@@ -1,9 +1,17 @@
+import { HeroMarqueeBackdrop } from "@/app/components/hero-marquee-backdrop";
+import { HomeFeaturedCarousel } from "@/app/components/home-featured-carousel";
+import { HomeBenefitsSection } from "@/app/components/home-benefits-section";
+import { HomePodcastSection } from "@/app/components/home-podcast-section";
+import { HomeTestimonialsSection } from "@/app/components/home-testimonials-section";
+
 export default function Home() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
-      <h1 className="text-center text-3xl font-semibold tracking-tight sm:text-4xl">
-        Play Book of Burma Project
-      </h1>
+    <main className="flex flex-1 flex-col font-sans">
+      <HeroMarqueeBackdrop />
+      <HomeFeaturedCarousel />
+      <HomeBenefitsSection />
+      <HomeTestimonialsSection />
+      <HomePodcastSection />
     </main>
   );
 }

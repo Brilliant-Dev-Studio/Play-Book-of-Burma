@@ -3,13 +3,43 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Roman Wood palette — normal shapes w/ text + outline black ½pt */
+  --palette-black: #000000;
+  --palette-mist: #ccd3d8;
+  --palette-coral: #ec7147;
+  --palette-butter: #fecf73;
+  --palette-wine: #76220b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-mist: var(--palette-mist);
+  --color-coral: var(--palette-coral);
+  --color-butter: var(--palette-butter);
+  --color-wine: var(--palette-wine);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-roman-wood-slide-title: var(--font-rwst-stack);
+}
+
+@keyframes hero-marquee-left {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes hero-marquee-right {
+  from {
+    transform: translate3d(-50%, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
 }
 
 @media (prefers-color-scheme: dark) {
