@@ -1,7 +1,16 @@
+import { HomeFeaturedCarousel } from "@/app/components/home-featured-carousel";
+import { HomeMembershipCta } from "@/app/components/home-membership-cta";
+import { HomePodcastSection } from "@/app/components/home-podcast-section";
+
 export default function LibraryPage() {
   return (
-    <main className="flex flex-1 items-center justify-center bg-mist px-4 py-16 font-sans text-wine">
-      <p className="text-lg font-medium">Library</p>
+    <main className="flex min-h-0 flex-1 flex-col bg-black font-sans text-white">
+      <HomeFeaturedCarousel
+        heading="Play book of Burma"
+        variant="embedded"
+      />
+      <HomePodcastSection variant="embedded" />
+      <HomeMembershipCta variant="embedded" />
     </main>
   );
 }

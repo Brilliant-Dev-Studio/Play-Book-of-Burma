@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 
 type PodcastItem = {
   title: string;
@@ -62,13 +63,13 @@ function PlayBadge({ href }: { href: string }) {
 function PodcastRow({ item }: { item: PodcastItem }) {
   return (
     <article className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-7">
-      <div className="group relative block w-full max-w-[360px] overflow-hidden rounded-none border border-white/10 bg-white/5 shadow-[0_14px_44px_rgba(0,0,0,0.45)] sm:w-[360px]">
+      <div className="group relative block w-full max-w-[360px] overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-[0_14px_44px_rgba(0,0,0,0.45)] sm:w-[360px]">
         <Image
           src={item.image}
           alt=""
           width={360}
           height={190}
-          className="h-[190px] w-full object-cover opacity-90 transition-transform duration-500 ease-out group-hover:scale-[1.06] group-hover:opacity-100 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+          className="h-[190px] w-full rounded-2xl object-cover opacity-90 transition-transform duration-500 ease-out group-hover:scale-[1.06] group-hover:opacity-100 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           priority={false}
         />
         <PlayBadge href={item.href ?? "#"} />
@@ -83,24 +84,95 @@ function PodcastRow({ item }: { item: PodcastItem }) {
         </p>
         <a
           href={item.href ?? "#"}
-          className="mt-3 inline-flex text-lg font-semibold text-[#d9764e] underline decoration-[#d9764e]/70 underline-offset-4 hover:decoration-[#d9764e]"
+          className="mt-3 inline-flex items-center gap-1 text-lg font-semibold text-coral underline decoration-coral/70 underline-offset-4 hover:decoration-coral"
         >
           Watch Now
+          <span aria-hidden>→</span>
         </a>
       </div>
     </article>
   );
 }
 
-export function HomePodcastSection() {
+export function HomePodcastSection({
+  variant = "default",
+}: {
+  /** Tighter vertical padding when stacked under another section (e.g. Library). */
+  variant?: "default" | "embedded";
+} = {}) {
+  const [activeTab, setActiveTab] = useState<
+    "Popular" | "Season 2" | "Season 1"
+  >("Popular");
+
+  const sectionPad =
+    variant === "embedded"
+      ? "bg-black pt-8 pb-14 sm:pt-10 sm:pb-16 md:pt-12 md:pb-20 lg:pb-24"
+      : "bg-black py-16 md:py-20 lg:py-24 xl:py-28";
+
   return (
-    <section className="bg-black py-16 md:py-20 lg:py-24 xl:py-28">
+    <section className={sectionPad}>
       <div className="mx-auto w-full max-w-[95%] px-4 sm:px-6 lg:px-8">
         <h2 className="text-left text-2xl font-semibold tracking-tight text-white sm:text-3xl">
           Listen to Story of Burma Podcast with No Ads
         </h2>
 
-        <div className="mt-10 space-y-14">
+        <div
+          className={
+            variant === "embedded"
+              ? "mt-5 flex flex-wrap items-center gap-0 text-sm sm:mt-6 sm:text-[15px]"
+              : "mt-8 flex flex-wrap items-center gap-0 text-sm sm:mt-10 sm:text-[15px]"
+          }
+        >
+          <button
+            type="button"
+            onClick={() => setActiveTab("Popular")}
+            className={`font-semibold transition-colors ${
+              activeTab === "Popular"
+                ? "text-white"
+                : "font-medium text-mist hover:text-white/85"
+            }`}
+          >
+            Popular
+          </button>
+          <span
+            className="mx-3 h-4 w-px shrink-0 bg-white/25 sm:mx-4"
+            aria-hidden
+          />
+          <button
+            type="button"
+            onClick={() => setActiveTab("Season 2")}
+            className={`transition-colors ${
+              activeTab === "Season 2"
+                ? "font-semibold text-white"
+                : "font-medium text-mist hover:text-white/85"
+            }`}
+          >
+            Season 2
+          </button>
+          <span
+            className="mx-3 h-4 w-px shrink-0 bg-white/25 sm:mx-4"
+            aria-hidden
+          />
+          <button
+            type="button"
+            onClick={() => setActiveTab("Season 1")}
+            className={`transition-colors ${
+              activeTab === "Season 1"
+                ? "font-semibold text-white"
+                : "font-medium text-mist hover:text-white/85"
+            }`}
+          >
+            Season 1
+          </button>
+        </div>
+
+        <div
+          className={
+            variant === "embedded"
+              ? "mt-6 space-y-12 sm:mt-8 sm:space-y-14"
+              : "mt-10 space-y-14"
+          }
+        >
           {PODCASTS.map((item, idx) => (
             <PodcastRow key={`${item.title}-${idx}`} item={item} />
           ))}

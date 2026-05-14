@@ -9,16 +9,16 @@ import {
   authPrimaryButtonClass,
 } from "@/app/components/auth-page-shell";
 
-export default function LoginPage() {
+export default function SignupPage() {
   return (
-    <AuthPageShell heading="Log In">
+    <AuthPageShell heading="Sign up">
       <form className="flex flex-col gap-5" action="#" method="post">
         <div>
-          <AuthFieldLabel htmlFor="login-username">
+          <AuthFieldLabel htmlFor="signup-username">
             Username<span className="text-coral">*</span>
           </AuthFieldLabel>
           <input
-            id="login-username"
+            id="signup-username"
             name="username"
             type="text"
             autoComplete="username"
@@ -28,11 +28,11 @@ export default function LoginPage() {
           />
         </div>
         <div>
-          <AuthFieldLabel htmlFor="login-email">
+          <AuthFieldLabel htmlFor="signup-email">
             Email<span className="text-coral">*</span>
           </AuthFieldLabel>
           <input
-            id="login-email"
+            id="signup-email"
             name="email"
             type="email"
             autoComplete="email"
@@ -41,32 +41,39 @@ export default function LoginPage() {
             required
           />
         </div>
-        <AuthPasswordField
-          id="login-password"
-          name="password"
-          autoComplete="current-password"
-          placeholder="Your password"
-          label={
-            <>
-              Password<span className="text-coral">*</span>
-            </>
-          }
-        />
+        <div className="grid gap-5 sm:grid-cols-2 sm:gap-x-3">
+          <AuthPasswordField
+            id="signup-password"
+            name="password"
+            autoComplete="new-password"
+            placeholder="Create a password"
+            label={
+              <>
+                Password<span className="text-coral">*</span>
+              </>
+            }
+          />
+          <AuthPasswordField
+            id="signup-password-confirm"
+            name="password_confirm"
+            autoComplete="new-password"
+            placeholder="Re-enter password"
+            label={
+              <>
+                Confirm<span className="text-coral">*</span>
+              </>
+            }
+          />
+        </div>
         <button type="submit" className={`mt-0.5 ${authPrimaryButtonClass}`}>
-          Log in
+          Create account
         </button>
       </form>
 
       <AuthOrDivider />
-      <AuthGoogleButton label="Log In with Google" />
+      <AuthGoogleButton label="Sign up with Google" />
 
       <div className="mt-5 flex flex-col items-center gap-2 text-center text-sm">
-        <Link
-          href="#"
-          className="font-medium text-zinc-300 underline decoration-white/25 underline-offset-4 hover:text-coral hover:decoration-coral/50"
-        >
-          Forgot your password?
-        </Link>
         <Link
           href="#"
           className="font-medium text-zinc-300 underline decoration-white/25 underline-offset-4 hover:text-coral hover:decoration-coral/50"
@@ -76,12 +83,12 @@ export default function LoginPage() {
       </div>
 
       <p className="mt-5 text-center text-sm text-zinc-500">
-        Don&apos;t have an account?{" "}
+        Already have an account?{" "}
         <Link
-          href="/signup"
+          href="/login"
           className="font-semibold text-zinc-200 underline decoration-white/20 underline-offset-2 hover:text-coral hover:decoration-coral/45"
         >
-          Sign up
+          Log in
         </Link>
       </p>
     </AuthPageShell>

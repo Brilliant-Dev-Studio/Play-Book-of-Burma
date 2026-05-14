@@ -21,15 +21,15 @@ function FeaturedVideoCard({ isFirst }: { isFirst?: boolean }) {
   return (
     <article
       data-card={isFirst ? true : undefined}
-      className="flex w-[260px] shrink-0 snap-start flex-col sm:w-72 md:w-[300px]"
+      className="flex w-[280px] shrink-0 snap-start flex-col sm:w-80 md:w-[328px]"
     >
-      <div className="group relative aspect-[3/4] w-full overflow-hidden rounded-none bg-zinc-900 shadow-[0_16px_48px_rgba(0,0,0,0.5)]">
+      <div className="group relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl bg-zinc-900 shadow-[0_16px_48px_rgba(0,0,0,0.5)]">
         <Image
           src={CARD_THUMB}
           alt=""
           fill
-          className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06] group-focus-within:scale-[1.06] motion-reduce:transition-none motion-reduce:group-hover:scale-100 motion-reduce:group-focus-within:scale-100"
-          sizes="(max-width: 640px) 260px, 300px"
+          className="rounded-t-2xl object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06] group-focus-within:scale-[1.06] motion-reduce:transition-none motion-reduce:group-hover:scale-100 motion-reduce:group-focus-within:scale-100"
+          sizes="(max-width: 640px) 280px, 328px"
         />
 
         <div
@@ -52,8 +52,8 @@ function FeaturedVideoCard({ isFirst }: { isFirst?: boolean }) {
           className="absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
           aria-label="Play"
         >
-        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-coral text-black shadow-lg transition-transform hover:scale-105 sm:h-12 sm:w-12">
-          <span className="ml-0.5 text-2xl leading-none">▶</span>
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-coral text-black shadow-lg transition-transform hover:scale-105 sm:h-12 sm:w-12">
+            <span className="ml-0.5 text-2xl leading-none">▶</span>
           </span>
         </Link>
 
@@ -80,7 +80,18 @@ function FeaturedVideoCard({ isFirst }: { isFirst?: boolean }) {
   );
 }
 
-export function HomeFeaturedCarousel() {
+export function HomeFeaturedCarousel({
+  heading,
+  variant = "default",
+  showSeeAll = true,
+}: {
+  /** Page title shown above the tab row (e.g. Library page). */
+  heading?: string;
+  /** `embedded` = less top padding when not directly under the home hero. */
+  variant?: "default" | "embedded";
+  /** Hide “See All” when already on the full library view. */
+  showSeeAll?: boolean;
+} = {}) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<"Popular" | "Coming Soon">(
     "Popular",
@@ -97,9 +108,26 @@ export function HomeFeaturedCarousel() {
     el.scrollBy({ left: dir * step, behavior: "smooth" });
   }, []);
 
+  const sectionPad =
+    variant === "embedded"
+      ? "bg-black pb-12 pt-4 sm:pb-14 sm:pt-5 md:pb-16 md:pt-6 lg:pb-20 lg:pt-8"
+      : "bg-black pb-16 pt-32 md:pb-20 md:pt-40 lg:pb-24 lg:pt-48 xl:pb-28 xl:pt-56";
+
   return (
-    <section className="bg-black pb-16 pt-32 md:pb-20 md:pt-40 lg:pb-24 lg:pt-48 xl:pb-28 xl:pt-56">
+    <section className={sectionPad}>
       <div className="mx-auto w-full max-w-[95%] px-4 sm:px-6 lg:px-8">
+        {heading ? (
+          <h1
+            className={[
+              "text-2xl font-bold tracking-tight text-white sm:text-3xl md:text-4xl",
+              variant === "embedded"
+                ? "mb-4 sm:mb-5"
+                : "mb-6 sm:mb-8",
+            ].join(" ")}
+          >
+            {heading}
+          </h1>
+        ) : null}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-0 text-sm sm:text-[15px]">
             <button
@@ -128,12 +156,14 @@ export function HomeFeaturedCarousel() {
             >
               Coming Soon
             </button>
-            <Link
-              href="/library"
-              className="ml-5 font-medium text-mist transition-colors hover:text-white/90 sm:ml-8"
-            >
-              See All
-            </Link>
+            {showSeeAll ? (
+              <Link
+                href="/library"
+                className="ml-5 font-medium text-mist transition-colors hover:text-white/90 sm:ml-8"
+              >
+                See All
+              </Link>
+            ) : null}
           </div>
 
           <div className="flex shrink-0 gap-2">
@@ -158,7 +188,11 @@ export function HomeFeaturedCarousel() {
 
         <div
           ref={scrollerRef}
-          className="mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-5 md:mt-10 [&::-webkit-scrollbar]:hidden"
+          className={
+            variant === "embedded"
+              ? "mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-5 md:mt-7 [&::-webkit-scrollbar]:hidden"
+              : "mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-5 md:mt-10 [&::-webkit-scrollbar]:hidden"
+          }
         >
           {Array.from({ length: CARD_COUNT }, (_, i) => (
             <FeaturedVideoCard key={i} isFirst={i === 0} />

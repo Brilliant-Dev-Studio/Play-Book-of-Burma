@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { HomeMembershipCta } from "@/app/components/home-membership-cta";
 
 const BENEFITS = [
   {
@@ -35,12 +35,12 @@ export function HomeBenefitsSection() {
         <div className="mt-7 grid gap-8 md:grid-cols-3 md:gap-10">
           {BENEFITS.map((b) => (
             <div key={b.title} className="min-w-0">
-              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-white/10 bg-black">
+              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-white/10 bg-black">
                 <Image
                   src={b.imageUrl}
                   alt=""
                   fill
-                  className="object-cover opacity-90"
+                  className="rounded-2xl object-cover opacity-90"
                   sizes="(max-width: 768px) 95vw, 33vw"
                 />
                 <div
@@ -59,24 +59,7 @@ export function HomeBenefitsSection() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col items-center text-center">
-          <h3 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            Become Our Membership Today
-          </h3>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/80 sm:text-base">
-            Choose 6–12 months plan, only costs 1,000 MMK per day,
-            <br />
-            Learn 24/7 at anytime, anywhere
-          </p>
-          <Link
-            href="/membership"
-            className="mt-6 inline-flex items-center justify-center rounded-lg bg-coral px-6 py-2.5 text-sm font-semibold tracking-tight text-white transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
-          >
-            Get Playbook Now
-          </Link>
-        </div>
-
-        
+        <HomeMembershipCta />
       </div>
     </section>
   );
