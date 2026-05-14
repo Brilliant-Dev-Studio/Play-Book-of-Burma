@@ -2,29 +2,36 @@
 
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
+import {
+  AtSign,
+  BriefcaseBusiness,
+  Mail,
+  Music2,
+  Phone,
+  Play,
+  Users,
+} from "lucide-react";
 import logo from "@/app/assets/logo.png";
 import appStoreBadge from "@/app/assets/download-on-the-app-store-apple-logo-svgrepo-com.png";
 import googlePlayBadge from "@/app/assets/google-play-badge-logo-svgrepo-com.png";
 
-function SocialIcon({
-  children,
-  label,
+function FooterIconBadge({
+  icon: Icon,
+  srLabel,
 }: {
-  children: React.ReactNode;
-  label: string;
+  icon: LucideIcon;
+  srLabel?: string;
 }) {
   return (
-    <span className="grid h-5 w-5 place-items-center rounded-sm bg-coral text-black shadow-[0_6px_14px_rgba(0,0,0,0.55)] ring-1 ring-black/25">
-      <span className="sr-only">{label}</span>
-      {children}
-    </span>
-  );
-}
-
-function ContactIcon({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="grid h-5 w-5 place-items-center rounded-sm bg-coral text-black shadow-[0_6px_14px_rgba(0,0,0,0.55)] ring-1 ring-black/25">
-      {children}
+    <span className="grid h-5 w-5 shrink-0 place-items-center rounded-sm bg-coral text-black shadow-[0_6px_14px_rgba(0,0,0,0.55)] ring-1 ring-black/25">
+      {srLabel ? <span className="sr-only">{srLabel}</span> : null}
+      <Icon
+        className="h-3 w-3"
+        aria-hidden
+        strokeWidth={2.5}
+        absoluteStrokeWidth
+      />
     </span>
   );
 }
@@ -54,7 +61,7 @@ function StoreBadge({
 export function SiteFooter() {
   return (
     <footer className="border-t border-white/15 bg-black pb-10 pt-8 sm:pb-14 sm:pt-10">
-      <div className="mx-auto w-full max-w-[95%] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[85%] px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col items-start justify-between gap-6 sm:mb-10 sm:flex-row sm:items-start sm:gap-8">
           <Link href="/" className="inline-flex items-center gap-3">
             <Image
@@ -130,28 +137,20 @@ export function SiteFooter() {
             </h3>
             <ul className="mt-5 space-y-3 text-sm text-white/85 sm:mt-6 sm:text-[15px]">
               <li className="flex items-center gap-3">
-                <SocialIcon label="Facebook">
-                  <span className="text-xs font-black leading-none">f</span>
-                </SocialIcon>
+                <FooterIconBadge icon={Users} srLabel="Facebook" />
                 <span>Facebook</span>
               </li>
               <li className="flex items-center gap-3">
-                <SocialIcon label="TikTok">
-                  <span className="text-xs font-black leading-none">d</span>
-                </SocialIcon>
+                <FooterIconBadge icon={Music2} srLabel="TikTok" />
                 <span>TikTok</span>
               </li>
               <li className="flex items-center gap-3">
-                <SocialIcon label="YouTube">
-                  <span className="text-xs font-black leading-none">▶</span>
-                </SocialIcon>
+                <FooterIconBadge icon={Play} srLabel="YouTube" />
                 <span>YouTube</span>
               </li>
               <li className="flex items-center gap-3">
-                <SocialIcon label="LinkedIn">
-                  <span className="text-xs font-black leading-none">in</span>
-                </SocialIcon>
-                <span>Linkedin</span>
+                <FooterIconBadge icon={BriefcaseBusiness} srLabel="LinkedIn" />
+                <span>LinkedIn</span>
               </li>
             </ul>
           </section>
@@ -162,21 +161,15 @@ export function SiteFooter() {
             </h3>
             <ul className="mt-5 space-y-4 text-sm text-white/85 sm:mt-6 sm:text-[15px]">
               <li className="flex items-start gap-3">
-                <ContactIcon>
-                  <span className="text-xs font-black leading-none">☎</span>
-                </ContactIcon>
+                <FooterIconBadge icon={Phone} srLabel="Phone" />
                 <span>+95 9454161306</span>
               </li>
               <li className="flex items-start gap-3">
-                <ContactIcon>
-                  <span className="text-xs font-black leading-none">✉</span>
-                </ContactIcon>
+                <FooterIconBadge icon={Mail} srLabel="Email" />
                 <span className="break-all">pr.playbookofburma@gmail.com</span>
               </li>
               <li className="flex items-start gap-3">
-                <ContactIcon>
-                  <span className="text-xs font-black leading-none">＠</span>
-                </ContactIcon>
+                <FooterIconBadge icon={AtSign} srLabel="Social handle" />
                 <span>@playbookofburma</span>
               </li>
             </ul>

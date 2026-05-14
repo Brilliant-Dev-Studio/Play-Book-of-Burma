@@ -3,9 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
-
-const CARD_THUMB =
-  "https://i.pinimg.com/736x/a5/45/57/a5455734ddffef0ce71183fc807fac14.jpg" as const;
+import popularCardThumb from "@/app/assets/benefits/Ray Dalio - 1.png";
 
 const CARD = {
   titleLine1: "Learn Finance in 21 Day,",
@@ -19,17 +17,19 @@ const CARD_COUNT = 6;
 
 function FeaturedVideoCard({ isFirst }: { isFirst?: boolean }) {
   return (
-    <article
+    <Link
+      href="/click-video-detail"
       data-card={isFirst ? true : undefined}
-      className="flex w-[280px] shrink-0 snap-start flex-col sm:w-80 md:w-[328px]"
+      className="group flex w-[284px] shrink-0 snap-start flex-col outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[324px] md:w-[332px]"
+      aria-label={`${CARD.titleLine1} ${CARD.titleLine2}`}
     >
-      <div className="group relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl bg-zinc-900 shadow-[0_16px_48px_rgba(0,0,0,0.5)]">
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl bg-zinc-900 shadow-[0_16px_48px_rgba(0,0,0,0.5)]">
         <Image
-          src={CARD_THUMB}
+          src={popularCardThumb}
           alt=""
           fill
           className="rounded-t-2xl object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06] group-focus-within:scale-[1.06] motion-reduce:transition-none motion-reduce:group-hover:scale-100 motion-reduce:group-focus-within:scale-100"
-          sizes="(max-width: 640px) 280px, 328px"
+          sizes="(max-width: 640px) 288px, 320px"
         />
 
         <div
@@ -47,15 +47,14 @@ function FeaturedVideoCard({ isFirst }: { isFirst?: boolean }) {
           aria-hidden
         />
 
-        <Link
-          href="/library"
-          className="absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
-          aria-label="Play"
+        <span
+          className="pointer-events-none absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
+          aria-hidden
         >
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-coral text-black shadow-lg transition-transform hover:scale-105 sm:h-12 sm:w-12">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-coral text-black shadow-lg transition-transform group-hover:scale-105 sm:h-12 sm:w-12">
             <span className="ml-0.5 text-2xl leading-none">▶</span>
           </span>
-        </Link>
+        </span>
 
         {/* Title only — on the card / over the fade */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-4 pb-2 text-center sm:px-5 sm:pb-3">
@@ -76,7 +75,7 @@ function FeaturedVideoCard({ isFirst }: { isFirst?: boolean }) {
           {CARD.duration}
         </p>
       </div>
-    </article>
+    </Link>
   );
 }
 
@@ -115,7 +114,7 @@ export function HomeFeaturedCarousel({
 
   return (
     <section className={sectionPad}>
-      <div className="mx-auto w-full max-w-[95%] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[85%] px-4 sm:px-6 lg:px-8">
         {heading ? (
           <h1
             className={[
@@ -185,15 +184,17 @@ export function HomeFeaturedCarousel({
             </button>
           </div>
         </div>
+      </div>
 
-        <div
-          ref={scrollerRef}
-          className={
-            variant === "embedded"
-              ? "mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-5 md:mt-7 [&::-webkit-scrollbar]:hidden"
-              : "mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-5 md:mt-10 [&::-webkit-scrollbar]:hidden"
-          }
-        >
+      {/* Full-bleed track: cards scroll into viewport edges; insets align row 0 with max-w-[85%] + page padding */}
+      <div
+        ref={scrollerRef}
+        className={[
+          "relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+          variant === "embedded" ? "mt-6 md:mt-7" : "mt-8 md:mt-10",
+        ].join(" ")}
+      >
+        <div className="flex w-max snap-x snap-mandatory gap-4 pl-[calc(7.5vw+1rem)] pr-[calc(7.5vw+1rem)] sm:gap-5 sm:pl-[calc(7.5vw+1.5rem)] sm:pr-[calc(7.5vw+1.5rem)] lg:pl-[calc(7.5vw+2rem)] lg:pr-[calc(7.5vw+2rem)]">
           {Array.from({ length: CARD_COUNT }, (_, i) => (
             <FeaturedVideoCard key={i} isFirst={i === 0} />
           ))}

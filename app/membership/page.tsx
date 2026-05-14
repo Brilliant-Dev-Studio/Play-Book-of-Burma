@@ -25,7 +25,7 @@ function HowPayStepCard({
         "relative flex min-h-0 flex-col rounded-2xl border border-white/12 bg-zinc-900/90 shadow-[0_16px_48px_rgba(0,0,0,0.35)]",
         emphasized
           ? "px-5 pb-7 pt-10 sm:px-7 sm:pb-8 sm:pt-11 md:min-h-[26rem] md:px-8 md:pb-9 md:pt-12 lg:min-h-[28rem]"
-          : "px-5 pb-6 pt-9 sm:px-6 sm:pb-7 sm:pt-10",
+          : "px-5 pb-6 pt-10 sm:px-6 sm:pb-7 sm:pt-11",
         emphasized
           ? "ring-1 ring-coral/20 shadow-[0_20px_56px_rgba(0,0,0,0.4)]"
           : "",
@@ -42,7 +42,7 @@ function HowPayStepCard({
       </div>
       <h3
         className={[
-          "font-semibold leading-snug tracking-tight text-white",
+          "text-pretty pr-1 font-semibold leading-snug tracking-tight text-white",
           emphasized ? "text-xl sm:text-2xl" : "text-xl",
         ].join(" ")}
       >
@@ -228,7 +228,7 @@ export default function MembershipPage() {
         aria-hidden
       />
 
-      <div className="relative z-10 mx-auto w-full max-w-[95%] px-4 sm:px-6 lg:max-w-[min(95%,1400px)] lg:px-8">
+      <div className="relative z-10 mx-auto w-full max-w-[85%] px-4 sm:px-6 lg:max-w-[min(85%,1400px)] lg:px-8">
         <header className="flex flex-col items-center text-center">
           <span
             className="mb-4 h-1 w-10 rounded-full bg-coral shadow-[0_0_20px_rgba(236,113,71,0.45)]"
@@ -267,10 +267,10 @@ export default function MembershipPage() {
             How do I pay?
           </h2>
 
-          <div className="mx-auto mt-10 grid max-w-6xl gap-6 sm:mt-12 sm:gap-8 md:mt-14 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1fr)] lg:max-w-7xl lg:gap-10">
+          <div className="mx-auto mt-10 grid w-full gap-6 sm:mt-12 sm:gap-8 md:mt-14 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-10">
             <HowPayStepCard step={1} title="Choose your payment method">
-              <div className="divide-y divide-white/[0.08] overflow-hidden rounded-lg border border-white/[0.08] bg-black/[0.2]">
-                <div className="flex gap-3.5 p-4 sm:gap-4 sm:p-5">
+              <div className="flex w-full flex-col">
+                <div className="flex w-full items-center gap-4 sm:gap-5">
                   <Image
                     src={kbzPayLogo}
                     alt="KBZ Pay"
@@ -285,23 +285,27 @@ export default function MembershipPage() {
                     <p className="mt-1 text-[15px] font-semibold leading-snug tracking-tight text-white">
                       Account
                     </p>
-                    <dl className="mt-3.5 space-y-2.5">
-                      <div>
-                        <dt className="text-xs font-medium text-white/45">Name</dt>
-                        <dd className="mt-0.5 text-sm font-medium leading-snug text-white/92">
+                    <dl className="mt-3 grid gap-x-4 gap-y-2.5 sm:grid-cols-[minmax(0,4.5rem)_1fr] sm:gap-x-5">
+                      <div className="sm:contents">
+                        <dt className="text-xs font-medium text-white/45 sm:pt-0.5">Name</dt>
+                        <dd className="text-sm font-medium leading-snug text-white/92 sm:min-w-0">
                           Htet Naing Oo
                         </dd>
                       </div>
-                      <div>
-                        <dt className="text-xs font-medium text-white/45">Number</dt>
-                        <dd className="mt-0.5 font-mono text-[15px] font-medium tabular-nums tracking-wide text-white">
+                      <div className="sm:contents">
+                        <dt className="text-xs font-medium text-white/45 sm:pt-0.5">Number</dt>
+                        <dd className="font-mono text-[15px] font-medium tabular-nums tracking-wide text-white sm:min-w-0">
                           09763600983
                         </dd>
                       </div>
                     </dl>
                   </div>
                 </div>
-                <div className="flex gap-3.5 p-4 sm:gap-4 sm:p-5">
+                <div
+                  className="my-4 h-px w-full shrink-0 bg-white/[0.08] sm:my-5"
+                  aria-hidden
+                />
+                <div className="flex w-full items-center gap-4 sm:gap-5">
                   <Image
                     src={wavePayLogo}
                     alt="Wave Money"
@@ -316,16 +320,16 @@ export default function MembershipPage() {
                     <p className="mt-1 text-[15px] font-semibold leading-snug tracking-tight text-white">
                       Account
                     </p>
-                    <dl className="mt-3.5 space-y-2.5">
-                      <div>
-                        <dt className="text-xs font-medium text-white/45">Name</dt>
-                        <dd className="mt-0.5 text-sm font-medium leading-snug text-white/92">
+                    <dl className="mt-3 grid gap-x-4 gap-y-2.5 sm:grid-cols-[minmax(0,4.5rem)_1fr] sm:gap-x-5">
+                      <div className="sm:contents">
+                        <dt className="text-xs font-medium text-white/45 sm:pt-0.5">Name</dt>
+                        <dd className="text-sm font-medium leading-snug text-white/92 sm:min-w-0">
                           Htet Naing Oo
                         </dd>
                       </div>
-                      <div>
-                        <dt className="text-xs font-medium text-white/45">Number</dt>
-                        <dd className="mt-0.5 font-mono text-[15px] font-medium tabular-nums tracking-wide text-white">
+                      <div className="sm:contents">
+                        <dt className="text-xs font-medium text-white/45 sm:pt-0.5">Number</dt>
+                        <dd className="font-mono text-[15px] font-medium tabular-nums tracking-wide text-white sm:min-w-0">
                           09763600983
                         </dd>
                       </div>

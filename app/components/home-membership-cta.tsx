@@ -30,7 +30,7 @@ export function HomeMembershipCta({
   if (variant === "embedded") {
     return (
       <section className="bg-black pb-14 pt-10 sm:pb-16 sm:pt-12 md:pb-20 md:pt-14">
-        <div className="mx-auto w-full max-w-[95%] px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-[85%] px-4 sm:px-6 lg:px-8">
           {inner}
         </div>
       </section>

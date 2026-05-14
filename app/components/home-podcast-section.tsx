@@ -3,11 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import podcastThumb from "@/app/assets/podcast/woman-speaking.png";
 
 type PodcastItem = {
   title: string;
   description: string;
-  image: string;
   href?: string;
 };
 
@@ -16,32 +16,24 @@ const PODCASTS: PodcastItem[] = [
     title: "Title",
     description:
       "Lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-    image:
-      "https://i.pinimg.com/736x/77/44/21/77442191acfd4d72e0da454c6dc5eb4d.jpg",
     href: "#",
   },
   {
     title: "Title",
     description:
       "Lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-    image:
-      "https://i.pinimg.com/736x/fd/8f/e7/fd8fe7ee4918c5055ee7939d889432df.jpg",
     href: "#",
   },
   {
     title: "Title",
     description:
       "Lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-    image:
-      "https://i.pinimg.com/736x/77/44/21/77442191acfd4d72e0da454c6dc5eb4d.jpg",
     href: "#",
   },
   {
     title: "Title",
     description:
       "Lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-    image:
-      "https://i.pinimg.com/736x/fd/8f/e7/fd8fe7ee4918c5055ee7939d889432df.jpg",
     href: "#",
   },
 ];
@@ -63,13 +55,13 @@ function PlayBadge({ href }: { href: string }) {
 function PodcastRow({ item }: { item: PodcastItem }) {
   return (
     <article className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-7">
-      <div className="group relative block w-full max-w-[360px] overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-[0_14px_44px_rgba(0,0,0,0.45)] sm:w-[360px]">
+      <div className="group relative aspect-[360/190] w-full max-w-[360px] overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-[0_14px_44px_rgba(0,0,0,0.45)] sm:w-[360px]">
         <Image
-          src={item.image}
+          src={podcastThumb}
           alt=""
-          width={360}
-          height={190}
-          className="h-[190px] w-full rounded-2xl object-cover opacity-90 transition-transform duration-500 ease-out group-hover:scale-[1.06] group-hover:opacity-100 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+          fill
+          className="rounded-2xl object-cover object-center opacity-90 transition-transform duration-500 ease-out [transform-origin:center] scale-[1.18] group-hover:scale-[1.26] group-hover:opacity-100 motion-reduce:scale-[1.18] motion-reduce:transition-none motion-reduce:group-hover:scale-[1.18]"
+          sizes="(max-width: 640px) 100vw, 360px"
           priority={false}
         />
         <PlayBadge href={item.href ?? "#"} />
@@ -111,7 +103,7 @@ export function HomePodcastSection({
 
   return (
     <section className={sectionPad}>
-      <div className="mx-auto w-full max-w-[95%] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[85%] px-4 sm:px-6 lg:px-8">
         <h2 className="text-left text-2xl font-semibold tracking-tight text-white sm:text-3xl">
           Listen to Story of Burma Podcast with No Ads
         </h2>

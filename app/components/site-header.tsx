@@ -147,7 +147,7 @@ export function SiteHeader() {
             onClick={() => setMenuOpen(false)}
           />
         ) : null}
-        <div className="relative z-50 mx-auto w-full max-w-[95%] px-4 py-2.5 sm:px-6 lg:px-8">
+        <div className="relative z-50 mx-auto w-full max-w-[85%] px-4 py-2.5 sm:px-6 lg:px-8">
           <div className="flex min-h-[4.25rem] w-full items-center justify-between gap-4 sm:min-h-[5.25rem] sm:gap-6 lg:min-h-[5.75rem]">
             <Link
               href="/"
@@ -174,7 +174,7 @@ export function SiteHeader() {
                     key={item.href}
                     href={item.href}
                     aria-current={active ? "page" : undefined}
-                    className={`text-[15px] font-medium tracking-tight transition-colors ${
+                    className={`text-[15px] font-bold tracking-tight transition-colors ${
                       active
                         ? "text-coral"
                         : "text-white/95 hover:text-white"
@@ -217,7 +217,7 @@ export function SiteHeader() {
                     key={item.href}
                     href={item.href}
                     aria-current={active ? "page" : undefined}
-                    className={`border-b border-white/10 py-3.5 text-base font-medium tracking-tight transition-colors last:border-b-0 ${
+                    className={`border-b border-white/10 py-3.5 text-base font-bold tracking-tight transition-colors last:border-b-0 ${
                       active
                         ? "text-coral"
                         : "text-white/95 active:bg-white/[0.04]"
