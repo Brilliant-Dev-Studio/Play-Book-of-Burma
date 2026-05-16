@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import {
   membershipFormFieldClass,
+  membershipFormFieldErrorClass,
   membershipFormFieldLabelClass,
 } from "@/app/components/membership-form-field-styles";
 
@@ -58,6 +59,10 @@ export function AuthPasswordField({
   placeholder,
   label,
   required = true,
+  value,
+  onChange,
+  onBlur,
+  error,
 }: {
   id: string;
   name: string;
@@ -65,6 +70,10 @@ export function AuthPasswordField({
   placeholder: string;
   label: ReactNode;
   required?: boolean;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
+  error?: string | null;
 }) {
   const [visible, setVisible] = useState(false);
 
@@ -81,12 +90,17 @@ export function AuthPasswordField({
           autoComplete={autoComplete}
           placeholder={placeholder}
           required={required}
-          className={`${membershipFormFieldClass} pr-11`}
+          value={value}
+          onChange={onChange}
+          onBlur={onBlur}
+          aria-invalid={!!error}
+          aria-describedby={error ? `${id}-error` : undefined}
+          className={`${error ? membershipFormFieldErrorClass : membershipFormFieldClass} pr-11`}
         />
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
-          className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral/60"
+          className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral/60"
           aria-pressed={visible}
           aria-label={visible ? "Hide password" : "Show password"}
         >
@@ -97,6 +111,11 @@ export function AuthPasswordField({
           )}
         </button>
       </div>
+      {error && (
+        <p id={`${id}-error`} className="mt-1.5 text-xs text-red-400">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

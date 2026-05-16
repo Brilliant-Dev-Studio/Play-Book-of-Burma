@@ -3,6 +3,7 @@ import Image from "next/image";
 import googleGLogo from "@/app/assets/Google__G__logo.svg.webp";
 import {
   membershipFormFieldClass,
+  membershipFormFieldErrorClass,
   membershipFormFieldLabelClass,
 } from "@/app/components/membership-form-field-styles";
 
@@ -55,6 +56,7 @@ export function AuthFieldLabel({
 }
 
 export const authInputClass = membershipFormFieldClass;
+export const authInputErrorClass = membershipFormFieldErrorClass;
 
 /** Primary CTA — matches membership payment submit */
 export const authPrimaryButtonClass =

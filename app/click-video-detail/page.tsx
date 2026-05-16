@@ -1,8 +1,73 @@
-import Image from "next/image";
+import Image, { type StaticImageData } from "next/image";
 import detailBackdrop from "@/app/assets/benefits/Man.png";
+import skillsetThumb from "@/app/assets/benefits/Ray Dalio - 1.png";
+import { HomeMembershipCta } from "@/app/components/home-membership-cta";
 
 const DESCRIPTION =
   "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.";
+
+const SKILLSET_DESCRIPTION =
+  "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,";
+
+const LESSON_DETAIL =
+  "Lorem Ipsum is simply dummy text of the printing and typesetting industry.";
+
+const DOWNLOAD_DESCRIPTION =
+  "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s";
+
+const LESSONS = [
+  { title: "Introduction of Modern Finance", duration: "10 mins", details: LESSON_DETAIL },
+  { title: "Lorem Ipsum is simply dummy text of the printing", duration: "10 mins", details: LESSON_DETAIL },
+  { title: "Lorem Ipsum is simply dummy text of the printing", duration: "10 mins", details: LESSON_DETAIL },
+  { title: "Lorem Ipsum is simply dummy text of the printing", duration: "10 mins", details: LESSON_DETAIL },
+  { title: "Lorem Ipsum is simply dummy text of the printing", duration: "10 mins", details: LESSON_DETAIL },
+];
+
+type SkillsetItem = {
+  number: number;
+  image: StaticImageData;
+  title: string;
+  description: string;
+};
+
+const SKILLSETS: SkillsetItem[] = [
+  { number: 1, image: skillsetThumb, title: "Title of Skillsets", description: SKILLSET_DESCRIPTION },
+  { number: 2, image: skillsetThumb, title: "Title of Skillsets", description: SKILLSET_DESCRIPTION },
+  { number: 3, image: skillsetThumb, title: "Title of Skillsets", description: SKILLSET_DESCRIPTION },
+];
+
+function SkillsetCard({ number, image, title, description }: SkillsetItem) {
+  return (
+    <article className="group relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-zinc-900 shadow-[0_16px_48px_rgba(0,0,0,0.5)] ring-1 ring-white/10">
+      <Image
+        src={image}
+        alt=""
+        fill
+        className="object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+        sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 28vw"
+      />
+
+      <div
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.95)_0%,rgba(0,0,0,0.82)_28%,rgba(0,0,0,0.45)_50%,rgba(0,0,0,0.15)_68%,transparent_82%)]"
+        aria-hidden
+      />
+
+      <span className="absolute left-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-coral text-base font-bold text-white shadow-[0_4px_14px_rgba(236,113,71,0.5)] sm:left-4 sm:top-4 sm:h-10 sm:w-10 sm:text-lg">
+        {number}
+      </span>
+
+      <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-5 sm:px-6 sm:pb-6">
+        <h3 className="text-lg font-bold leading-snug tracking-tight text-white sm:text-xl">
+          {title}
+        </h3>
+        <p className="mt-3 text-sm leading-relaxed text-white/80 sm:text-[0.95rem]">
+          <span className="font-medium text-white">Description: </span>
+          {description}
+        </p>
+      </div>
+    </article>
+  );
+}
 
 /**
  * Top: hero — left rail + right image.
@@ -95,6 +160,105 @@ export default function ClickVideoDetailPage() {
           </div>
         </div>
       </section>
+
+      {/* Skillset You will Learn */}
+      <section className="w-full shrink-0 bg-black pb-16 md:pb-20 lg:pb-24 xl:pb-28">
+        <div className="mx-auto w-full max-w-[85%] px-4 sm:px-6 lg:px-8">
+          <h2 className="mb-8 text-2xl font-bold tracking-tight text-white sm:text-3xl md:mb-10 md:text-4xl">
+            Skillset You will Learn
+          </h2>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:gap-7 lg:grid-cols-3 lg:gap-8">
+            {SKILLSETS.map((s) => (
+              <SkillsetCard key={s.number} {...s} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Lessons Plan */}
+      <section className="w-full shrink-0 bg-black pb-16 md:pb-20 lg:pb-24 xl:pb-28">
+        <div className="mx-auto w-full max-w-[85%] px-4 sm:px-6 lg:px-8">
+          <h2 className="mb-8 text-2xl font-bold tracking-tight text-white sm:text-3xl md:mb-10 md:text-4xl">
+            Lessons Plan
+          </h2>
+
+          <div className="flex flex-col gap-3">
+            {LESSONS.map((lesson, index) => (
+              <details
+                key={index}
+                className="group border border-white/10 bg-zinc-900/90"
+              >
+                <summary className="flex cursor-pointer list-none items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-white/[0.04] sm:px-6 sm:py-5 [&::-webkit-details-marker]:hidden">
+                  <span className="w-6 shrink-0 text-base font-medium tabular-nums text-white sm:text-lg">
+                    {index + 1}
+                  </span>
+                  <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-white sm:text-base">
+                    {lesson.title}
+                  </span>
+                  <span className="shrink-0 text-sm text-white/80 sm:text-base">
+                    {lesson.duration}
+                  </span>
+                  <span
+                    className="shrink-0 text-xs text-white/50 transition-transform duration-200 ease-out group-open:rotate-180"
+                    aria-hidden
+                  >
+                    ▼
+                  </span>
+                </summary>
+                <div className="border-t border-white/[0.06] bg-black/25 px-5 py-4 pl-[3.25rem] text-sm leading-relaxed text-white/80 sm:px-6 sm:pl-14 sm:text-[15px]">
+                  {lesson.details}
+                </div>
+              </details>
+            ))}
+          </div>
+
+          {/* Download Learning Resources */}
+          <div className="mt-6 flex flex-col gap-5 border border-white/10 bg-zinc-900/90 p-5 sm:mt-8 sm:flex-row sm:gap-7 sm:p-7 md:mt-10">
+            <div className="relative aspect-[3/4] w-full shrink-0 overflow-hidden rounded-lg bg-zinc-800 sm:w-40 md:w-48">
+              <Image
+                src={skillsetThumb}
+                alt=""
+                fill
+                className="object-cover object-center"
+                sizes="(max-width: 640px) 90vw, (max-width: 768px) 160px, 192px"
+              />
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <h3 className="text-xl font-bold leading-snug tracking-tight text-white sm:text-2xl">
+                Download Learning Resources
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-white/85 sm:text-[0.95rem]">
+                <span className="font-medium text-white">Description: </span>
+                {DOWNLOAD_DESCRIPTION}
+              </p>
+              <button
+                type="button"
+                className="mt-5 flex w-fit items-center gap-2 rounded-md border border-white/20 bg-transparent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/[0.06] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral sm:mt-6 sm:px-6 sm:py-3 sm:text-base"
+                aria-label="Download Guidebook"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.8}
+                  stroke="currentColor"
+                  className="h-5 w-5"
+                  aria-hidden
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+                  />
+                </svg>
+                Guidebook
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <HomeMembershipCta variant="embedded" />
     </main>
   );
 }

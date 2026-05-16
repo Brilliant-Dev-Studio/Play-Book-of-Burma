@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String      @id
+  email            String      @unique
+  displayName      String?
+  photoUrl         String?
+  emailVerified    Boolean     @default(false)
+  verifyCode       String?
+  verifyCodeExpiry DateTime?
+  resetCode        String?
+  resetCodeExpiry  DateTime?
+  resetVerified    Boolean     @default(false)
+  membership       Membership?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+model Membership {
+  id                String           @id @default(cuid())
+  userId            String           @unique
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status            MembershipStatus @default(PENDING)
+  paymentMethod     PaymentMethod?
+  paymentScreenshot String?
+  approvedAt        DateTime?
+  expiresAt         DateTime?
+  notes             String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+enum MembershipStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum PaymentMethod {
+  KBZ_PAY
+  WAVE_MONEY
+}

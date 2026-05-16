@@ -2,21 +2,37 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import logo from "@/app/assets/logo.png";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { signOut } from "@/lib/auth";
 
-const navItems = [
+const mainNavItems = [
   { href: "/", label: "Home" },
   { href: "/membership", label: "Membership" },
   { href: "/library", label: "Library" },
-  { href: "/login", label: "Login" },
-  { href: "/signup", label: "Sign up" },
 ] as const;
 
 function isNavActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function IconChevronDown({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={2}
+      stroke="currentColor"
+      className={className}
+      aria-hidden
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+    </svg>
+  );
 }
 
 function MenuToggleIcon({ open }: { open: boolean }) {
@@ -46,11 +62,15 @@ function MenuToggleIcon({ open }: { open: boolean }) {
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const headerRef = useRef<HTMLElement>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
   const [isFixed, setIsFixed] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [authMenuOpen, setAuthMenuOpen] = useState(false);
+  const authMenuRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     const el = headerRef.current;
@@ -81,8 +101,8 @@ export function SiteHeader() {
             setIsHidden(false);
           } else {
             const goingDown = y > lastY;
-            // Hide on scroll-down, show on scroll-up
             setIsHidden(goingDown);
+            setAuthMenuOpen(false);
           }
 
           lastY = y;
@@ -98,7 +118,26 @@ export function SiteHeader() {
 
   useEffect(() => {
     setMenuOpen(false);
+    setAuthMenuOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (!authMenuOpen) return;
+    function onClickOutside(e: MouseEvent) {
+      if (authMenuRef.current && !authMenuRef.current.contains(e.target as Node)) {
+        setAuthMenuOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setAuthMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClickOutside);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [authMenuOpen]);
 
   useEffect(() => {
     if (isHidden) setMenuOpen(false);
@@ -124,6 +163,11 @@ export function SiteHeader() {
     };
   }, [menuOpen]);
 
+  async function handleSignOut() {
+    await signOut();
+    router.push("/");
+  }
+
   return (
     <>
       {isFixed ? <div style={{ height: headerHeight }} aria-hidden /> : null}
@@ -133,7 +177,7 @@ export function SiteHeader() {
           "bg-black transition-transform duration-200 ease-out will-change-transform",
           isFixed
             ? "fixed inset-x-0 top-0 z-50"
-            : menuOpen
+            : menuOpen || authMenuOpen
               ? "relative z-50"
               : "relative",
           isFixed && isHidden ? "-translate-y-full" : "translate-y-0",
@@ -148,10 +192,10 @@ export function SiteHeader() {
           />
         ) : null}
         <div className="relative z-50 mx-auto w-full max-w-[85%] px-4 py-2.5 sm:px-6 lg:px-8">
-          <div className="flex min-h-[4.25rem] w-full items-center justify-between gap-4 sm:min-h-[5.25rem] sm:gap-6 lg:min-h-[5.75rem]">
+          <div className="flex min-h-17 w-full items-center justify-between gap-4 sm:min-h-21 sm:gap-6 lg:min-h-23">
             <Link
               href="/"
-              className="relative flex min-w-0 shrink-0 items-center outline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/80"
+              className="relative flex min-w-0 shrink-0 items-center outline-offset-4 focus-visible:outline-2 focus-visible:outline-white/80"
               onClick={() => setMenuOpen(false)}
             >
               <Image
@@ -163,11 +207,12 @@ export function SiteHeader() {
               />
             </Link>
 
+            {/* Desktop nav */}
             <nav
               aria-label="Main"
               className="hidden items-center justify-end gap-x-8 md:flex"
             >
-              {navItems.map((item) => {
+              {mainNavItems.map((item) => {
                 const active = isNavActive(pathname, item.href);
                 return (
                   <Link
@@ -175,20 +220,116 @@ export function SiteHeader() {
                     href={item.href}
                     aria-current={active ? "page" : undefined}
                     className={`text-[15px] font-bold tracking-tight transition-colors ${
-                      active
-                        ? "text-coral"
-                        : "text-white/95 hover:text-white"
+                      active ? "text-coral" : "text-white/95 hover:text-white"
                     }`}
                   >
                     {item.label}
                   </Link>
                 );
               })}
+
+              {/* Desktop auth */}
+              {loading ? (
+                <div className="w-24" aria-hidden />
+              ) : user ? (
+                <div ref={authMenuRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setAuthMenuOpen((o) => !o)}
+                    aria-expanded={authMenuOpen}
+                    aria-haspopup="menu"
+                    className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+                  >
+                    {user.photoURL ? (
+                      <Image
+                        src={user.photoURL}
+                        alt={user.displayName ?? "Profile"}
+                        width={36}
+                        height={36}
+                        className="h-9 w-9 rounded-full object-cover ring-2 ring-white/20"
+                      />
+                    ) : (
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-coral text-sm font-bold text-white">
+                        {(user.displayName ?? user.email ?? "U").charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                    <IconChevronDown
+                      className={`h-4 w-4 text-white/70 transition-transform duration-200 ${authMenuOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {authMenuOpen && (
+                    <div
+                      role="menu"
+                      className="absolute right-0 top-full z-50 mt-2 w-60 overflow-hidden rounded-lg border border-white/10 bg-zinc-900 shadow-[0_16px_48px_rgba(0,0,0,0.5)]"
+                    >
+                      <div className="border-b border-white/10 px-4 py-3">
+                        <p className="truncate text-sm font-semibold text-white">
+                          {user.displayName ?? "User"}
+                        </p>
+                        {user.email && (
+                          <p className="mt-0.5 truncate text-xs text-white/60">
+                            {user.email}
+                          </p>
+                        )}
+                      </div>
+                      <Link
+                        href="/user-portal"
+                        onClick={() => setAuthMenuOpen(false)}
+                        role="menuitem"
+                        className="block px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-white/[0.06]"
+                      >
+                        Go to User Portal
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setAuthMenuOpen(false);
+                          await handleSignOut();
+                        }}
+                        role="menuitem"
+                        className="block w-full border-t border-white/10 px-4 py-3 text-left text-sm font-medium text-white transition-colors hover:bg-white/[0.06]"
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    aria-current={
+                      isNavActive(pathname, "/login") ? "page" : undefined
+                    }
+                    className={`text-[15px] font-bold tracking-tight transition-colors ${
+                      isNavActive(pathname, "/login")
+                        ? "text-coral"
+                        : "text-white/95 hover:text-white"
+                    }`}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/signup"
+                    aria-current={
+                      isNavActive(pathname, "/signup") ? "page" : undefined
+                    }
+                    className={`text-[15px] font-bold tracking-tight transition-colors ${
+                      isNavActive(pathname, "/signup")
+                        ? "text-coral"
+                        : "text-white/95 hover:text-white"
+                    }`}
+                  >
+                    Sign up
+                  </Link>
+                </>
+              )}
             </nav>
 
             <button
               type="button"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/[0.06] text-white transition-colors hover:bg-white/[0.1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral md:hidden"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/6 text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral md:hidden"
               aria-expanded={menuOpen}
               aria-controls="site-header-mobile-nav"
               aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -198,6 +339,7 @@ export function SiteHeader() {
             </button>
           </div>
 
+          {/* Mobile nav */}
           <div
             id="site-header-mobile-nav"
             className={[
@@ -210,7 +352,7 @@ export function SiteHeader() {
             {...(!menuOpen ? { inert: true } : {})}
           >
             <nav aria-label="Main" className="flex flex-col px-4 py-4 sm:px-6">
-              {navItems.map((item) => {
+              {mainNavItems.map((item) => {
                 const active = isNavActive(pathname, item.href);
                 return (
                   <Link
@@ -220,7 +362,7 @@ export function SiteHeader() {
                     className={`border-b border-white/10 py-3.5 text-base font-bold tracking-tight transition-colors last:border-b-0 ${
                       active
                         ? "text-coral"
-                        : "text-white/95 active:bg-white/[0.04]"
+                        : "text-white/95 active:bg-white/4"
                     }`}
                     onClick={() => setMenuOpen(false)}
                   >
@@ -228,6 +370,78 @@ export function SiteHeader() {
                   </Link>
                 );
               })}
+
+              {/* Mobile auth */}
+              {!loading && user ? (
+                <>
+                  <div className="flex items-center gap-3 border-b border-white/10 py-3.5">
+                    {user.photoURL ? (
+                      <Image
+                        src={user.photoURL}
+                        alt={user.displayName ?? "Profile"}
+                        width={28}
+                        height={28}
+                        className="h-7 w-7 rounded-full object-cover ring-2 ring-white/20"
+                      />
+                    ) : (
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-coral text-xs font-bold text-white">
+                        {(user.displayName ?? user.email ?? "U").charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                    <span className="truncate text-sm font-medium text-white/70">
+                      {user.displayName ?? user.email}
+                    </span>
+                  </div>
+                  <Link
+                    href="/user-portal"
+                    onClick={() => setMenuOpen(false)}
+                    className="border-b border-white/10 py-3.5 text-base font-bold tracking-tight text-white/95 transition-colors hover:text-coral active:bg-white/4"
+                  >
+                    Go to User Portal
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setMenuOpen(false);
+                      await handleSignOut();
+                    }}
+                    className="py-3.5 text-left text-base font-bold tracking-tight text-white/95 transition-colors hover:text-coral"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : !loading ? (
+                <>
+                  <Link
+                    href="/login"
+                    aria-current={
+                      isNavActive(pathname, "/login") ? "page" : undefined
+                    }
+                    className={`border-b border-white/10 py-3.5 text-base font-bold tracking-tight transition-colors ${
+                      isNavActive(pathname, "/login")
+                        ? "text-coral"
+                        : "text-white/95 active:bg-white/4"
+                    }`}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/signup"
+                    aria-current={
+                      isNavActive(pathname, "/signup") ? "page" : undefined
+                    }
+                    className={`py-3.5 text-base font-bold tracking-tight transition-colors ${
+                      isNavActive(pathname, "/signup")
+                        ? "text-coral"
+                        : "text-white/95 active:bg-white/4"
+                    }`}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Sign up
+                  </Link>
+                </>
+              ) : null}
             </nav>
           </div>
         </div>
