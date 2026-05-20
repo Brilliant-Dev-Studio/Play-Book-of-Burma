@@ -4,9 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import logo from "@/app/assets/logo.png";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { useAuth } from "@/lib/hooks/useAuth";
-import { signOut } from "@/lib/auth";
+import { useEffect, useRef, useState } from "react";
+import { useCurrentUser, clearCurrentUserCache } from "@/lib/hooks/useCurrentUser";
+import { logout } from "@/lib/auth";
 
 const mainNavItems = [
   { href: "/", label: "Home" },
@@ -63,58 +63,10 @@ function MenuToggleIcon({ open }: { open: boolean }) {
 export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, loading } = useAuth();
-  const headerRef = useRef<HTMLElement>(null);
-  const [headerHeight, setHeaderHeight] = useState(0);
-  const [isFixed, setIsFixed] = useState(false);
-  const [isHidden, setIsHidden] = useState(false);
+  const { user, loading } = useCurrentUser();
   const [menuOpen, setMenuOpen] = useState(false);
   const [authMenuOpen, setAuthMenuOpen] = useState(false);
   const authMenuRef = useRef<HTMLDivElement>(null);
-
-  useLayoutEffect(() => {
-    const el = headerRef.current;
-    if (!el) return;
-
-    const update = () => setHeaderHeight(el.getBoundingClientRect().height);
-    update();
-
-    const ro = new ResizeObserver(() => update());
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  useEffect(() => {
-    let lastY = window.scrollY;
-    let ticking = false;
-
-    const onScroll = () => {
-      const y = window.scrollY;
-      const scrolledPast = y > 50;
-
-      if (!ticking) {
-        ticking = true;
-        window.requestAnimationFrame(() => {
-          setIsFixed(scrolledPast);
-
-          if (!scrolledPast) {
-            setIsHidden(false);
-          } else {
-            const goingDown = y > lastY;
-            setIsHidden(goingDown);
-            setAuthMenuOpen(false);
-          }
-
-          lastY = y;
-          ticking = false;
-        });
-      }
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -140,10 +92,6 @@ export function SiteHeader() {
   }, [authMenuOpen]);
 
   useEffect(() => {
-    if (isHidden) setMenuOpen(false);
-  }, [isHidden]);
-
-  useEffect(() => {
     if (!menuOpen) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setMenuOpen(false);
@@ -164,24 +112,16 @@ export function SiteHeader() {
   }, [menuOpen]);
 
   async function handleSignOut() {
-    await signOut();
+    await logout();
+    clearCurrentUserCache();
     router.push("/");
+    router.refresh();
   }
 
   return (
     <>
-      {isFixed ? <div style={{ height: headerHeight }} aria-hidden /> : null}
       <header
-        ref={headerRef}
-        className={[
-          "bg-black transition-transform duration-200 ease-out will-change-transform",
-          isFixed
-            ? "fixed inset-x-0 top-0 z-50"
-            : menuOpen || authMenuOpen
-              ? "relative z-50"
-              : "relative",
-          isFixed && isHidden ? "-translate-y-full" : "translate-y-0",
-        ].join(" ")}
+        className="sticky inset-x-0 top-0 z-50 bg-black"
       >
         {menuOpen ? (
           <button
@@ -240,9 +180,10 @@ export function SiteHeader() {
                     aria-haspopup="menu"
                     className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                   >
-                    {user.photoURL ? (
-                      <Image
-                        src={user.photoURL}
+                    {user.photoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={user.photoUrl}
                         alt={user.displayName ?? "Profile"}
                         width={36}
                         height={36}
@@ -281,6 +222,24 @@ export function SiteHeader() {
                       >
                         Go to User Portal
                       </Link>
+                      <Link
+                        href="/user-portal/settings"
+                        onClick={() => setAuthMenuOpen(false)}
+                        role="menuitem"
+                        className="block border-t border-white/10 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-white/[0.06]"
+                      >
+                        Settings
+                      </Link>
+                      {user.role === "ADMIN" && (
+                        <Link
+                          href="/admin"
+                          onClick={() => setAuthMenuOpen(false)}
+                          role="menuitem"
+                          className="block border-t border-white/10 px-4 py-3 text-sm font-medium text-coral transition-colors hover:bg-white/[0.06]"
+                        >
+                          Admin Dashboard
+                        </Link>
+                      )}
                       <button
                         type="button"
                         onClick={async () => {
@@ -296,34 +255,19 @@ export function SiteHeader() {
                   )}
                 </div>
               ) : (
-                <>
-                  <Link
-                    href="/login"
-                    aria-current={
-                      isNavActive(pathname, "/login") ? "page" : undefined
-                    }
-                    className={`text-[15px] font-bold tracking-tight transition-colors ${
-                      isNavActive(pathname, "/login")
-                        ? "text-coral"
-                        : "text-white/95 hover:text-white"
-                    }`}
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    href="/signup"
-                    aria-current={
-                      isNavActive(pathname, "/signup") ? "page" : undefined
-                    }
-                    className={`text-[15px] font-bold tracking-tight transition-colors ${
-                      isNavActive(pathname, "/signup")
-                        ? "text-coral"
-                        : "text-white/95 hover:text-white"
-                    }`}
-                  >
-                    Sign up
-                  </Link>
-                </>
+                <Link
+                  href="/login"
+                  aria-current={
+                    isNavActive(pathname, "/login") ? "page" : undefined
+                  }
+                  className={`text-[15px] font-bold tracking-tight transition-colors ${
+                    isNavActive(pathname, "/login")
+                      ? "text-coral"
+                      : "text-white/95 hover:text-white"
+                  }`}
+                >
+                  Login
+                </Link>
               )}
             </nav>
 
@@ -375,9 +319,10 @@ export function SiteHeader() {
               {!loading && user ? (
                 <>
                   <div className="flex items-center gap-3 border-b border-white/10 py-3.5">
-                    {user.photoURL ? (
-                      <Image
-                        src={user.photoURL}
+                    {user.photoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={user.photoUrl}
                         alt={user.displayName ?? "Profile"}
                         width={28}
                         height={28}
@@ -411,36 +356,20 @@ export function SiteHeader() {
                   </button>
                 </>
               ) : !loading ? (
-                <>
-                  <Link
-                    href="/login"
-                    aria-current={
-                      isNavActive(pathname, "/login") ? "page" : undefined
-                    }
-                    className={`border-b border-white/10 py-3.5 text-base font-bold tracking-tight transition-colors ${
-                      isNavActive(pathname, "/login")
-                        ? "text-coral"
-                        : "text-white/95 active:bg-white/4"
-                    }`}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    href="/signup"
-                    aria-current={
-                      isNavActive(pathname, "/signup") ? "page" : undefined
-                    }
-                    className={`py-3.5 text-base font-bold tracking-tight transition-colors ${
-                      isNavActive(pathname, "/signup")
-                        ? "text-coral"
-                        : "text-white/95 active:bg-white/4"
-                    }`}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Sign up
-                  </Link>
-                </>
+                <Link
+                  href="/login"
+                  aria-current={
+                    isNavActive(pathname, "/login") ? "page" : undefined
+                  }
+                  className={`py-3.5 text-base font-bold tracking-tight transition-colors ${
+                    isNavActive(pathname, "/login")
+                      ? "text-coral"
+                      : "text-white/95 active:bg-white/4"
+                  }`}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Login
+                </Link>
               ) : null}
             </nav>
           </div>

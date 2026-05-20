@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendResetCodeEmail } from "@/lib/server/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,11 +26,7 @@ export async function POST(req: NextRequest) {
       data: { resetCode: code, resetCodeExpiry: expiry, resetVerified: false },
     });
 
-    console.log(`\n[RESET OTP MOCK] ─────────────────────`);
-    console.log(`  Email : ${email}`);
-    console.log(`  Code  : ${code}`);
-    console.log(`  Expiry: ${expiry.toISOString()}`);
-    console.log(`──────────────────────────────────────\n`);
+    await sendResetCodeEmail(email, code, expiry);
 
     return NextResponse.json({ ok: true, uid: user.id });
   } catch (err) {

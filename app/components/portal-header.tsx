@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import logo from "@/app/assets/logo.png";
-import { useAuth } from "@/lib/hooks/useAuth";
-import { signOut } from "@/lib/auth";
+import { useCurrentUser, clearCurrentUserCache } from "@/lib/hooks/useCurrentUser";
+import { logout } from "@/lib/auth";
 
 function IconLightBulb({ className }: { className?: string }) {
   return (
@@ -71,7 +71,7 @@ const portalNavItems = [
 
 export function PortalHeader() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading } = useCurrentUser();
   const [menuOpen, setMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -95,8 +95,10 @@ export function PortalHeader() {
 
   async function handleSignOut() {
     setMenuOpen(false);
-    await signOut();
+    await logout();
+    clearCurrentUserCache();
     router.push("/");
+    router.refresh();
   }
 
   const displayName = user?.displayName ?? user?.email?.split("@")[0] ?? "User";
@@ -148,9 +150,10 @@ export function PortalHeader() {
                 <span className="hidden truncate text-[15px] font-semibold tracking-tight text-white sm:block">
                   {displayName}
                 </span>
-                {user?.photoURL ? (
-                  <Image
-                    src={user.photoURL}
+                {user?.photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={user.photoUrl}
                     alt=""
                     width={40}
                     height={40}
@@ -201,11 +204,29 @@ export function PortalHeader() {
                     })}
                   </div>
 
+                  <Link
+                    href="/user-portal/settings"
+                    onClick={() => setMenuOpen(false)}
+                    role="menuitem"
+                    className="block px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-white/[0.06]"
+                  >
+                    Settings
+                  </Link>
+                  {user?.role === "ADMIN" && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setMenuOpen(false)}
+                      role="menuitem"
+                      className="block border-t border-white/10 px-4 py-3 text-sm font-medium text-coral transition-colors hover:bg-white/[0.06]"
+                    >
+                      Admin Dashboard
+                    </Link>
+                  )}
                   <button
                     type="button"
                     onClick={handleSignOut}
                     role="menuitem"
-                    className="block w-full px-4 py-3 text-left text-sm font-medium text-white transition-colors hover:bg-white/[0.06]"
+                    className="block w-full border-t border-white/10 px-4 py-3 text-left text-sm font-medium text-white transition-colors hover:bg-white/[0.06]"
                   >
                     Sign Out
                   </button>

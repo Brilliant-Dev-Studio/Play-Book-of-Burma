@@ -6,20 +6,26 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
-  id               String      @id
-  email            String      @unique
-  displayName      String?
-  photoUrl         String?
-  emailVerified    Boolean     @default(false)
-  verifyCode       String?
-  verifyCodeExpiry DateTime?
-  resetCode        String?
-  resetCodeExpiry  DateTime?
-  resetVerified    Boolean     @default(false)
-  membership       Membership?
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  id                 String      @id @default(cuid())
+  email              String      @unique
+  displayName        String?
+  photoUrl           String?
+  passwordHash       String
+  emailVerified      Boolean     @default(false)
+  role               Role        @default(USER)
+  mustChangePassword Boolean     @default(false)
+  resetCode          String?
+  resetCodeExpiry    DateTime?
+  resetVerified      Boolean     @default(false)
+  membership         Membership?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 }
 
 model Membership {

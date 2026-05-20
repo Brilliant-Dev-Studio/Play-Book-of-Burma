@@ -1,6 +1,4 @@
 import type { ReactNode } from "react";
-import Image from "next/image";
-import googleGLogo from "@/app/assets/Google__G__logo.svg.webp";
 import {
   membershipFormFieldClass,
   membershipFormFieldErrorClass,
@@ -58,38 +56,5 @@ export function AuthFieldLabel({
 export const authInputClass = membershipFormFieldClass;
 export const authInputErrorClass = membershipFormFieldErrorClass;
 
-/** Primary CTA — matches membership payment submit */
 export const authPrimaryButtonClass =
   "w-full rounded-xl bg-coral py-3 text-sm font-bold tracking-wide text-white shadow-[0_8px_28px_rgba(236,113,71,0.35)] transition-[transform,box-shadow,opacity] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(236,113,71,0.42)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral motion-reduce:hover:translate-y-0";
-
-export function AuthOrDivider() {
-  return (
-    <div className="relative my-5">
-      <div className="absolute inset-0 flex items-center" aria-hidden>
-        <span className="h-px w-full bg-gradient-to-r from-transparent via-white/18 to-transparent" />
-      </div>
-      <div className="relative flex justify-center text-[11px] font-semibold uppercase tracking-[0.14em] text-white/40">
-        <span className="bg-gradient-to-b from-zinc-900/95 to-zinc-950 px-4 py-0.5">Or</span>
-      </div>
-    </div>
-  );
-}
-
-export function AuthGoogleButton({ label }: { label: string }) {
-  return (
-    <button
-      type="button"
-      className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-white/[0.12] bg-zinc-950/55 px-4 py-3 text-base font-medium leading-snug text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-[border-color,box-shadow,background-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-white/[0.2] hover:bg-zinc-950/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral/50"
-    >
-      <Image
-        src={googleGLogo}
-        alt=""
-        width={20}
-        height={20}
-        className="h-5 w-5 shrink-0 object-contain"
-        aria-hidden
-      />
-      {label}
-    </button>
-  );
-}

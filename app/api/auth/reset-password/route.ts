@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { hashPassword } from "@/lib/server/password";
 
 export async function POST(req: NextRequest) {
   try {
     const { uid, password } = await req.json();
-    if (!uid || !password) {
-      return NextResponse.json({ error: "uid and password are required." }, { status: 400 });
+    if (!uid || typeof password !== "string" || password.length < 8) {
+      return NextResponse.json(
+        { error: "uid and a password of at least 8 characters are required." },
+        { status: 400 },
+      );
     }
 
     const user = await prisma.user.findUnique({ where: { id: uid } });
@@ -16,15 +20,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // TODO: use Firebase Admin SDK to update password
-    // await adminAuth.updateUser(uid, { password });
-
+    const passwordHash = await hashPassword(password);
     await prisma.user.update({
       where: { id: uid },
-      data: { resetVerified: false },
+      data: {
+        passwordHash,
+        resetCode: null,
+        resetCodeExpiry: null,
+        resetVerified: false,
+      },
     });
-
-    console.log(`[RESET MOCK] Password reset for uid: ${uid}`);
 
     return NextResponse.json({ ok: true });
   } catch (err) {

@@ -6,6 +6,9 @@ import { PortalHeader } from "@/app/components/portal-header";
 
 export function HeaderSwitch() {
   const pathname = usePathname();
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
   if (pathname?.startsWith("/user-portal")) {
     return <PortalHeader />;
   }

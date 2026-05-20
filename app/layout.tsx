@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Cinzel, Geist, Geist_Mono } from "next/font/google";
 import { HeaderSwitch } from "@/app/components/header-switch";
-import { SiteFooter } from "@/app/components/site-footer";
-import { Providers } from "@/app/providers";
+import { FooterSwitch } from "@/app/components/footer-switch";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -37,11 +36,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${romanWoodSlideTitle.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
-        <Providers>
-          <HeaderSwitch />
-          <div className="flex min-h-0 flex-1 flex-col">{children}</div>
-          <SiteFooter />
-        </Providers>
+        <HeaderSwitch />
+        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+        <FooterSwitch />
       </body>
     </html>
   );

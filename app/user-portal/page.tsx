@@ -2,7 +2,6 @@
 
 import Image, { type StaticImageData } from "next/image";
 import { useCallback, useRef, useState } from "react";
-import { useAuth } from "@/lib/hooks/useAuth";
 import { UserPortalSidebar } from "@/app/components/user-portal-sidebar";
 import courseThumb from "@/app/assets/benefits/Ray Dalio - 1.png";
 import { UserPortalPodcastSection } from "@/app/components/user-portal-podcast-section";
@@ -78,7 +77,6 @@ const CONTINUE_WATCHING: ContinuesWatchingItem[] = Array.from({ length: 6 }, () 
 }));
 
 export default function UserPortalPage() {
-  useAuth();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isOpen, setIsOpen] = useState(true);
 

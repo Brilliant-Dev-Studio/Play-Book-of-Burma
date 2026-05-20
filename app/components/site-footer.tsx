@@ -1,6 +1,6 @@
 "use client";
 
-import Image, { type StaticImageData } from "next/image";
+import { type StaticImageData } from "next/image";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -12,7 +12,6 @@ import {
   Play,
   Users,
 } from "lucide-react";
-import logo from "@/app/assets/logo.png";
 import appStoreBadge from "@/app/assets/download-on-the-app-store-apple-logo-svgrepo-com.png";
 import googlePlayBadge from "@/app/assets/google-play-badge-logo-svgrepo-com.png";
 
@@ -62,32 +61,6 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-white/15 bg-black pb-10 pt-8 sm:pb-14 sm:pt-10">
       <div className="mx-auto w-full max-w-[85%] px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-col items-start justify-between gap-6 sm:mb-10 sm:flex-row sm:items-start sm:gap-8">
-          <Link href="/" className="inline-flex items-center gap-3">
-            <Image
-              src={logo}
-              alt="Story of Burma"
-              className="h-10 w-auto"
-              sizes="160px"
-            />
-          </Link>
-
-          <nav className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm font-medium text-white/85 sm:justify-end sm:gap-x-10">
-            <Link href="/" className="hover:text-white">
-              Home
-            </Link>
-            <Link href="/membership" className="hover:text-white">
-              Membership
-            </Link>
-            <Link href="/library" className="hover:text-white">
-              Library
-            </Link>
-            <Link href="/login" className="hover:text-white">
-              Login
-            </Link>
-          </nav>
-        </div>
-
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
           <section>
             <h3 className="text-left text-lg font-semibold tracking-tight text-white sm:text-xl">
