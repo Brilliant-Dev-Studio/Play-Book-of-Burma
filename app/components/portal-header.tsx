@@ -2,8 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+
+function isNavActive(pathname: string | null, href: string) {
+  if (!pathname) return false;
+  if (href === "/user-portal") return pathname === "/user-portal";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 import logo from "@/app/assets/logo.png";
 import { useCurrentUser, clearCurrentUserCache } from "@/lib/hooks/useCurrentUser";
 import { logout } from "@/lib/auth";
@@ -66,11 +72,12 @@ function IconChevron({ className }: { className?: string }) {
 
 const portalNavItems = [
   { href: "/user-portal/progress", label: "My Progress", icon: IconLightBulb },
-  { href: "/library", label: "Library", icon: IconBook },
+  { href: "/user-portal/library", label: "Library", icon: IconBook },
 ] as const;
 
 export function PortalHeader() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user: liveUser, loading: liveLoading } = useCurrentUser();
   const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -135,16 +142,26 @@ export function PortalHeader() {
           <div className="flex items-center gap-5 sm:gap-7 md:gap-9">
             {portalNavItems.map((item) => {
               const Icon = item.icon;
+              const active = isNavActive(pathname, item.href);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="hidden items-center gap-2 text-white/95 transition-colors hover:text-white sm:flex"
+                  aria-current={active ? "page" : undefined}
+                  className={`relative hidden items-center gap-2 transition-colors sm:flex ${
+                    active ? "text-coral" : "text-white/95 hover:text-white"
+                  }`}
                 >
                   <Icon className="h-5 w-5 text-coral" />
                   <span className="text-[15px] font-bold tracking-tight">
                     {item.label}
                   </span>
+                  {active && (
+                    <span
+                      className="absolute -bottom-2 left-0 right-0 h-0.5 rounded-full bg-coral"
+                      aria-hidden
+                    />
+                  )}
                 </Link>
               );
             })}
@@ -200,13 +217,17 @@ export function PortalHeader() {
                   <div className="border-b border-white/10 sm:hidden">
                     {portalNavItems.map((item) => {
                       const Icon = item.icon;
+                      const active = isNavActive(pathname, item.href);
                       return (
                         <Link
                           key={item.href}
                           href={item.href}
                           onClick={() => setMenuOpen(false)}
                           role="menuitem"
-                          className="flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-white/[0.06]"
+                          aria-current={active ? "page" : undefined}
+                          className={`flex items-center gap-2.5 px-4 py-3 text-sm font-medium transition-colors hover:bg-white/[0.06] ${
+                            active ? "border-l-2 border-coral bg-coral/10 text-coral" : "text-white"
+                          }`}
                         >
                           <Icon className="h-4 w-4 text-coral" />
                           {item.label}

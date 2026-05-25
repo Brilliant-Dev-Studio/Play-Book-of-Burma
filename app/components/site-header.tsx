@@ -159,11 +159,17 @@ export function SiteHeader() {
                     key={item.href}
                     href={item.href}
                     aria-current={active ? "page" : undefined}
-                    className={`text-[15px] font-bold tracking-tight transition-colors ${
+                    className={`relative text-[15px] font-bold tracking-tight transition-colors ${
                       active ? "text-coral" : "text-white/95 hover:text-white"
                     }`}
                   >
                     {item.label}
+                    {active && (
+                      <span
+                        className="absolute -bottom-2 left-0 right-0 h-0.5 rounded-full bg-coral"
+                        aria-hidden
+                      />
+                    )}
                   </Link>
                 );
               })}
