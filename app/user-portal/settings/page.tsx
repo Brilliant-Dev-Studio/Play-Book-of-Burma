@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+type Gender = "MALE" | "FEMALE" | "OTHER";
+type Region = "YANGON" | "MANDALAY" | "THAILAND" | "OTHER";
+
 type Me = {
   id: string;
   email: string;
@@ -10,6 +13,9 @@ type Me = {
   photoUrl: string | null;
   role: "USER" | "ADMIN";
   mustChangePassword: boolean;
+  gender: Gender | null;
+  birthYear: number | null;
+  region: Region | null;
 };
 
 export default function SettingsPage() {
@@ -17,6 +23,9 @@ export default function SettingsPage() {
   const [me, setMe] = useState<Me | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
+  const [gender, setGender] = useState<"" | Gender>("");
+  const [birthYear, setBirthYear] = useState<string>("");
+  const [region, setRegion] = useState<"" | Region>("");
   const [profileMsg, setProfileMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const [profilePending, setProfilePending] = useState(false);
 
@@ -38,6 +47,9 @@ export default function SettingsPage() {
       setMe(u);
       setDisplayName(u.displayName ?? "");
       setPhotoUrl(u.photoUrl ?? "");
+      setGender(u.gender ?? "");
+      setBirthYear(u.birthYear ? String(u.birthYear) : "");
+      setRegion(u.region ?? "");
     })();
   }, [router]);
 
@@ -46,12 +58,17 @@ export default function SettingsPage() {
     setProfilePending(true);
     setProfileMsg(null);
     try {
+      const yr = birthYear.trim();
+      const yrNum = yr ? Number(yr) : null;
       const res = await fetch("/api/user/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           displayName: displayName.trim() || null,
           photoUrl: photoUrl.trim() || null,
+          gender: gender || null,
+          birthYear: yrNum,
+          region: region || null,
         }),
       });
       const data = await res.json();
@@ -140,6 +157,53 @@ export default function SettingsPage() {
           <p className="mt-1 text-xs text-white/50">
             Paste a public image URL. File upload will be available later.
           </p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div>
+            <label className="block text-sm font-medium text-white/80">
+              Gender <span className="text-white/40">(optional)</span>
+            </label>
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value as "" | Gender)}
+              className={inputClass}
+            >
+              <option value="">Prefer not to say</option>
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-white/80">
+              Birth year <span className="text-white/40">(optional)</span>
+            </label>
+            <input
+              type="number"
+              min={1900}
+              max={new Date().getFullYear()}
+              placeholder="e.g. 1995"
+              value={birthYear}
+              onChange={(e) => setBirthYear(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-white/80">
+              Region <span className="text-white/40">(optional)</span>
+            </label>
+            <select
+              value={region}
+              onChange={(e) => setRegion(e.target.value as "" | Region)}
+              className={inputClass}
+            >
+              <option value="">—</option>
+              <option value="YANGON">Yangon</option>
+              <option value="MANDALAY">Mandalay</option>
+              <option value="THAILAND">Thailand</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
         </div>
         {profileMsg && (
           <p

@@ -13,21 +13,18 @@ import {
   LabelList,
 } from "recharts";
 
-const DATA = [
-  { month: "Jan", total: 12, sixMonths: 10, twelveMonths: 4 },
-  { month: "Feb", total: 16, sixMonths: 14, twelveMonths: 6 },
-  { month: "March", total: 18, sixMonths: 16, twelveMonths: 5 },
-  { month: "April", total: 21, sixMonths: 18, twelveMonths: 7 },
-  { month: "May", total: 29, sixMonths: 24, twelveMonths: 8 },
-  { month: "June", total: 38, sixMonths: 30, twelveMonths: 14 },
-  { month: "July", total: 56, sixMonths: 36, twelveMonths: 22 },
-];
+export type ChartPoint = {
+  month: string;
+  total: number;
+  sixMonths: number;
+  twelveMonths: number;
+};
 
 const CORAL = "#ec7147";
 const BUTTER = "#fecf73";
 const MIST = "#ccd3d8";
 
-export function SubscribersOverviewChart() {
+export function SubscribersOverviewChart({ data }: { data: ChartPoint[] }) {
   return (
     <section className="mb-10">
       <h2 className="mb-4 text-2xl font-bold tracking-tight text-white">
@@ -37,7 +34,7 @@ export function SubscribersOverviewChart() {
         <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
-              data={DATA}
+              data={data}
               margin={{ top: 24, right: 16, left: 0, bottom: 8 }}
             >
               <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />

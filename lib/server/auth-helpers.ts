@@ -39,6 +39,9 @@ export async function getCurrentUser() {
       photoUrl: true,
       role: true,
       mustChangePassword: true,
+      gender: true,
+      birthYear: true,
+      region: true,
     },
   });
   return user;

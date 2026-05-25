@@ -14,8 +14,11 @@ type AdminUser = {
 function titleForPath(pathname: string | null): string {
   if (!pathname) return "Admin";
   if (pathname === "/admin") return "Dashboard";
+  if (pathname.startsWith("/admin/admins")) return "Admins";
   if (pathname.startsWith("/admin/users")) return "Users";
   if (pathname.startsWith("/admin/submissions")) return "Submissions";
+  if (pathname.startsWith("/admin/instructors")) return "Instructors";
+  if (pathname.startsWith("/admin/videos")) return "Videos";
   if (pathname.startsWith("/admin/subscribers")) return "Subscribers";
   if (pathname.startsWith("/admin/retention")) return "Retention";
   return "Admin";

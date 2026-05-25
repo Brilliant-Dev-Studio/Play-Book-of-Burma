@@ -1,12 +1,7 @@
 import Image from "next/image";
 import kbzPayLogo from "@/app/assets/kbzpay.png";
 import wavePayLogo from "@/app/assets/wavepay.png";
-import {
-  membershipFormFieldClass,
-  membershipFormFieldLabelClass,
-  membershipFormFileClass,
-  membershipFormTextareaClass,
-} from "@/app/components/membership-form-field-styles";
+import { MembershipSubmissionForm } from "@/app/components/membership-submission-form";
 
 function HowPayStepCard({
   step,
@@ -344,79 +339,7 @@ export default function MembershipPage() {
               title="Fill in the following information"
               emphasized
             >
-              <form className="flex flex-col gap-5" action="#" method="post">
-                <div>
-                  <label className={membershipFormFieldLabelClass} htmlFor="pay-name">
-                    Name
-                  </label>
-                  <input
-                    id="pay-name"
-                    name="name"
-                    type="text"
-                    placeholder="Your full name"
-                    autoComplete="name"
-                    className={membershipFormFieldClass}
-                  />
-                </div>
-                <div>
-                  <label className={membershipFormFieldLabelClass} htmlFor="pay-email">
-                    Email
-                  </label>
-                  <input
-                    id="pay-email"
-                    name="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    autoComplete="email"
-                    className={membershipFormFieldClass}
-                  />
-                </div>
-                <div>
-                  <label className={membershipFormFieldLabelClass} htmlFor="pay-phone">
-                    Phone
-                  </label>
-                  <input
-                    id="pay-phone"
-                    name="phone"
-                    type="tel"
-                    placeholder="09xxxxxxxx"
-                    autoComplete="tel"
-                    className={membershipFormFieldClass}
-                  />
-                </div>
-                <div>
-                  <label className={membershipFormFieldLabelClass} htmlFor="pay-screenshot">
-                    Payment screenshot
-                  </label>
-                  <input
-                    id="pay-screenshot"
-                    name="screenshot"
-                    type="file"
-                    accept="image/*"
-                    className={membershipFormFileClass}
-                  />
-                </div>
-                <div>
-                  <label className={membershipFormFieldLabelClass} htmlFor="pay-note">
-                    Note
-                  </label>
-                  <textarea
-                    id="pay-note"
-                    name="note"
-                    rows={3}
-                    placeholder="Anything we should know?"
-                    className={membershipFormTextareaClass}
-                  />
-                </div>
-                <div className="flex justify-end border-t border-white/[0.08] pt-4">
-                  <button
-                    type="submit"
-                    className="rounded-xl bg-coral px-7 py-3 text-sm font-bold tracking-wide text-white shadow-[0_8px_28px_rgba(236,113,71,0.35)] transition-[transform,box-shadow,opacity] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(236,113,71,0.42)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral motion-reduce:hover:translate-y-0"
-                  >
-                    SUBMIT
-                  </button>
-                </div>
-              </form>
+              <MembershipSubmissionForm />
             </HowPayStepCard>
 
             <HowPayStepCard step={3} title="Approval in Not more than 30 mins">

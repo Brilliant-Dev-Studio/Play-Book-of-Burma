@@ -2,8 +2,11 @@ import { DateRangeFilter } from "@/app/admin/components/date-range-filter";
 import { WatchHrSection } from "@/app/admin/components/watch-hr-section";
 import { DemographicProfile } from "@/app/admin/components/demographic-profile";
 import { WatchHrOverviewChart } from "@/app/admin/components/watch-hr-overview-chart";
+import { getSubscriberDemographics } from "@/lib/server/subscribers-stats";
 
-export default function AdminSubscribersPage() {
+export default async function AdminSubscribersPage() {
+  const demographics = await getSubscriberDemographics();
+
   return (
     <div className="mx-auto w-full max-w-7xl">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
@@ -18,7 +21,7 @@ export default function AdminSubscribersPage() {
 
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-2">
         <WatchHrSection />
-        <DemographicProfile />
+        <DemographicProfile {...demographics} />
       </div>
 
       <WatchHrOverviewChart />

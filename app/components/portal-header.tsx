@@ -71,9 +71,20 @@ const portalNavItems = [
 
 export function PortalHeader() {
   const router = useRouter();
-  const { user, loading } = useCurrentUser();
+  const { user: liveUser, loading: liveLoading } = useCurrentUser();
+  const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Force the SSR-matching state on the very first client render so the
+  // hydrated DOM never diverges, even if the module-level cache in
+  // `useCurrentUser` was already populated by a prior navigation.
+  const user = mounted ? liveUser : null;
+  const loading = mounted ? liveLoading : true;
 
   useEffect(() => {
     if (!menuOpen) return;

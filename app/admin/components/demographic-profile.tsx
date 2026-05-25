@@ -13,19 +13,13 @@ import { StatCard } from "@/app/admin/components/stat-card";
 
 const CORAL = "#ec7147";
 
-const AGE_DATA = [
-  { label: "18-24", pct: 20 },
-  { label: "25-34", pct: 56 },
-  { label: "35-44", pct: 20 },
-  { label: "> 45", pct: 4 },
-];
-
-const REGION_DATA = [
-  { label: "Yangon", pct: 20 },
-  { label: "Mandalay", pct: 56 },
-  { label: "Thailand", pct: 20 },
-  { label: "Others", pct: 4 },
-];
+export type DemographicProfileProps = {
+  totalSubscribers: number;
+  malePct: number;
+  femalePct: number;
+  ageBuckets: { label: string; pct: number }[];
+  regionBuckets: { label: string; pct: number }[];
+};
 
 function HorizontalPctChart({
   data,
@@ -74,21 +68,27 @@ function HorizontalPctChart({
   );
 }
 
-export function DemographicProfile() {
+export function DemographicProfile({
+  totalSubscribers,
+  malePct,
+  femalePct,
+  ageBuckets,
+  regionBuckets,
+}: DemographicProfileProps) {
   return (
     <section>
       <h2 className="mb-4 text-xl font-bold tracking-tight text-white">Demographic Profile</h2>
 
       <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <StatCard label="Total Subscribers" value="10" />
-        <StatCard label="Male (%)" value="40" unit="%" />
-        <StatCard label="Female (%)" value="60" unit="%" />
+        <StatCard label="Total Subscribers" value={String(totalSubscribers)} />
+        <StatCard label="Male (%)" value={String(malePct)} unit="%" />
+        <StatCard label="Female (%)" value={String(femalePct)} unit="%" />
       </div>
 
       <div className="rounded-2xl border border-white/15 bg-black p-5">
         <div className="flex flex-col gap-6 sm:flex-row">
-          <HorizontalPctChart data={AGE_DATA} title="Age" />
-          <HorizontalPctChart data={REGION_DATA} title="Regions" />
+          <HorizontalPctChart data={ageBuckets} title="Age" />
+          <HorizontalPctChart data={regionBuckets} title="Regions" />
         </div>
       </div>
     </section>

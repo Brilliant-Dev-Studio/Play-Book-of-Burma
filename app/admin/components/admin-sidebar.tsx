@@ -53,6 +53,31 @@ function IconInbox({ className }: { className?: string }) {
     </svg>
   );
 }
+function IconUserCircle({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="10" r="3" />
+      <path d="M6.5 18.5a6 6 0 0 1 11 0" />
+    </svg>
+  );
+}
+function IconPlay({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <rect x="3" y="5" width="18" height="14" rx="2.5" />
+      <path d="M10.5 9.5v5l4-2.5-4-2.5Z" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+function IconShield({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
 function IconChevron({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
@@ -64,9 +89,12 @@ function IconChevron({ className }: { className?: string }) {
 const NAV: NavItem[] = [
   { label: "Dashboard", href: "/admin", icon: IconDashboard },
   { label: "Submissions", href: "/admin/submissions", icon: IconInbox },
+  { label: "Instructors", href: "/admin/instructors", icon: IconUserCircle },
+  { label: "Videos", href: "/admin/videos", icon: IconPlay },
   { label: "Subscribers", href: "/admin/subscribers", icon: IconSubs },
   { label: "Retention", href: "/admin/retention", icon: IconHeart },
   { label: "Users", href: "/admin/users", icon: IconUsers },
+  { label: "Admins", href: "/admin/admins", icon: IconShield },
 ];
 
 export function AdminSidebar() {
