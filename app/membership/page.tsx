@@ -3,6 +3,8 @@ import kbzPayLogo from "@/app/assets/kbzpay.png";
 import wavePayLogo from "@/app/assets/wavepay.png";
 import { MembershipSubmissionForm } from "@/app/components/membership-submission-form";
 
+
+
 function HowPayStepCard({
   step,
   title,
