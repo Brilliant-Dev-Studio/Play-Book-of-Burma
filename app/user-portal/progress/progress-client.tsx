@@ -1,8 +1,6 @@
 "use client";
 
-import Image, { type StaticImageData } from "next/image";
 import { useCallback, useRef } from "react";
-import courseThumb from "@/app/assets/benefits/Ray Dalio - 1.png";
 
 export type BookmarkItem = {
   videoId: string;
@@ -26,16 +24,19 @@ export type NoteItemData = {
   preview: string;
 };
 
-type ContinuesWatchingItem = {
-  image: StaticImageData;
-  duration: string;
+export type ContinueWatchingItem = {
+  videoId: string;
+  lessonId: string;
+  thumbnailUrl: string;
+  durationLabel: string;
   progressPct: number;
   author: string;
   subtitle: string;
 };
 
-type PlaybookItem = {
-  image: StaticImageData;
+export type PlaybookAchievedItem = {
+  videoId: string;
+  thumbnailUrl: string;
   titleLine1: string;
   titleLine2: string;
   metaLine1: string;
@@ -43,43 +44,30 @@ type PlaybookItem = {
   duration: string;
 };
 
-const CONTINUE_WATCHING: ContinuesWatchingItem[] = Array.from({ length: 6 }, () => ({
-  image: courseThumb,
-  duration: "16:36",
-  progressPct: 35,
-  author: "Ko Jason Myint",
-  subtitle: "Financial Management | Lesson 2 of 10",
-}));
-
-const PLAYBOOK_ACHIEVED: PlaybookItem[] = Array.from({ length: 6 }, () => ({
-  image: courseThumb,
-  titleLine1: "Learn Finance in 21 Day,",
-  titleLine2: "Become Master at it",
-  metaLine1: "Ko Jason Myint,",
-  metaLine2: "CEO of BYD By Essentials",
-  duration: "1 hour 15 minutes",
-}));
-
 export function ProgressClient({
   bookmarks,
   notes,
+  continueWatching,
+  achieved,
 }: {
   bookmarks: BookmarkItem[];
   notes: NoteItemData[];
+  continueWatching: ContinueWatchingItem[];
+  achieved: PlaybookAchievedItem[];
 }) {
   return (
     <main className="min-h-0 flex-1 bg-black">
       <div className="mx-auto w-full max-w-[85%] px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
-        <ContinuesWatchingSection />
+        <ContinuesWatchingSection items={continueWatching} />
         <YourNotesSection items={notes} />
         <YourBookmarksSection items={bookmarks} />
-        <PlaybookAchievedSection />
+        <PlaybookAchievedSection items={achieved} />
       </div>
     </main>
   );
 }
 
-function ContinuesWatchingSection() {
+function ContinuesWatchingSection({ items }: { items: ContinueWatchingItem[] }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   const scrollByDir = useCallback((dir: -1 | 1) => {
@@ -118,46 +106,55 @@ function ContinuesWatchingSection() {
         </div>
       </div>
 
-      <div
-        ref={scrollerRef}
-        className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        <div className="flex w-max snap-x snap-mandatory gap-4 pl-[calc(7.5vw+1rem)] pr-[calc(7.5vw+1rem)] sm:gap-5 sm:pl-[calc(7.5vw+1.5rem)] sm:pr-[calc(7.5vw+1.5rem)] lg:pl-[calc(7.5vw+2rem)] lg:pr-[calc(7.5vw+2rem)]">
-          {CONTINUE_WATCHING.map((item, i) => (
-            <ContinuesWatchingCard key={i} {...item} />
-          ))}
+      {items.length === 0 ? (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] py-12 text-center text-white/55">
+          Nothing in progress yet — start a lesson to see it here.
         </div>
-      </div>
+      ) : (
+        <div
+          ref={scrollerRef}
+          className="overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          <div className="flex w-max snap-x snap-mandatory gap-4 pr-4 sm:gap-5 sm:pr-6 lg:pr-10">
+            {items.map((item) => (
+              <ContinuesWatchingCard key={item.lessonId} {...item} />
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
 
 function ContinuesWatchingCard({
-  image,
-  duration,
+  videoId,
+  lessonId,
+  thumbnailUrl,
+  durationLabel,
   progressPct,
   author,
   subtitle,
-}: ContinuesWatchingItem) {
+}: ContinueWatchingItem) {
   return (
     <a
-      href="/user-portal/watch"
+      href={`/user-portal/watch?video=${videoId}&lesson=${lessonId}`}
       data-card
       className="group flex w-80 shrink-0 snap-start flex-col outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-95 md:w-105"
     >
-      <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/15 bg-zinc-900">
-        <Image
-          src={image}
-          alt=""
-          fill
-          className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
-          sizes="(max-width: 640px) 260px, 300px"
-        />
-        <span className="absolute bottom-2.5 right-2.5 rounded-md bg-black/75 px-2 py-1 text-xs font-medium text-white">
-          {duration}
-        </span>
-        <div className="absolute inset-x-0 bottom-0 h-1 bg-black/40">
-          <div className="h-full bg-coral" style={{ width: `${progressPct}%` }} />
+      <div className="rounded-2xl border-2 border-white/45 p-[5px] transition-colors group-hover:border-white/65">
+        <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-zinc-900">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={thumbnailUrl}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+          />
+          <span className="absolute bottom-2.5 right-2.5 rounded-md bg-black/75 px-2 py-1 text-xs font-medium text-white">
+            {durationLabel}
+          </span>
+          <div className="absolute inset-x-0 bottom-0 h-1 bg-black/40">
+            <div className="h-full bg-coral" style={{ width: `${progressPct}%` }} />
+          </div>
         </div>
       </div>
       <div className="mt-3">
@@ -214,9 +211,9 @@ function YourBookmarksSection({ items }: { items: BookmarkItem[] }) {
       ) : (
         <div
           ref={scrollerRef}
-          className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          <div className="flex w-max snap-x snap-mandatory gap-4 pl-[calc(7.5vw+1rem)] pr-[calc(7.5vw+1rem)] sm:gap-5 sm:pl-[calc(7.5vw+1.5rem)] sm:pr-[calc(7.5vw+1.5rem)] lg:pl-[calc(7.5vw+2rem)] lg:pr-[calc(7.5vw+2rem)]">
+          <div className="flex w-max snap-x snap-mandatory gap-4 pr-4 sm:gap-5 sm:pr-6 lg:pr-10">
             {items.map((item) => (
               <BookmarkCard key={item.lessonId} {...item} />
             ))}
@@ -319,7 +316,7 @@ function NoteCard({
           className="h-full w-full object-cover"
         />
       </div>
-      <div className="mt-5 flex flex-col items-center text-center sm:mt-6">
+      <div className="mt-5 mb-5 flex flex-col items-center text-center sm:mt-6 sm:mb-6">
         <h3 className="text-sm font-bold tracking-tight text-white sm:text-base">
           {videoTitle}
         </h3>
@@ -334,7 +331,7 @@ function NoteCard({
         </p>
       </div>
       <a
-        href={`/user-portal/watch?video=${videoId}&lesson=${lessonId}`}
+        href={`/user-portal/watch?video=${videoId}&lesson=${lessonId}&tab=notes`}
         className="mt-auto inline-flex items-center justify-center rounded-lg bg-zinc-800 py-2 text-xs font-semibold text-white transition-colors hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral sm:py-2.5 sm:text-sm"
       >
         View Notes
@@ -343,7 +340,7 @@ function NoteCard({
   );
 }
 
-function PlaybookAchievedSection() {
+function PlaybookAchievedSection({ items }: { items: PlaybookAchievedItem[] }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   const scrollByDir = useCallback((dir: -1 | 1) => {
@@ -382,42 +379,48 @@ function PlaybookAchievedSection() {
         </div>
       </div>
 
-      <div
-        ref={scrollerRef}
-        className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        <div className="flex w-max snap-x snap-mandatory gap-4 pl-[calc(7.5vw+1rem)] pr-[calc(7.5vw+1rem)] sm:gap-5 sm:pl-[calc(7.5vw+1.5rem)] sm:pr-[calc(7.5vw+1.5rem)] lg:pl-[calc(7.5vw+2rem)] lg:pr-[calc(7.5vw+2rem)]">
-          {PLAYBOOK_ACHIEVED.map((item, i) => (
-            <PlaybookCard key={i} {...item} />
-          ))}
+      {items.length === 0 ? (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] py-12 text-center text-white/55">
+          You haven&apos;t completed any playbooks yet.
         </div>
-      </div>
+      ) : (
+        <div
+          ref={scrollerRef}
+          className="overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          <div className="flex w-max snap-x snap-mandatory gap-4 pr-4 sm:gap-5 sm:pr-6 lg:pr-10">
+            {items.map((item) => (
+              <PlaybookCard key={item.videoId} {...item} />
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
 
 function PlaybookCard({
-  image,
+  videoId,
+  thumbnailUrl,
   titleLine1,
   titleLine2,
   metaLine1,
   metaLine2,
   duration,
-}: PlaybookItem) {
+}: PlaybookAchievedItem) {
   return (
     <a
-      href="/user-portal/watch"
+      href={`/user-portal/click-video-detail?video=${videoId}`}
       data-card
       className="group flex w-[260px] shrink-0 snap-start flex-col outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[300px] md:w-[320px]"
       aria-label={`${titleLine1} ${titleLine2}`}
     >
       <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl bg-zinc-900 shadow-[0_16px_48px_rgba(0,0,0,0.5)]">
-        <Image
-          src={image}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={thumbnailUrl}
           alt=""
-          fill
-          className="rounded-t-2xl object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06] motion-reduce:group-hover:scale-100"
-          sizes="(max-width: 640px) 260px, (max-width: 1024px) 300px, 320px"
+          className="absolute inset-0 h-full w-full rounded-t-2xl object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06] motion-reduce:group-hover:scale-100"
         />
         <div
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.72)_22%,rgba(0,0,0,0.35)_45%,rgba(0,0,0,0.12)_62%,transparent_78%)]"

@@ -31,6 +31,8 @@ model User {
   membership         Membership?
   bookmarks          Bookmark[]
   notes              Note[]
+  watchProgress      WatchProgress[]
+  playbookAchievements PlaybookAchievement[]
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
 }
@@ -47,6 +49,45 @@ model Bookmark {
   @@index([userId])
 }
 
+model Podcast {
+  id              String   @id @default(cuid())
+  title           String
+  description     String
+  audioKey        String
+  thumbnailKey    String
+  season          Int      @default(1)
+  episodeOrder    Int      @default(0)
+  durationSeconds Int      @default(0)
+  durationLabel   String   @default("")
+  popular         Boolean  @default(false)
+  industryId      String
+  industry        Industry @relation(fields: [industryId], references: [id])
+  publishedAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([season, episodeOrder])
+  @@index([popular])
+  @@index([industryId])
+}
+
+model WatchProgress {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId        String
+  lesson          Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  currentSeconds  Int       @default(0)
+  durationSeconds Int       @default(0)
+  completedAt     DateTime?
+  lastWatchedAt   DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([userId, lessonId])
+  @@index([userId, lastWatchedAt])
+}
+
 model Note {
   id        String   @id @default(cuid())
   userId    String
@@ -59,6 +100,20 @@ model Note {
 
   @@unique([userId, lessonId])
   @@index([userId])
+}
+
+model PlaybookAchievement {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoId     String
+  video       Video     @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  achievedAt  DateTime  @default(now())
+  emailSentAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@unique([userId, videoId])
+  @@index([userId, achievedAt])
 }
 
 enum Gender {
@@ -143,14 +198,27 @@ enum Playbook {
   CEO_PLAYBOOK
 }
 
-enum Industry {
-  RETAILS
-  FMCG
-  TECHNOLOGY
+model Industry {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  order     Int       @default(0)
+  videos    Video[]
+  podcasts  Podcast[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([order])
 }
 
-enum Skillset {
-  BUSINESS_FINANCE_STRATEGY
+model Skillset {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  order     Int      @default(0)
+  videos    Video[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
 }
 
 enum PublishStatus {
@@ -163,8 +231,10 @@ model Video {
   id                  String         @id @default(cuid())
   type                ContentType    @default(VIDEO)
   playbook            Playbook       @default(CEO_PLAYBOOK)
-  industry            Industry
-  skillset            Skillset
+  industryId          String
+  industry            Industry       @relation(fields: [industryId], references: [id])
+  skillsetId          String
+  skillset            Skillset       @relation(fields: [skillsetId], references: [id])
   titleLine1          String
   titleLine2          String?
   description         String
@@ -172,13 +242,14 @@ model Video {
   instructor          Instructor     @relation(fields: [instructorId], references: [id])
   thumbnailKey        String
   trailerKey          String?
-  guidebookUrl        String?
+  guidebookKey        String?
   durationSeconds     Int            @default(0)
   durationLabel       String
   status              PublishStatus  @default(DRAFT)
   publishedAt         DateTime?
   lessons             Lesson[]
   skillsetItems       SkillsetItem[]
+  playbookAchievements PlaybookAchievement[]
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
 }
@@ -206,6 +277,7 @@ model Lesson {
   details         String
   bookmarks       Bookmark[]
   notes           Note[]
+  watchProgress   WatchProgress[]
 }
 
 model SkillsetItem {
@@ -215,5 +287,5 @@ model SkillsetItem {
   order       Int
   title       String
   description String
-  imageUrl    String
+  imageKey    String
 }

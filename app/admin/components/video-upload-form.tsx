@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { S3Uploader } from "@/app/admin/components/s3-uploader";
 import {
@@ -19,7 +19,7 @@ type LessonRow = {
   durationLabel: string;
   details: string;
 };
-type SkillsetRow = { title: string; description: string; imageUrl: string };
+type SkillsetRow = { title: string; description: string; imageKey: string };
 
 export type VideoFormInitial = Partial<VideoFormInput> & {
   id?: string;
@@ -30,21 +30,42 @@ export type VideoFormInitial = Partial<VideoFormInput> & {
 
 export type InstructorOption = { id: string; name: string; title: string };
 
+export type TaxonomyOption = { id: string; name: string };
+
 function emptyLesson(): LessonRow {
   return { title: "", videoKey: "", durationSeconds: 0, durationLabel: "", details: "" };
 }
+
+function formatDuration(totalSeconds: number): string {
+  const sec = Math.round(totalSeconds);
+  if (sec <= 0) return "";
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  const parts: string[] = [];
+  if (h > 0) parts.push(`${h} ${h === 1 ? "hour" : "hours"}`);
+  if (m > 0) parts.push(`${m} ${m === 1 ? "minute" : "minutes"}`);
+  if (h === 0 && (m === 0 || s >= 5) && s > 0) {
+    parts.push(`${s} ${s === 1 ? "second" : "seconds"}`);
+  }
+  return parts.join(" ") || `${sec} seconds`;
+}
 function emptySkillset(): SkillsetRow {
-  return { title: "", description: "", imageUrl: "" };
+  return { title: "", description: "", imageKey: "" };
 }
 
 export function VideoUploadForm({
   mode,
   initial,
   instructors,
+  industries,
+  skillsets,
 }: {
   mode: "create" | "edit";
   initial?: VideoFormInitial;
   instructors: InstructorOption[];
+  industries: TaxonomyOption[];
+  skillsets: TaxonomyOption[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -54,19 +75,14 @@ export function VideoUploadForm({
   const [titleLine2, setTitleLine2] = useState(initial?.titleLine2 ?? "");
   const [instructorId, setInstructorId] = useState(initial?.instructorId ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
-  const [type, setType] = useState<VideoFormInput["type"]>(initial?.type ?? "VIDEO");
-  const [industry, setIndustry] = useState<VideoFormInput["industry"]>(
-    initial?.industry ?? "TECHNOLOGY",
+  // All videos are type=VIDEO now — podcasts have their own admin section.
+  const [industryId, setIndustryId] = useState<string>(
+    initial?.industryId ?? industries[0]?.id ?? "",
   );
-  const [skillset, setSkillset] = useState<VideoFormInput["skillset"]>(
-    initial?.skillset ?? "BUSINESS_FINANCE_STRATEGY",
+  const [skillsetId, setSkillsetId] = useState<string>(
+    initial?.skillsetId ?? skillsets[0]?.id ?? "",
   );
-  const [durationLabel, setDurationLabel] = useState(initial?.durationLabel ?? "");
-  const [durationSeconds, setDurationSeconds] = useState<number>(
-    initial?.durationSeconds ?? 0,
-  );
-  const [status, setStatus] = useState<VideoFormInput["status"]>(initial?.status ?? "DRAFT");
-  const [guidebookUrl, setGuidebookUrl] = useState(initial?.guidebookUrl ?? "");
+  const [guidebookKey, setGuidebookKey] = useState<string>(initial?.guidebookKey ?? "");
 
   const existingThumbnailKey = initial?.thumbnailKey ?? "";
   const [thumbStaged, setThumbStaged] = useState(false);
@@ -84,29 +100,38 @@ export function VideoUploadForm({
 
   const hasInstructors = instructors.length > 0;
 
+  const totalDurationSeconds = useMemo(
+    () => lessons.reduce((sum, l) => sum + (Number(l.durationSeconds) || 0), 0),
+    [lessons],
+  );
+  const totalDurationLabel = useMemo(
+    () => formatDuration(totalDurationSeconds),
+    [totalDurationSeconds],
+  );
+
   function buildPayload(thumbnailKey: string): VideoFormInput {
     return {
       id: initial?.id,
-      type,
+      type: "VIDEO",
       playbook: "CEO_PLAYBOOK",
-      industry,
-      skillset,
+      industryId,
+      skillsetId,
       titleLine1,
       titleLine2: titleLine2 || undefined,
       description,
       instructorId,
       thumbnailKey,
       trailerKey: trailerKey || undefined,
-      guidebookUrl: guidebookUrl || undefined,
-      durationSeconds: Number(durationSeconds) || 0,
-      durationLabel,
-      status,
+      guidebookKey: guidebookKey || undefined,
+      durationSeconds: totalDurationSeconds,
+      durationLabel: totalDurationLabel,
+      status: "PUBLISHED",
       lessons,
       skillsetItems,
     };
   }
 
-  function submit(publish: boolean) {
+  function submit() {
     setErrors([]);
     startTransition(async () => {
       let thumbnailKey = existingThumbnailKey;
@@ -119,7 +144,7 @@ export function VideoUploadForm({
         return;
       }
 
-      const result = await saveVideo(buildPayload(thumbnailKey), publish);
+      const result = await saveVideo(buildPayload(thumbnailKey), true);
       if (!result.ok) {
         setErrors(result.errors);
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -130,18 +155,27 @@ export function VideoUploadForm({
     });
   }
 
-  const canPublish =
-    (!!existingThumbnailKey || thumbStaged) &&
-    !!titleLine1 &&
-    !!instructorId &&
-    lessons.length > 0 &&
-    lessons.every((l) => l.videoKey && l.title);
+  const missing: string[] = [];
+  if (!existingThumbnailKey && !thumbStaged) missing.push("Thumbnail");
+  if (!titleLine1.trim()) missing.push("Title line 1");
+  if (!instructorId) missing.push("Instructor");
+  if (lessons.length === 0) {
+    missing.push("At least one lesson");
+  } else {
+    lessons.forEach((l, i) => {
+      const lacks: string[] = [];
+      if (!l.videoKey) lacks.push("video");
+      if (!l.title.trim()) lacks.push("title");
+      if (lacks.length) missing.push(`Lesson ${i + 1} ${lacks.join(" + ")}`);
+    });
+  }
+  const canPublish = missing.length === 0;
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        submit(false);
+        submit();
       }}
       className="space-y-6"
     >
@@ -196,13 +230,15 @@ export function VideoUploadForm({
           </div>
 
           <div>
-            <label className={labelClass}>Guidebook URL (optional)</label>
-            <input
-              className={inputClass}
-              value={guidebookUrl}
-              onChange={(e) => setGuidebookUrl(e.target.value)}
-              placeholder="https://…"
-            />
+            <p className={labelClass}>Guidebook PDF (optional)</p>
+            <div className="mt-2">
+              <S3Uploader
+                kind="guidebook"
+                height={180}
+                currentKey={guidebookKey}
+                onComplete={({ key }) => setGuidebookKey(key)}
+              />
+            </div>
           </div>
         </div>
 
@@ -253,76 +289,49 @@ export function VideoUploadForm({
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div>
-              <label className={labelClass}>Type</label>
-              <select
-                className={inputClass}
-                value={type}
-                onChange={(e) => setType(e.target.value as VideoFormInput["type"])}
-              >
-                <option value="VIDEO">Video</option>
-                <option value="PODCAST">Podcast</option>
-              </select>
-            </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className={labelClass}>Industry</label>
               <select
                 className={inputClass}
-                value={industry}
-                onChange={(e) => setIndustry(e.target.value as VideoFormInput["industry"])}
+                value={industryId}
+                onChange={(e) => setIndustryId(e.target.value)}
+                disabled={industries.length === 0}
               >
-                <option value="RETAILS">Retails</option>
-                <option value="FMCG">FMCG</option>
-                <option value="TECHNOLOGY">Technology</option>
+                {industries.length === 0 && <option value="">No industries</option>}
+                {industries.map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
               <label className={labelClass}>Skillset</label>
               <select
                 className={inputClass}
-                value={skillset}
-                onChange={(e) => setSkillset(e.target.value as VideoFormInput["skillset"])}
+                value={skillsetId}
+                onChange={(e) => setSkillsetId(e.target.value)}
+                disabled={skillsets.length === 0}
               >
-                <option value="BUSINESS_FINANCE_STRATEGY">
-                  Business, Finance & Strategy
-                </option>
+                {skillsets.length === 0 && <option value="">No skillsets</option>}
+                {skillsets.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="sm:col-span-2">
-              <label className={labelClass}>Duration label (subscriber-facing)</label>
-              <input
-                className={inputClass}
-                value={durationLabel}
-                onChange={(e) => setDurationLabel(e.target.value)}
-                placeholder="1 hour 15 minutes"
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Duration (seconds)</label>
-              <input
-                type="number"
-                className={inputClass}
-                value={durationSeconds}
-                onChange={(e) => setDurationSeconds(Number(e.target.value))}
-              />
-            </div>
-          </div>
-
           <div>
-            <label className={labelClass}>Publish status</label>
-            <select
-              className={inputClass}
-              value={status}
-              onChange={(e) => setStatus(e.target.value as VideoFormInput["status"])}
-            >
-              <option value="DRAFT">Draft</option>
-              <option value="PUBLISHED">Published</option>
-              <option value="ARCHIVED">Archived</option>
-            </select>
+            <label className={labelClass}>Total duration (auto-computed from lessons)</label>
+            <input
+              className={`${inputClass} cursor-not-allowed opacity-80`}
+              value={totalDurationLabel || "Will be calculated once lesson videos are uploaded"}
+              readOnly
+              tabIndex={-1}
+            />
           </div>
         </div>
       </div>
@@ -334,7 +343,7 @@ export function VideoUploadForm({
         onAdd={() => setLessons((xs) => [...xs, emptyLesson()])}
         onRemove={(i) => setLessons((xs) => xs.filter((_, idx) => idx !== i))}
         render={(l, i) => (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_160px_140px]">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="sm:col-span-3">
               <p className={labelClass}>Lesson {i + 1} video</p>
               <div className="mt-2">
@@ -343,11 +352,22 @@ export function VideoUploadForm({
                   height={180}
                   currentKey={l.videoKey}
                   currentUrl={l.videoUrl}
-                  onComplete={({ key }) =>
+                  onComplete={({ key, durationSeconds }) =>
                     setLessons((xs) =>
-                      xs.map((x, idx) =>
-                        idx === i ? { ...x, videoKey: key, videoUrl: undefined } : x,
-                      ),
+                      xs.map((x, idx) => {
+                        if (idx !== i) return x;
+                        if (durationSeconds && durationSeconds > 0) {
+                          const sec = Math.round(durationSeconds);
+                          return {
+                            ...x,
+                            videoKey: key,
+                            videoUrl: undefined,
+                            durationSeconds: sec,
+                            durationLabel: formatDuration(sec),
+                          };
+                        }
+                        return { ...x, videoKey: key, videoUrl: undefined };
+                      }),
                     )
                   }
                 />
@@ -368,32 +388,13 @@ export function VideoUploadForm({
                 }
               />
             </div>
-            <div>
-              <label className={labelClass}>Duration label</label>
+            <div className="sm:col-span-2">
+              <label className={labelClass}>Duration (auto from video)</label>
               <input
-                className={inputClass}
-                value={l.durationLabel}
-                onChange={(e) =>
-                  setLessons((xs) =>
-                    xs.map((x, idx) => (idx === i ? { ...x, durationLabel: e.target.value } : x)),
-                  )
-                }
-                placeholder="10 mins"
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Seconds</label>
-              <input
-                type="number"
-                className={inputClass}
-                value={l.durationSeconds}
-                onChange={(e) =>
-                  setLessons((xs) =>
-                    xs.map((x, idx) =>
-                      idx === i ? { ...x, durationSeconds: Number(e.target.value) } : x,
-                    ),
-                  )
-                }
+                className={`${inputClass} cursor-not-allowed opacity-80`}
+                value={l.durationLabel || (l.videoKey ? "Detecting…" : "Upload a video first")}
+                readOnly
+                tabIndex={-1}
               />
             </div>
             <div className="sm:col-span-3">
@@ -434,16 +435,19 @@ export function VideoUploadForm({
               />
             </div>
             <div>
-              <label className={labelClass}>Image URL</label>
-              <input
-                className={inputClass}
-                value={s.imageUrl}
-                onChange={(e) =>
-                  setSkillsetItems((xs) =>
-                    xs.map((x, idx) => (idx === i ? { ...x, imageUrl: e.target.value } : x)),
-                  )
-                }
-              />
+              <p className={labelClass}>Image</p>
+              <div className="mt-2">
+                <S3Uploader
+                  kind="thumbnail"
+                  height={140}
+                  currentKey={s.imageKey}
+                  onComplete={({ key }) =>
+                    setSkillsetItems((xs) =>
+                      xs.map((x, idx) => (idx === i ? { ...x, imageKey: key } : x)),
+                    )
+                  }
+                />
+              </div>
             </div>
             <div className="sm:col-span-2">
               <label className={labelClass}>Description</label>
@@ -463,28 +467,26 @@ export function VideoUploadForm({
       />
 
       {/* Footer */}
-      <div className="sticky bottom-0 -mx-8 flex items-center justify-between gap-3 border-t border-white/10 bg-black/80 px-8 py-4 backdrop-blur">
-        <Link
-          href="/admin/videos"
-          className="rounded-md border border-white/15 bg-white/[0.04] px-4 py-2 text-sm font-semibold text-white/80 transition-colors hover:bg-white/[0.08]"
-        >
-          Cancel
-        </Link>
-        <div className="flex items-center gap-2">
+      <div className="sticky bottom-0 -mx-8 flex flex-col gap-3 border-t border-white/10 bg-black/80 px-8 py-4 backdrop-blur">
+        {!canPublish && missing.length > 0 && (
+          <div className="rounded-md border border-butter/30 bg-butter/10 px-3 py-2 text-xs text-butter">
+            <span className="font-semibold">Needed to publish:</span>{" "}
+            {missing.join(", ")}
+          </div>
+        )}
+        <div className="flex items-center justify-between gap-3">
+          <Link
+            href="/admin/videos"
+            className="rounded-md border border-white/15 bg-white/[0.04] px-4 py-2 text-sm font-semibold text-white/80 transition-colors hover:bg-white/[0.08]"
+          >
+            Cancel
+          </Link>
           <button
             type="submit"
-            disabled={pending}
-            className="rounded-md border border-white/15 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/[0.12] disabled:opacity-50"
-          >
-            {pending ? "Saving…" : mode === "edit" ? "Save changes" : "Save as Draft"}
-          </button>
-          <button
-            type="button"
             disabled={pending || !canPublish}
-            onClick={() => submit(true)}
             className="rounded-md bg-coral px-5 py-2 text-sm font-bold text-black transition-colors hover:bg-coral/90 disabled:opacity-50"
           >
-            {pending ? "Publishing…" : "Publish"}
+            {pending ? "Publishing…" : mode === "edit" ? "Save changes" : "Publish"}
           </button>
         </div>
       </div>

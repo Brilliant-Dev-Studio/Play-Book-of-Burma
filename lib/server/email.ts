@@ -20,3 +20,17 @@ export async function sendResetCodeEmail(to: string, code: string, expiry: Date)
   console.log(`  Expiry: ${expiry.toISOString()}`);
   console.log("───────────────────────────────────────────\n");
 }
+
+// Ready to wire to AWS SES once a domain is purchased. Not called yet — the
+// playbook award flow leaves emailSentAt null until this is hooked up.
+export async function sendPlaybookAchievedEmail(
+  to: string,
+  playbookTitle: string,
+  displayName?: string | null,
+): Promise<void> {
+  console.log("\n[PLAYBOOK ACHIEVED EMAIL MOCK] ────────────");
+  console.log(`  To           : ${to}`);
+  if (displayName) console.log(`  Display Name : ${displayName}`);
+  console.log(`  Playbook     : ${playbookTitle}`);
+  console.log("──────────────────────────────────────────\n");
+}

@@ -12,7 +12,7 @@ export default async function EditVideoPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [video, instructors] = await Promise.all([
+  const [video, instructors, industries, skillsets] = await Promise.all([
     prisma.video.findUnique({
       where: { id },
       include: {
@@ -24,6 +24,14 @@ export default async function EditVideoPage({
       orderBy: [{ name: "asc" }],
       select: { id: true, name: true, title: true },
     }),
+    prisma.industry.findMany({
+      orderBy: [{ order: "asc" }, { name: "asc" }],
+      select: { id: true, name: true },
+    }),
+    prisma.skillset.findMany({
+      orderBy: [{ order: "asc" }, { name: "asc" }],
+      select: { id: true, name: true },
+    }),
   ]);
 
   if (!video) notFound();
@@ -32,8 +40,8 @@ export default async function EditVideoPage({
     id: video.id,
     type: video.type,
     playbook: video.playbook,
-    industry: video.industry,
-    skillset: video.skillset,
+    industryId: video.industryId,
+    skillsetId: video.skillsetId,
     titleLine1: video.titleLine1,
     titleLine2: video.titleLine2 ?? undefined,
     description: video.description,
@@ -44,7 +52,7 @@ export default async function EditVideoPage({
     trailerUrl: video.trailerKey
       ? await presignGetUrl(video.trailerKey, PRESIGN_TTL.video)
       : undefined,
-    guidebookUrl: video.guidebookUrl ?? undefined,
+    guidebookKey: video.guidebookKey ?? undefined,
     durationSeconds: video.durationSeconds,
     durationLabel: video.durationLabel,
     status: video.status,
@@ -61,7 +69,7 @@ export default async function EditVideoPage({
     skillsetItems: video.skillsetItems.map((s) => ({
       title: s.title,
       description: s.description,
-      imageUrl: s.imageUrl,
+      imageKey: s.imageKey,
     })),
   };
 
@@ -75,7 +83,13 @@ export default async function EditVideoPage({
           Update content for the Client Portal.
         </p>
       </div>
-      <VideoUploadForm mode="edit" initial={initial} instructors={instructors} />
+      <VideoUploadForm
+        mode="edit"
+        initial={initial}
+        instructors={instructors}
+        industries={industries}
+        skillsets={skillsets}
+      />
     </div>
   );
 }

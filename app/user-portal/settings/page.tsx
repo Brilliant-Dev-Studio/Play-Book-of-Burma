@@ -18,6 +18,73 @@ type Me = {
   region: Region | null;
 };
 
+function PasswordField({
+  label,
+  value,
+  onChange,
+  minLength,
+}: {
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  minLength?: number;
+}) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div>
+      <label className="block text-sm font-medium text-white/80">{label}</label>
+      <div className="relative mt-1">
+        <input
+          type={visible ? "text" : "password"}
+          required
+          minLength={minLength}
+          value={value}
+          onChange={onChange}
+          className="w-full rounded-md border border-white/15 bg-black/40 px-3 py-2 pr-11 text-white outline-none focus:border-coral"
+        />
+        <button
+          type="button"
+          onClick={() => setVisible((v) => !v)}
+          aria-pressed={visible}
+          aria-label={visible ? "Hide password" : "Show password"}
+          className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral/60"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="h-5 w-5"
+            aria-hidden
+          >
+            {visible ? (
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19 12 19c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 5c4.638 0 8.573 2.51 9.963 6.683a1.01 1.01 0 010 .758m-6.122 6.122a3 3 0 01-4.244-4.244M12 12h.01M17.364 17.364L4.636 4.636"
+              />
+            ) : (
+              <>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 5 12 5c4.638 0 8.573 2.51 9.963 6.683a1.01 1.01 0 010 .636C20.577 16.49 16.64 19 12 19c-4.638 0-8.573-2.51-9.964-6.683z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </>
+            )}
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const router = useRouter();
   const [me, setMe] = useState<Me | null>(null);
@@ -226,38 +293,23 @@ export default function SettingsPage() {
         className="space-y-4 rounded-xl border border-white/10 bg-white/[0.04] p-6"
       >
         <h2 className="text-lg font-bold">Change password</h2>
-        <div>
-          <label className="block text-sm font-medium text-white/80">Current password</label>
-          <input
-            type="password"
-            required
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            className={inputClass}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-white/80">New password</label>
-          <input
-            type="password"
-            required
-            minLength={8}
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className={inputClass}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-white/80">Confirm new password</label>
-          <input
-            type="password"
-            required
-            minLength={8}
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            className={inputClass}
-          />
-        </div>
+        <PasswordField
+          label="Current password"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+        />
+        <PasswordField
+          label="New password"
+          minLength={8}
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+        />
+        <PasswordField
+          label="Confirm new password"
+          minLength={8}
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+        />
         {pwdMsg && (
           <p className={`text-sm ${pwdMsg.kind === "ok" ? "text-emerald-400" : "text-red-400"}`}>
             {pwdMsg.text}

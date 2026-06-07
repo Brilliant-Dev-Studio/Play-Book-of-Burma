@@ -1,10 +1,12 @@
 "use client";
 
-import Image, { type StaticImageData } from "next/image";
 import { useCallback, useRef, useState } from "react";
-import { UserPortalSidebar } from "@/app/components/user-portal-sidebar";
-import courseThumb from "@/app/assets/benefits/Ray Dalio - 1.png";
+import {
+  UserPortalSidebar,
+  type FilterGroup,
+} from "@/app/components/user-portal-sidebar";
 import { UserPortalPodcastSection } from "@/app/components/user-portal-podcast-section";
+import type { UserPortalPodcastItem } from "@/lib/server/podcasts";
 
 function IconFilter({ className }: { className?: string }) {
   return (
@@ -50,31 +52,70 @@ export type NewlyAddedItem = {
   instructorName: string;
   instructorTitle: string;
   duration: string;
+  playbook: string;
+  industry: string;
+  skillset: string;
 };
 
-type ContinuesWatchingItem = {
-  image: StaticImageData;
-  duration: string;
+export type ContinueWatchingItem = {
+  videoId: string;
+  lessonId: string;
+  thumbnailUrl: string;
+  durationLabel: string;
   progressPct: number;
   author: string;
   subtitle: string;
 };
 
-const CONTINUE_WATCHING: ContinuesWatchingItem[] = Array.from({ length: 6 }, () => ({
-  image: courseThumb,
-  duration: "16:36",
-  progressPct: 35,
-  author: "Ko Jason Myint",
-  subtitle: "Financial Management | Lesson 2 of 10",
-}));
+const PLAYBOOKS_INITIAL_VISIBLE = 3;
+const PLAYBOOKS_LOAD_MORE_STEP = 6;
+
+function filterPlaybooks(
+  items: NewlyAddedItem[],
+  selected: Set<string>,
+  filterGroups: FilterGroup[],
+): NewlyAddedItem[] {
+  if (selected.size === 0) return items;
+  const optionsByGroup = new Map<string, Set<string>>();
+  for (const g of filterGroups) {
+    const sel = g.options.filter((o) => selected.has(o));
+    if (sel.length > 0) optionsByGroup.set(g.heading, new Set(sel));
+  }
+  if (optionsByGroup.size === 0) return items;
+  return items.filter((v) => {
+    for (const [heading, opts] of optionsByGroup) {
+      const value =
+        heading === "Industry"
+          ? v.industry
+          : heading === "Skillsets"
+            ? v.skillset
+            : heading === "Playbook"
+              ? v.playbook
+              : "";
+      if (!opts.has(value)) return false;
+    }
+    return true;
+  });
+}
 
 export function UserPortalClient({
   newlyAdded,
+  allPlaybooks,
+  filterGroups,
+  continueWatching,
+  podcasts,
 }: {
   newlyAdded: NewlyAddedItem[];
+  allPlaybooks: NewlyAddedItem[];
+  filterGroups: FilterGroup[];
+  continueWatching: ContinueWatchingItem[];
+  podcasts: UserPortalPodcastItem[];
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isOpen, setIsOpen] = useState(true);
+
+  const hasActiveFilter = selected.size > 0;
+  const filteredPlaybooks = filterPlaybooks(allPlaybooks, selected, filterGroups);
 
   function toggle(option: string) {
     setSelected((prev) => {
@@ -100,13 +141,14 @@ export function UserPortalClient({
           onToggle={toggle}
           onClearAll={clearAll}
           onClose={() => setIsOpen(false)}
+          filterGroups={filterGroups}
         />
       )}
 
       <main className="flex min-w-0 flex-1 flex-col">
         {/* Filter toolbar — sticky on scroll; border spans full main width, content aligned with header container */}
         <div className="sticky top-0 z-30 border-b border-white/10 bg-zinc-950/85 backdrop-blur-md">
-          <div className="mx-auto flex w-full max-w-[85%] flex-wrap items-center gap-2 px-4 py-3 sm:gap-3 sm:px-6 sm:py-4 lg:px-8">
+          <div className="flex w-full flex-wrap items-center gap-2 px-4 py-3 sm:gap-3 sm:px-6 sm:py-4 lg:px-10">
             <button
               type="button"
               onClick={() => setIsOpen((o) => !o)}
@@ -158,23 +200,24 @@ export function UserPortalClient({
         </div>
 
         {/* Page body — aligned with header container */}
-        <div className="mx-auto flex min-h-0 w-full max-w-[85%] flex-1 flex-col px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-14">
-          <NewlyAddedSection sidebarOpen={isOpen} items={newlyAdded} />
-          <ContinuesWatchingSection sidebarOpen={isOpen} />
-          <UserPortalPodcastSection />
+        <div className="flex min-h-0 w-full flex-1 flex-col px-4 py-10 sm:px-6 sm:py-12 lg:px-10 lg:py-14">
+          {hasActiveFilter ? (
+            <FilteredPlaybooksSection items={filteredPlaybooks} />
+          ) : (
+            <>
+              <NewlyAddedSection items={newlyAdded} />
+              <WatchAllPlaybooksSection items={allPlaybooks} />
+              <ContinuesWatchingSection items={continueWatching} />
+              <UserPortalPodcastSection items={podcasts} />
+            </>
+          )}
         </div>
       </main>
     </div>
   );
 }
 
-function NewlyAddedSection({
-  sidebarOpen = false,
-  items,
-}: {
-  sidebarOpen?: boolean;
-  items: NewlyAddedItem[];
-}) {
+function NewlyAddedSection({ items }: { items: NewlyAddedItem[] }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   const scrollByDir = useCallback((dir: -1 | 1) => {
@@ -191,7 +234,7 @@ function NewlyAddedSection({
     <section>
       <div className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
         <div className="min-w-0 flex-1">
-          <h2 className="text-2xl font-bold leading-tight tracking-tight text-white sm:text-3xl md:text-4xl">
+          <h2 className="font-roman-wood-slide-title text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
             If you Dream Big, Will you give us 15 mins a day to change your life?
           </h2>
           <p className="mt-2 text-base font-bold text-white sm:text-lg">
@@ -225,17 +268,16 @@ function NewlyAddedSection({
       ) : (
         <div
           ref={scrollerRef}
-          className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          <div
-            className={`flex w-max snap-x snap-mandatory gap-4 pl-[calc(7.5vw+1rem)] pr-[calc(7.5vw+1rem)] sm:gap-5 sm:pl-[calc(7.5vw+1.5rem)] sm:pr-[calc(7.5vw+1.5rem)] ${
-              sidebarOpen
-                ? "lg:pl-[calc(7.65rem+7.5vw+2rem)] lg:pr-[calc(7.65rem+7.5vw+2rem)]"
-                : "lg:pl-[calc(7.5vw+2rem)] lg:pr-[calc(7.5vw+2rem)]"
-            }`}
-          >
+          <div className="flex w-max snap-x snap-mandatory gap-4 pr-4 sm:gap-5 sm:pr-6 lg:pr-10">
             {items.map((item) => (
-              <NewlyAddedCard key={item.id} {...item} />
+              <PlaybookVideoCard
+                key={item.id}
+                {...item}
+                showNewBadge
+                layout="carousel"
+              />
             ))}
           </div>
         </div>
@@ -244,7 +286,73 @@ function NewlyAddedSection({
   );
 }
 
-function NewlyAddedCard({
+function WatchAllPlaybooksSection({ items }: { items: NewlyAddedItem[] }) {
+  const [visibleCount, setVisibleCount] = useState(PLAYBOOKS_INITIAL_VISIBLE);
+  const visible = items.slice(0, visibleCount);
+  const hasMore = visibleCount < items.length;
+
+  return (
+    <section className="mt-12 sm:mt-14 md:mt-16">
+      <h2 className="mb-6 text-xl font-bold tracking-tight text-white sm:mb-8 sm:text-2xl md:text-3xl">
+        Watch All the Playbooks
+      </h2>
+
+      {items.length === 0 ? (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] py-16 text-center text-white/55">
+          No published videos yet.
+        </div>
+      ) : (
+        <>
+          <PlaybookVideoGrid items={visible} />
+          {hasMore && (
+            <div className="mt-8 flex justify-center sm:mt-10">
+              <button
+                type="button"
+                onClick={() =>
+                  setVisibleCount((n) =>
+                    Math.min(n + PLAYBOOKS_LOAD_MORE_STEP, items.length),
+                  )
+                }
+                className="rounded-full border border-white/20 bg-white/[0.06] px-8 py-3 text-sm font-semibold text-white transition-colors hover:border-coral/40 hover:bg-coral/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
+              >
+                Load more
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+function FilteredPlaybooksSection({ items }: { items: NewlyAddedItem[] }) {
+  return (
+    <section>
+      <h2 className="mb-6 text-xl font-bold tracking-tight text-white sm:mb-8 sm:text-2xl md:text-3xl">
+        Filtered Playbooks
+      </h2>
+      {items.length === 0 ? (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] py-16 text-center text-white/55">
+          No videos match your filters.
+        </div>
+      ) : (
+        <PlaybookVideoGrid items={items} />
+      )}
+    </section>
+  );
+}
+
+function PlaybookVideoGrid({ items }: { items: NewlyAddedItem[] }) {
+  return (
+    <div className="flex flex-wrap gap-4 sm:gap-5">
+      {items.map((item) => (
+        <PlaybookVideoCard key={item.id} {...item} layout="grid" />
+      ))}
+    </div>
+  );
+}
+
+function PlaybookVideoCard({
   id,
   thumbnailUrl,
   titleLine1,
@@ -252,20 +360,30 @@ function NewlyAddedCard({
   instructorName,
   instructorTitle,
   duration,
-}: NewlyAddedItem) {
+  showNewBadge = false,
+  layout = "carousel",
+}: NewlyAddedItem & {
+  showNewBadge?: boolean;
+  layout?: "carousel" | "grid";
+}) {
+  const layoutClass =
+    layout === "carousel"
+      ? "w-[314px] shrink-0 snap-start sm:w-[354px] md:w-[362px]"
+      : "w-[314px] sm:w-[354px] md:w-[362px]";
+
   return (
     <a
-      href={`/user-portal/watch?video=${id}`}
+      href={`/user-portal/click-video-detail?video=${id}`}
       data-card
-      className="group flex w-[260px] shrink-0 snap-start flex-col outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[300px] md:w-[320px]"
+      className={`group flex flex-col overflow-hidden rounded-2xl border-2 border-white/45 bg-black outline-none transition-colors hover:border-white/65 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black ${layoutClass}`}
       aria-label={`${titleLine1} ${titleLine2}`}
     >
-      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl bg-zinc-900 shadow-[0_16px_48px_rgba(0,0,0,0.5)]">
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-zinc-900">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={thumbnailUrl}
           alt=""
-          className="absolute inset-0 h-full w-full rounded-t-2xl object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06] motion-reduce:group-hover:scale-100"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06] motion-reduce:group-hover:scale-100"
         />
 
         <div
@@ -283,13 +401,14 @@ function NewlyAddedCard({
           aria-hidden
         />
 
-        {/* "New!" stamp — top-left */}
-        <span
-          className="absolute left-3 top-3 z-20 -rotate-3 rounded-full bg-coral px-3 py-1 text-sm font-bold italic text-white shadow-[0_4px_14px_rgba(236,113,71,0.5)] sm:left-4 sm:top-4"
-          aria-label="Newly added"
-        >
-          New!
-        </span>
+        {showNewBadge && (
+          <span
+            className="absolute left-3 top-3 z-20 -rotate-3 rounded-full bg-coral px-3 py-1 text-sm font-bold italic text-white shadow-[0_4px_14px_rgba(236,113,71,0.5)] sm:left-4 sm:top-4"
+            aria-label="Newly added"
+          >
+            New!
+          </span>
+        )}
 
         <span
           className="pointer-events-none absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
@@ -307,13 +426,13 @@ function NewlyAddedCard({
         </div>
       </div>
 
-      <div className="-mt-0.5 relative z-10 flex flex-col items-center px-1 text-center">
+      <div className="relative z-10 flex flex-col items-center px-4 pb-4 pt-4 text-center">
         <span className="h-[3px] w-12 shrink-0 bg-coral" aria-hidden />
-        <p className="mt-1.5 text-sm leading-snug text-white/90">
+        <p className="mt-2 text-sm font-semibold leading-snug text-white/90 sm:text-[15px]">
           <span className="block w-full truncate">{instructorName},</span>
           <span className="block w-full truncate">{instructorTitle}</span>
         </p>
-        <p className="mt-1 w-full truncate text-xs text-white/70 sm:text-sm">
+        <p className="mt-1 w-full truncate text-xs font-medium text-white/70 sm:text-sm">
           {duration}
         </p>
       </div>
@@ -322,9 +441,9 @@ function NewlyAddedCard({
 }
 
 function ContinuesWatchingSection({
-  sidebarOpen = false,
+  items,
 }: {
-  sidebarOpen?: boolean;
+  items: ContinueWatchingItem[];
 }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
 
@@ -364,52 +483,55 @@ function ContinuesWatchingSection({
         </div>
       </div>
 
-      <div
-        ref={scrollerRef}
-        className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        <div
-          className={`flex w-max snap-x snap-mandatory gap-4 pl-[calc(7.5vw+1rem)] pr-[calc(7.5vw+1rem)] sm:gap-5 sm:pl-[calc(7.5vw+1.5rem)] sm:pr-[calc(7.5vw+1.5rem)] ${
-            sidebarOpen
-              ? "lg:pl-[calc(7.65rem+7.5vw+2rem)] lg:pr-[calc(7.65rem+7.5vw+2rem)]"
-              : "lg:pl-[calc(7.5vw+2rem)] lg:pr-[calc(7.5vw+2rem)]"
-          }`}
-        >
-          {CONTINUE_WATCHING.map((item, i) => (
-            <ContinuesWatchingCard key={i} {...item} />
-          ))}
+      {items.length === 0 ? (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] py-12 text-center text-white/55">
+          Nothing in progress yet — start a lesson to see it here.
         </div>
-      </div>
+      ) : (
+        <div
+          ref={scrollerRef}
+          className="overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          <div className="flex w-max snap-x snap-mandatory gap-4 pr-4 sm:gap-5 sm:pr-6 lg:pr-10">
+            {items.map((item) => (
+              <ContinuesWatchingCard key={item.lessonId} {...item} />
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
 
 function ContinuesWatchingCard({
-  image,
-  duration,
+  videoId,
+  lessonId,
+  thumbnailUrl,
+  durationLabel,
   progressPct,
   author,
   subtitle,
-}: ContinuesWatchingItem) {
+}: ContinueWatchingItem) {
   return (
     <a
-      href="/user-portal/watch"
+      href={`/user-portal/watch?video=${videoId}&lesson=${lessonId}`}
       data-cw-card
       className="group flex w-72 shrink-0 snap-start flex-col outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-80 md:w-88"
     >
-      <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/15 bg-zinc-900">
-        <Image
-          src={image}
-          alt=""
-          fill
-          className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
-          sizes="(max-width: 640px) 288px, (max-width: 1024px) 320px, 352px"
-        />
-        <span className="absolute bottom-2.5 right-2.5 rounded-md bg-black/75 px-2 py-1 text-xs font-medium text-white">
-          {duration}
-        </span>
-        <div className="absolute inset-x-0 bottom-0 h-1 bg-black/40">
-          <div className="h-full bg-coral" style={{ width: `${progressPct}%` }} />
+      <div className="rounded-2xl border-2 border-white/45 p-[5px] transition-colors group-hover:border-white/65">
+        <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-zinc-900">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={thumbnailUrl}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+          />
+          <span className="absolute bottom-2.5 right-2.5 rounded-md bg-black/75 px-2 py-1 text-xs font-medium text-white">
+            {durationLabel}
+          </span>
+          <div className="absolute inset-x-0 bottom-0 h-1 bg-black/40">
+            <div className="h-full bg-coral" style={{ width: `${progressPct}%` }} />
+          </div>
         </div>
       </div>
       <div className="mt-3">

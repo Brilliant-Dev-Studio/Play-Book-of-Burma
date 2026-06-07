@@ -1,49 +1,18 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import podcastThumb from "@/app/assets/podcast/woman-speaking.png";
+import { useMemo, useState } from "react";
+import type { HomePodcastGroup, HomePodcastItem } from "@/lib/server/podcasts";
+import { PodcastPlayerRow } from "./user-portal-podcast-section";
 
-type PodcastItem = {
-  title: string;
-  description: string;
-  href?: string;
-};
-
-const PODCASTS: PodcastItem[] = [
-  {
-    title: "Title",
-    description:
-      "Lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-    href: "#",
-  },
-  {
-    title: "Title",
-    description:
-      "Lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-    href: "#",
-  },
-  {
-    title: "Title",
-    description:
-      "Lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-    href: "#",
-  },
-  {
-    title: "Title",
-    description:
-      "Lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-    href: "#",
-  },
-];
+const MEMBERSHIP_HREF = "/membership";
 
 function PlayBadge({ href }: { href: string }) {
   return (
     <Link
       href={href}
       className="absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
-      aria-label="Play"
+      aria-label="Become a member to listen"
     >
       <span className="flex h-11 w-11 items-center justify-center rounded-full bg-coral text-black shadow-lg transition-transform hover:scale-105 sm:h-12 sm:w-12">
         <span className="ml-0.5 text-2xl leading-none">▶</span>
@@ -52,54 +21,72 @@ function PlayBadge({ href }: { href: string }) {
   );
 }
 
-function PodcastRow({ item }: { item: PodcastItem }) {
+function PodcastRow({ item }: { item: HomePodcastItem }) {
+  const [expanded, setExpanded] = useState(false);
   return (
     <article className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-7">
       <div className="group relative aspect-[360/190] w-full max-w-[360px] overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-[0_14px_44px_rgba(0,0,0,0.45)] sm:w-[360px]">
-        <Image
-          src={podcastThumb}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={item.thumbnailUrl}
           alt=""
-          fill
-          className="rounded-2xl object-cover object-center opacity-90 transition-transform duration-500 ease-out [transform-origin:center] scale-[1.18] group-hover:scale-[1.26] group-hover:opacity-100 motion-reduce:scale-[1.18] motion-reduce:transition-none motion-reduce:group-hover:scale-[1.18]"
-          sizes="(max-width: 640px) 100vw, 360px"
-          priority={false}
+          className="absolute inset-0 h-full w-full rounded-2xl object-cover object-center opacity-90 transition-transform duration-500 ease-out [transform-origin:center] scale-[1.18] group-hover:scale-[1.26] group-hover:opacity-100 motion-reduce:scale-[1.18] motion-reduce:transition-none motion-reduce:group-hover:scale-[1.18]"
         />
-        <PlayBadge href={item.href ?? "#"} />
+        <PlayBadge href={MEMBERSHIP_HREF} />
       </div>
 
       <div className="min-w-0 pt-0 sm:pt-2">
         <h3 className="text-xl font-semibold tracking-tight text-white">
           {item.title}
         </h3>
-        <p className="mt-2 max-w-[62ch] text-base leading-relaxed text-white/85">
+        <p
+          className={`mt-2 max-w-[62ch] text-base leading-relaxed text-white/85 ${
+            expanded ? "" : "line-clamp-3"
+          }`}
+        >
           {item.description}
         </p>
-        <a
-          href={item.href ?? "#"}
-          className="mt-3 inline-flex items-center gap-1 text-lg font-semibold text-coral underline decoration-coral/70 underline-offset-4 hover:decoration-coral"
+        {item.description && (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="mt-2 block text-sm font-semibold text-coral underline decoration-coral/70 underline-offset-4 hover:decoration-coral"
+          >
+            {expanded ? "Show less" : "Read more"}
+          </button>
+        )}
+        <Link
+          href={MEMBERSHIP_HREF}
+          className="mt-3 flex w-fit items-center gap-1 text-lg font-semibold text-coral underline decoration-coral/70 underline-offset-4 hover:decoration-coral"
         >
           Watch Now
           <span aria-hidden>→</span>
-        </a>
+        </Link>
       </div>
     </article>
   );
 }
 
 export function HomePodcastSection({
+  groups,
   variant = "default",
+  withPlayer = false,
 }: {
+  groups: HomePodcastGroup[];
   /** Tighter vertical padding when stacked under another section (e.g. Library). */
   variant?: "default" | "embedded";
-} = {}) {
-  const [activeTab, setActiveTab] = useState<
-    "Popular" | "Season 2" | "Season 1"
-  >("Popular");
+  /** Render an inline audio player (portal) instead of the membership-gated "Watch Now" link. */
+  withPlayer?: boolean;
+}) {
+  const labels = useMemo(() => groups.map((g) => g.label), [groups]);
+  const [activeTab, setActiveTab] = useState<string>(labels[0] ?? "");
+
+  const activeGroup = groups.find((g) => g.label === activeTab) ?? groups[0];
 
   const sectionPad =
     variant === "embedded"
       ? "bg-black pt-8 pb-14 sm:pt-10 sm:pb-16 md:pt-12 md:pb-20 lg:pb-24"
-      : "bg-black py-16 md:py-20 lg:py-24 xl:py-28";
+      : "bg-black py-10 md:py-12 lg:py-16 xl:py-20";
 
   return (
     <section className={sectionPad}>
@@ -108,69 +95,60 @@ export function HomePodcastSection({
           Listen to Story of Burma Podcast with No Ads
         </h2>
 
-        <div
-          className={
-            variant === "embedded"
-              ? "mt-5 flex flex-wrap items-center gap-0 text-sm sm:mt-6 sm:text-[15px]"
-              : "mt-8 flex flex-wrap items-center gap-0 text-sm sm:mt-10 sm:text-[15px]"
-          }
-        >
-          <button
-            type="button"
-            onClick={() => setActiveTab("Popular")}
-            className={`font-semibold transition-colors ${
-              activeTab === "Popular"
-                ? "text-white"
-                : "font-medium text-mist hover:text-white/85"
-            }`}
-          >
-            Popular
-          </button>
-          <span
-            className="mx-3 h-4 w-px shrink-0 bg-white/25 sm:mx-4"
-            aria-hidden
-          />
-          <button
-            type="button"
-            onClick={() => setActiveTab("Season 2")}
-            className={`transition-colors ${
-              activeTab === "Season 2"
-                ? "font-semibold text-white"
-                : "font-medium text-mist hover:text-white/85"
-            }`}
-          >
-            Season 2
-          </button>
-          <span
-            className="mx-3 h-4 w-px shrink-0 bg-white/25 sm:mx-4"
-            aria-hidden
-          />
-          <button
-            type="button"
-            onClick={() => setActiveTab("Season 1")}
-            className={`transition-colors ${
-              activeTab === "Season 1"
-                ? "font-semibold text-white"
-                : "font-medium text-mist hover:text-white/85"
-            }`}
-          >
-            Season 1
-          </button>
-        </div>
+        {groups.length === 0 ? (
+          <div className="mt-10 rounded-2xl border border-white/10 bg-white/[0.04] py-12 text-center text-white/55">
+            No podcasts published yet.
+          </div>
+        ) : (
+          <>
+            <div
+              className={
+                variant === "embedded"
+                  ? "mt-5 flex flex-wrap items-center gap-0 text-sm sm:mt-6 sm:text-[15px]"
+                  : "mt-8 flex flex-wrap items-center gap-0 text-sm sm:mt-10 sm:text-[15px]"
+              }
+            >
+              {labels.map((label, i) => (
+                <span key={label} className="flex items-center">
+                  {i > 0 && (
+                    <span
+                      className="mx-3 h-4 w-px shrink-0 bg-white/25 sm:mx-4"
+                      aria-hidden
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab(label)}
+                    className={`transition-colors ${
+                      activeTab === label
+                        ? "font-semibold text-white"
+                        : "font-medium text-mist hover:text-white/85"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                </span>
+              ))}
+            </div>
 
-        <div
-          className={
-            variant === "embedded"
-              ? "mt-6 space-y-12 sm:mt-8 sm:space-y-14"
-              : "mt-10 space-y-14"
-          }
-        >
-          {PODCASTS.map((item, idx) => (
-            <PodcastRow key={`${item.title}-${idx}`} item={item} />
-          ))}
-        </div>
+            <div
+              className={
+                variant === "embedded"
+                  ? "mt-6 space-y-12 sm:mt-8 sm:space-y-14"
+                  : "mt-10 space-y-14"
+              }
+            >
+              {activeGroup?.items.map((item) =>
+                withPlayer ? (
+                  <PodcastPlayerRow key={item.id} item={item} />
+                ) : (
+                  <PodcastRow key={item.id} item={item} />
+                ),
+              )}
+            </div>
+          </>
+        )}
       </div>
     </section>
   );
 }
-

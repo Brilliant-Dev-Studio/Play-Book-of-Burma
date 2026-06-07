@@ -12,22 +12,13 @@ import {
   YAxis,
   LabelList,
 } from "recharts";
-
-const DATA = [
-  { month: "Jan", total: 12, playbook: 8, sob: 2 },
-  { month: "Feb", total: 16, playbook: 12, sob: 4 },
-  { month: "March", total: 18, playbook: 16, sob: 3 },
-  { month: "April", total: 21, playbook: 18, sob: 4 },
-  { month: "May", total: 29, playbook: 24, sob: 5 },
-  { month: "June", total: 38, playbook: 30, sob: 11 },
-  { month: "July", total: 56, playbook: 36, sob: 22 },
-];
+import type { WatchHrMonthPoint } from "@/lib/server/subscribers-stats";
 
 const CORAL = "#ec7147";
 const BUTTER = "#fecf73";
 const MIST = "#ccd3d8";
 
-export function WatchHrOverviewChart() {
+export function WatchHrOverviewChart({ data }: { data: WatchHrMonthPoint[] }) {
   return (
     <section className="mt-10">
       <h2 className="mb-4 text-xl font-bold tracking-tight text-white">Watch Hr Overview</h2>
@@ -35,7 +26,7 @@ export function WatchHrOverviewChart() {
         <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
-              data={DATA}
+              data={data}
               margin={{ top: 24, right: 16, left: 0, bottom: 8 }}
             >
               <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />

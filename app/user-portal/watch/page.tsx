@@ -2,15 +2,15 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { presignGetUrl, PRESIGN_TTL } from "@/lib/server/s3";
 import { requireSession } from "@/lib/server/auth-helpers";
-import { WatchClient, type WatchVideo } from "./watch-client";
+import { WatchClient, type WatchVideo, type Tab } from "./watch-client";
 
 export default async function WatchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ video?: string; lesson?: string }>;
+  searchParams: Promise<{ video?: string; lesson?: string; tab?: string }>;
 }) {
   const session = await requireSession();
-  const { video: videoId, lesson: lessonId } = await searchParams;
+  const { video: videoId, lesson: lessonId, tab } = await searchParams;
 
   if (!videoId) {
     const fallback = await prisma.video.findFirst({
@@ -32,7 +32,7 @@ export default async function WatchPage({
   if (!video) notFound();
 
   const lessonIds = video.lessons.map((l) => l.id);
-  const [thumbnailUrl, instructorPhotoUrl, lessonUrls, bookmarks, notes] = await Promise.all([
+  const [thumbnailUrl, instructorPhotoUrl, lessonUrls, bookmarks, notes, progress] = await Promise.all([
     presignGetUrl(video.thumbnailKey, PRESIGN_TTL.image),
     presignGetUrl(video.instructor.photoKey, PRESIGN_TTL.image),
     Promise.all(
@@ -50,15 +50,24 @@ export default async function WatchPage({
           select: { lessonId: true, content: true },
         })
       : Promise.resolve([]),
+    lessonIds.length
+      ? prisma.watchProgress.findMany({
+          where: { userId: session.uid, lessonId: { in: lessonIds } },
+          select: { lessonId: true, currentSeconds: true },
+        })
+      : Promise.resolve([]),
   ]);
   const bookmarkedSet = new Set(bookmarks.map((b) => b.lessonId));
+  const progressByLesson = new Map(progress.map((p) => [p.lessonId, p.currentSeconds]));
   const noteByLesson = new Map(notes.map((n) => [n.lessonId, n.content]));
 
   const watchVideo: WatchVideo = {
     id: video.id,
     title: [video.titleLine1, video.titleLine2].filter(Boolean).join(" "),
     description: video.description,
-    guidebookUrl: video.guidebookUrl,
+    guidebookUrl: video.guidebookKey
+      ? await presignGetUrl(video.guidebookKey, PRESIGN_TTL.image)
+      : null,
     thumbnailUrl,
     instructor: {
       id: video.instructor.id,
@@ -76,6 +85,7 @@ export default async function WatchPage({
       videoUrl: lessonUrls[i],
       bookmarked: bookmarkedSet.has(l.id),
       note: noteByLesson.get(l.id) ?? "",
+      progressSeconds: progressByLesson.get(l.id) ?? 0,
     })),
   };
 
@@ -86,5 +96,13 @@ export default async function WatchPage({
       )
     : 0;
 
-  return <WatchClient video={watchVideo} initialLessonIndex={initialLessonIndex} />;
+  const initialTab: Tab = tab === "notes" ? "Notes" : "All Lessons";
+
+  return (
+    <WatchClient
+      video={watchVideo}
+      initialLessonIndex={initialLessonIndex}
+      initialTab={initialTab}
+    />
+  );
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AuthPasswordField } from "@/app/components/auth-password-field";
 import {
   AuthFieldLabel,
@@ -32,8 +32,17 @@ function validate(f: Fields): Errors {
   return e;
 }
 
-export default function LoginPage() {
+function sanitizeNext(raw: string | null): string | null {
+  // Only allow same-origin relative paths to prevent open redirects.
+  if (!raw) return null;
+  if (!raw.startsWith("/") || raw.startsWith("//")) return null;
+  return raw;
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = sanitizeNext(searchParams?.get("next") ?? null);
   const [fields, setFields] = useState<Fields>({ email: "", password: "" });
   const [errors, setErrors] = useState<Errors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -66,6 +75,8 @@ export default function LoginPage() {
       setRedirecting(true);
       if (result.mustChangePassword) {
         router.push("/change-password");
+      } else if (nextPath) {
+        router.push(nextPath);
       } else if (result.role === "ADMIN") {
         router.push("/admin");
       } else {
@@ -149,5 +160,13 @@ export default function LoginPage() {
         </div>
       </AuthPageShell>
     </>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<FullScreenLoader />}>
+      <LoginForm />
+    </Suspense>
   );
 }

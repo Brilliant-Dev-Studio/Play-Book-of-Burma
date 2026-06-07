@@ -13,21 +13,21 @@ type LessonInput = {
   durationLabel: string;
   details: string;
 };
-type SkillsetInput = { title: string; description: string; imageUrl: string };
+type SkillsetInput = { title: string; description: string; imageKey: string };
 
 export type VideoFormInput = {
   id?: string;
   type: "VIDEO" | "PODCAST";
   playbook: "CEO_PLAYBOOK";
-  industry: "RETAILS" | "FMCG" | "TECHNOLOGY";
-  skillset: "BUSINESS_FINANCE_STRATEGY";
+  industryId: string;
+  skillsetId: string;
   titleLine1: string;
   titleLine2?: string;
   description: string;
   instructorId: string;
   thumbnailKey: string;
   trailerKey?: string;
-  guidebookUrl?: string;
+  guidebookKey?: string;
   durationSeconds: number;
   durationLabel: string;
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
@@ -42,6 +42,8 @@ function clean(input: VideoFormInput): VideoFormInput {
     titleLine2: input.titleLine2?.trim() || undefined,
     description: input.description.trim(),
     instructorId: input.instructorId.trim(),
+    industryId: input.industryId.trim(),
+    skillsetId: input.skillsetId.trim(),
     durationLabel: input.durationLabel.trim(),
     lessons: input.lessons
       .map((l) => ({
@@ -56,7 +58,7 @@ function clean(input: VideoFormInput): VideoFormInput {
       .map((s) => ({
         title: s.title.trim(),
         description: s.description.trim(),
-        imageUrl: s.imageUrl.trim(),
+        imageKey: s.imageKey.trim(),
       }))
       .filter((s) => s.title),
   };
@@ -74,10 +76,30 @@ async function validate(input: VideoFormInput): Promise<string[]> {
     });
     if (!exists) errors.push("Selected instructor does not exist.");
   }
+  if (!input.industryId) {
+    errors.push("Industry is required.");
+  } else {
+    const exists = await prisma.industry.findUnique({
+      where: { id: input.industryId },
+      select: { id: true },
+    });
+    if (!exists) errors.push("Selected industry does not exist.");
+  }
+  if (!input.skillsetId) {
+    errors.push("Skillset is required.");
+  } else {
+    const exists = await prisma.skillset.findUnique({
+      where: { id: input.skillsetId },
+      select: { id: true },
+    });
+    if (!exists) errors.push("Selected skillset does not exist.");
+  }
   if (!input.thumbnailKey || !isAllowedKey(input.thumbnailKey))
     errors.push("Thumbnail upload is required.");
   if (input.trailerKey && !isAllowedKey(input.trailerKey))
     errors.push("Trailer upload is invalid.");
+  if (input.guidebookKey && !isAllowedKey(input.guidebookKey))
+    errors.push("Guidebook upload is invalid.");
   if (!input.durationLabel) errors.push("Duration label is required.");
   if (input.lessons.length === 0) {
     errors.push("At least one lesson is required.");
@@ -88,12 +110,17 @@ async function validate(input: VideoFormInput): Promise<string[]> {
       }
     });
   }
+  input.skillsetItems.forEach((s, i) => {
+    if (!s.imageKey || !isAllowedKey(s.imageKey)) {
+      errors.push(`Skillset ${i + 1} is missing its image upload.`);
+    }
+  });
   return errors;
 }
 
 export async function saveVideo(
   input: VideoFormInput,
-  publish: boolean,
+  _publish?: boolean,
 ): Promise<{ ok: true; id: string } | { ok: false; errors: string[] }> {
   await requireAdmin();
 
@@ -101,21 +128,22 @@ export async function saveVideo(
   const errors = await validate(cleaned);
   if (errors.length > 0) return { ok: false, errors };
 
-  const status: "DRAFT" | "PUBLISHED" | "ARCHIVED" = publish ? "PUBLISHED" : cleaned.status;
-  const publishedAt = status === "PUBLISHED" ? new Date() : null;
+  // All videos are published immediately — admin no longer chooses a draft state.
+  const status: "DRAFT" | "PUBLISHED" | "ARCHIVED" = "PUBLISHED";
+  const publishedAt = new Date();
 
   const data = {
     type: cleaned.type,
     playbook: cleaned.playbook,
-    industry: cleaned.industry,
-    skillset: cleaned.skillset,
+    industryId: cleaned.industryId,
+    skillsetId: cleaned.skillsetId,
     titleLine1: cleaned.titleLine1,
     titleLine2: cleaned.titleLine2 ?? null,
     description: cleaned.description,
     instructorId: cleaned.instructorId,
     thumbnailKey: cleaned.thumbnailKey,
     trailerKey: cleaned.trailerKey?.trim() || null,
-    guidebookUrl: cleaned.guidebookUrl?.trim() || null,
+    guidebookKey: cleaned.guidebookKey?.trim() || null,
     durationSeconds: Number.isFinite(cleaned.durationSeconds) ? cleaned.durationSeconds : 0,
     durationLabel: cleaned.durationLabel,
     status,
@@ -123,28 +151,34 @@ export async function saveVideo(
   };
 
   let id = cleaned.id;
-  if (id) {
-    await prisma.$transaction([
-      prisma.lesson.deleteMany({ where: { videoId: id } }),
-      prisma.skillsetItem.deleteMany({ where: { videoId: id } }),
-      prisma.video.update({
-        where: { id },
+  try {
+    if (id) {
+      await prisma.$transaction([
+        prisma.lesson.deleteMany({ where: { videoId: id } }),
+        prisma.skillsetItem.deleteMany({ where: { videoId: id } }),
+        prisma.video.update({
+          where: { id },
+          data: {
+            ...data,
+            lessons: { create: cleaned.lessons.map((l, i) => ({ ...l, order: i })) },
+            skillsetItems: { create: cleaned.skillsetItems.map((s, i) => ({ ...s, order: i })) },
+          },
+        }),
+      ]);
+    } else {
+      const created = await prisma.video.create({
         data: {
           ...data,
           lessons: { create: cleaned.lessons.map((l, i) => ({ ...l, order: i })) },
           skillsetItems: { create: cleaned.skillsetItems.map((s, i) => ({ ...s, order: i })) },
         },
-      }),
-    ]);
-  } else {
-    const created = await prisma.video.create({
-      data: {
-        ...data,
-        lessons: { create: cleaned.lessons.map((l, i) => ({ ...l, order: i })) },
-        skillsetItems: { create: cleaned.skillsetItems.map((s, i) => ({ ...s, order: i })) },
-      },
-    });
-    id = created.id;
+      });
+      id = created.id;
+    }
+  } catch (err) {
+    console.error("saveVideo persistence error:", err);
+    const message = err instanceof Error ? err.message : String(err);
+    return { ok: false, errors: [`Could not save video: ${message}`] };
   }
 
   revalidatePath("/admin/videos");

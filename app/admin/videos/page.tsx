@@ -9,8 +9,8 @@ export default async function AdminVideosPage() {
     select: {
       id: true,
       type: true,
-      industry: true,
-      skillset: true,
+      industry: { select: { name: true } },
+      skillset: { select: { name: true } },
       titleLine1: true,
       titleLine2: true,
       thumbnailKey: true,
@@ -44,8 +44,8 @@ export default async function AdminVideosPage() {
           videos.map(async (v) => ({
             id: v.id,
             type: v.type,
-            industry: v.industry,
-            skillset: v.skillset,
+            industry: v.industry.name,
+            skillset: v.skillset.name,
             titleLine1: v.titleLine1,
             titleLine2: v.titleLine2,
             durationLabel: v.durationLabel,

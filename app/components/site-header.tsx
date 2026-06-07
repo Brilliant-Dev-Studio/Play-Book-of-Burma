@@ -132,7 +132,7 @@ export function SiteHeader() {
           />
         ) : null}
         <div className="relative z-50 mx-auto w-full max-w-[85%] px-4 py-2.5 sm:px-6 lg:px-8">
-          <div className="flex min-h-17 w-full items-center justify-between gap-4 sm:min-h-21 sm:gap-6 lg:min-h-23">
+          <div className="flex min-h-16 w-full items-center justify-between gap-4 sm:min-h-18 sm:gap-6 lg:min-h-20">
             <Link
               href="/"
               className="relative flex min-w-0 shrink-0 items-center outline-offset-4 focus-visible:outline-2 focus-visible:outline-white/80"
@@ -142,7 +142,7 @@ export function SiteHeader() {
                 src={logo}
                 alt="Story of Burma"
                 priority
-                className="h-12 w-auto sm:h-13 md:h-13"
+                className="h-12 w-auto sm:h-13 md:h-14 lg:h-15"
                 sizes="(max-width: 768px) 240px, 320px"
               />
             </Link>
@@ -176,7 +176,21 @@ export function SiteHeader() {
 
               {/* Desktop auth */}
               {loading ? (
-                <div className="w-24" aria-hidden />
+                <div
+                  role="status"
+                  aria-label="Checking sign-in"
+                  className="flex items-center gap-2"
+                >
+                  <span
+                    className="h-9 w-9 animate-pulse rounded-full bg-white/10"
+                    aria-hidden
+                  />
+                  <span
+                    className="hidden h-3 w-14 animate-pulse rounded bg-white/10 md:block"
+                    aria-hidden
+                  />
+                  <span className="sr-only">Checking sign-in…</span>
+                </div>
               ) : user ? (
                 <div ref={authMenuRef} className="relative">
                   <button
@@ -376,7 +390,23 @@ export function SiteHeader() {
                 >
                   Login
                 </Link>
-              ) : null}
+              ) : (
+                <div
+                  role="status"
+                  aria-label="Checking sign-in"
+                  className="flex items-center gap-3 py-3.5"
+                >
+                  <span
+                    className="h-7 w-7 animate-pulse rounded-full bg-white/10"
+                    aria-hidden
+                  />
+                  <span
+                    className="h-3 w-24 animate-pulse rounded bg-white/10"
+                    aria-hidden
+                  />
+                  <span className="sr-only">Checking sign-in…</span>
+                </div>
+              )}
             </nav>
           </div>
         </div>

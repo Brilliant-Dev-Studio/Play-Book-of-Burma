@@ -18,7 +18,10 @@ function titleForPath(pathname: string | null): string {
   if (pathname.startsWith("/admin/users")) return "Users";
   if (pathname.startsWith("/admin/submissions")) return "Submissions";
   if (pathname.startsWith("/admin/instructors")) return "Instructors";
+  if (pathname.startsWith("/admin/industries")) return "Industries";
+  if (pathname.startsWith("/admin/skillsets")) return "Skillsets";
   if (pathname.startsWith("/admin/videos")) return "Videos";
+  if (pathname.startsWith("/admin/podcasts")) return "Podcasts";
   if (pathname.startsWith("/admin/subscribers")) return "Subscribers";
   if (pathname.startsWith("/admin/retention")) return "Retention";
   return "Admin";
@@ -31,14 +34,6 @@ function initials(user: AdminUser): string {
   return letters.join("") || "A";
 }
 
-function IconBell({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
-      <path d="M6 8a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" />
-      <path d="M10 19a2 2 0 0 0 4 0" />
-    </svg>
-  );
-}
 function IconCaret({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
@@ -74,16 +69,6 @@ export function AdminTopBar({ user }: { user: AdminUser }) {
           </h1>
         </div>
 
-        {/* Notifications */}
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-white/80 transition-colors hover:bg-white/[0.08]"
-        >
-          <IconBell className="h-5 w-5" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-coral shadow-[0_0_8px_rgba(236,113,71,0.8)]" aria-hidden />
-        </button>
-
         {/* Avatar dropdown */}
         <div ref={menuRef} className="relative">
           <button
@@ -116,6 +101,13 @@ export function AdminTopBar({ user }: { user: AdminUser }) {
                 </p>
                 <p className="truncate text-[11px] text-white/55">{user.email}</p>
               </div>
+              <Link
+                href="/user-portal"
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2.5 text-sm text-white/80 transition-colors hover:bg-white/[0.06] hover:text-white"
+              >
+                User portal
+              </Link>
               <Link
                 href="/user-portal/settings"
                 onClick={() => setOpen(false)}

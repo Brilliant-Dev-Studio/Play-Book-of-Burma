@@ -1,7 +1,26 @@
-import { DateRangeFilter } from "@/app/admin/components/date-range-filter";
+import { prisma } from "@/lib/prisma";
+import { RetentionRangePicker } from "./range-picker";
+import type { RangeDays } from "@/app/admin/components/date-range-filter";
+
+const MONTH_NAMES = [
+  "Jan",
+  "Feb",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "Sep",
+  "October",
+  "November",
+  "Dec",
+] as const;
+
+const ALLOWED_RANGES: RangeDays[] = [7, 30, 90, 365];
 
 type Row = {
-  month: string;
+  monthLabel: string;
   total: number;
   m1to3: string;
   m4to6: string;
@@ -9,22 +28,101 @@ type Row = {
   totalPct: string;
 };
 
-const ROWS: Row[] = [
-  { month: "Jan",      total: 100, m1to3: "10%", m4to6: "20%", m7to12: "30%", totalPct: "60%" },
-  { month: "Feb",      total: 50,  m1to3: "20%", m4to6: "30%", m7to12: "50%", totalPct: "100%" },
-  { month: "March",    total: 70,  m1to3: "10%", m4to6: "20%", m7to12: "30%", totalPct: "60%" },
-  { month: "April",    total: 100, m1to3: "20%", m4to6: "30%", m7to12: "50%", totalPct: "100%" },
-  { month: "May",      total: 50,  m1to3: "10%", m4to6: "20%", m7to12: "30%", totalPct: "60%" },
-  { month: "June",     total: 70,  m1to3: "20%", m4to6: "30%", m7to12: "50%", totalPct: "100%" },
-  { month: "July",     total: 100, m1to3: "10%", m4to6: "20%", m7to12: "30%", totalPct: "60%" },
-  { month: "August",   total: 50,  m1to3: "0%",  m4to6: "30%", m7to12: "50%", totalPct: "80%" },
-  { month: "Sep",      total: 70,  m1to3: "10%", m4to6: "20%", m7to12: "30%", totalPct: "60%" },
-  { month: "October",  total: 100, m1to3: "20%", m4to6: "30%", m7to12: "50%", totalPct: "100%" },
-  { month: "November", total: 50,  m1to3: "10%", m4to6: "20%", m7to12: "30%", totalPct: "60%" },
-  { month: "Dec",      total: 70,  m1to3: "20%", m4to6: "30%", m7to12: "50%", totalPct: "100%" },
-];
+function pct(numer: number, denom: number): string {
+  if (denom === 0) return "—";
+  return `${Math.round((numer / denom) * 100)}%`;
+}
 
-export default function AdminRetentionPage() {
+function startOfMonth(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+}
+
+function addDays(d: Date, days: number): Date {
+  const next = new Date(d);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+export default async function AdminRetentionPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string }>;
+}) {
+  const { range } = await searchParams;
+  const rangeDays: RangeDays = (() => {
+    const n = Number(range);
+    return ALLOWED_RANGES.includes(n as RangeDays) ? (n as RangeDays) : 365;
+  })();
+
+  const now = new Date();
+  const rangeStart = addDays(now, -rangeDays);
+
+  const memberships = await prisma.membership.findMany({
+    where: {
+      status: { in: ["APPROVED", "EXPIRED"] },
+      approvedAt: { gte: rangeStart, lte: now, not: null },
+    },
+    select: { approvedAt: true, expiresAt: true },
+  });
+
+  // Group memberships by approvedAt year+month
+  const cohorts = new Map<
+    string,
+    { year: number; month: number; members: { approvedAt: Date; expiresAt: Date | null }[] }
+  >();
+  for (const m of memberships) {
+    if (!m.approvedAt) continue;
+    const y = m.approvedAt.getFullYear();
+    const mo = m.approvedAt.getMonth();
+    const key = `${y}-${mo}`;
+    if (!cohorts.has(key))
+      cohorts.set(key, { year: y, month: mo, members: [] });
+    cohorts.get(key)!.members.push({
+      approvedAt: m.approvedAt,
+      expiresAt: m.expiresAt,
+    });
+  }
+
+  // Build rows: walk each calendar month inside [rangeStart, now]
+  const rows: Row[] = [];
+  const cursor = startOfMonth(rangeStart);
+  const end = startOfMonth(now);
+  while (cursor <= end) {
+    const key = `${cursor.getFullYear()}-${cursor.getMonth()}`;
+    const cohort = cohorts.get(key);
+    const total = cohort?.members.length ?? 0;
+
+    let r1to3 = 0;
+    let r4to6 = 0;
+    let r7to12 = 0;
+    let rTotal = 0;
+
+    if (cohort) {
+      for (const m of cohort.members) {
+        if (!m.expiresAt) continue;
+        // Cohort start = approvedAt; reference dates for each window's far edge.
+        const ms90 = addDays(m.approvedAt, 90); // covers 1-3 months
+        const ms180 = addDays(m.approvedAt, 180); // covers 4-6 months
+        const ms365 = addDays(m.approvedAt, 365); // covers 7-12 months
+        if (m.expiresAt >= ms90) r1to3 += 1;
+        if (m.expiresAt >= ms180) r4to6 += 1;
+        if (m.expiresAt >= ms365) r7to12 += 1;
+        if (m.expiresAt >= now) rTotal += 1;
+      }
+    }
+
+    rows.push({
+      monthLabel: MONTH_NAMES[cursor.getMonth()],
+      total,
+      m1to3: pct(r1to3, total),
+      m4to6: pct(r4to6, total),
+      m7to12: pct(r7to12, total),
+      totalPct: pct(rTotal, total),
+    });
+
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+
   return (
     <div className="mx-auto w-full max-w-7xl">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
@@ -34,7 +132,7 @@ export default function AdminRetentionPage() {
           </h1>
           <p className="mt-1 text-sm text-white/55">Cohort Analysis</p>
         </div>
-        <DateRangeFilter />
+        <RetentionRangePicker initialDays={rangeDays} />
       </div>
 
       <div className="overflow-x-auto">
@@ -50,13 +148,24 @@ export default function AdminRetentionPage() {
             </tr>
           </thead>
           <tbody>
-            {ROWS.map((r, i) => {
-              const isLast = i === ROWS.length - 1;
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-4 py-12 text-center text-white/55">
+                  No approved memberships in this range yet.
+                </td>
+              </tr>
+            )}
+            {rows.map((r, i) => {
+              const isLast = i === rows.length - 1;
               return (
                 <tr key={i} className={isLast ? "border-b border-white/15" : ""}>
-                  <td className="px-4 py-3 text-white/90">{r.month}</td>
+                  <td className="px-4 py-3 text-white/90">{r.monthLabel}</td>
                   <td className="px-2 py-1.5 text-center align-middle">
-                    <div className="mx-auto flex h-11 w-32 items-center justify-center bg-coral font-semibold text-black">
+                    <div
+                      className={`mx-auto flex h-11 w-32 items-center justify-center font-semibold ${
+                        r.total > 0 ? "bg-coral text-black" : "border border-white/10 bg-white/[0.04] text-white/40"
+                      }`}
+                    >
                       {r.total}
                     </div>
                   </td>

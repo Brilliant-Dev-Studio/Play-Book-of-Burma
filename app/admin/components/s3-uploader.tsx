@@ -8,23 +8,56 @@ import Dashboard from "@uppy/dashboard";
 import "@uppy/core/css/style.min.css";
 import "@uppy/dashboard/css/style.min.css";
 
-type Kind = "video" | "thumbnail" | "trailer" | "instructor";
+type Kind = "video" | "thumbnail" | "trailer" | "instructor" | "audio" | "guidebook";
 
-type CompletePayload = { key: string; location: string };
+type CompletePayload = { key: string; location: string; durationSeconds?: number };
+
+async function readMediaDuration(file: File): Promise<number | null> {
+  const isVideo = file.type.startsWith("video/");
+  const isAudio = file.type.startsWith("audio/");
+  if (!isVideo && !isAudio) return null;
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const el = document.createElement(isAudio ? "audio" : "video");
+    el.preload = "metadata";
+    const cleanup = () => {
+      URL.revokeObjectURL(url);
+      el.removeAttribute("src");
+      el.load();
+    };
+    el.onloadedmetadata = () => {
+      const sec = Number.isFinite(el.duration) ? el.duration : null;
+      cleanup();
+      resolve(sec);
+    };
+    el.onerror = () => {
+      cleanup();
+      resolve(null);
+    };
+    el.src = url;
+  });
+}
 
 function buildUppy(kind: Kind, maxFileSize: number) {
+  const allowedFileTypes =
+    kind === "thumbnail" || kind === "instructor"
+      ? ["image/*"]
+      : kind === "audio"
+        ? ["audio/*"]
+        : kind === "guidebook"
+          ? [".pdf", "application/pdf"]
+          : ["video/*"];
   const uppy = new Uppy({
     restrictions: {
       maxNumberOfFiles: 1,
       maxFileSize,
-      allowedFileTypes:
-        kind === "thumbnail" || kind === "instructor" ? ["image/*"] : ["video/*"],
+      allowedFileTypes,
     },
     autoProceed: false,
   });
 
   uppy.use(AwsS3, {
-    shouldUseMultipart: () => kind === "video" || kind === "trailer",
+    shouldUseMultipart: () => kind === "video" || kind === "trailer" || kind === "audio",
     getChunkSize: () => 8 * 1024 * 1024,
     limit: 6,
 
@@ -135,6 +168,7 @@ export function S3Uploader({
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
   const isVideoKind = kind === "video" || kind === "trailer";
+  const isMediaKind = isVideoKind || kind === "audio";
 
   useEffect(() => {
     if (!targetRef.current) return;
@@ -142,7 +176,9 @@ export function S3Uploader({
     const defaultMax =
       kind === "thumbnail" || kind === "instructor"
         ? 25 * 1024 * 1024
-        : 5 * 1024 * 1024 * 1024;
+        : kind === "guidebook"
+          ? 50 * 1024 * 1024
+          : 5 * 1024 * 1024 * 1024;
     const uppy = buildUppy(kind, maxFileSize ?? defaultMax);
 
     uppy.use(Dashboard, {
@@ -153,6 +189,14 @@ export function S3Uploader({
       proudlyDisplayPoweredByUppy: false,
       hideUploadButton: false,
     });
+
+    const onFileAdded = (file: { id: string; data: File }) => {
+      if (!isMediaKind) return;
+      readMediaDuration(file.data).then((sec) => {
+        if (sec != null) uppy.setFileMeta(file.id, { durationSeconds: sec });
+      });
+    };
+    uppy.on("file-added", onFileAdded as never);
 
     const handler = (
       file: { meta?: Record<string, unknown>; response?: { uploadURL?: string; body?: Record<string, unknown> } } | undefined,
@@ -167,16 +211,18 @@ export function S3Uploader({
         "";
       const key = fromBody ?? fromMeta;
       if (!key) return;
-      onCompleteRef.current({ key, location: fromLocation });
+      const durationSeconds = file?.meta?.durationSeconds as number | undefined;
+      onCompleteRef.current({ key, location: fromLocation, durationSeconds });
     };
 
     uppy.on("upload-success", handler as never);
 
     return () => {
       uppy.off("upload-success", handler as never);
+      uppy.off("file-added", onFileAdded as never);
       uppy.destroy();
     };
-  }, [kind, height, maxFileSize]);
+  }, [kind, height, maxFileSize, isMediaKind]);
 
   return (
     <div className="rounded-lg border border-white/10 bg-black/40 p-2">

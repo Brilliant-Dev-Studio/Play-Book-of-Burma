@@ -33,7 +33,7 @@ const BENEFITS: readonly {
 
 export function HomeBenefitsSection() {
   return (
-    <section className="bg-black py-16 md:py-20 lg:py-24 xl:py-28">
+    <section className="bg-black py-10 md:py-12 lg:py-16 xl:py-20">
       <div className="mx-auto w-full max-w-[85%] px-4 sm:px-6 lg:px-8">
         <h2 className="text-left text-lg font-semibold tracking-tight text-white sm:text-xl">
           Benefits
@@ -41,8 +41,8 @@ export function HomeBenefitsSection() {
 
         <div className="mt-7 grid gap-8 md:grid-cols-3 md:gap-10">
           {BENEFITS.map((b) => (
-            <div key={b.title} className="min-w-0">
-              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-white/10 bg-black">
+            <div key={b.title} className="mx-auto w-full min-w-0 md:w-[88%]">
+              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border-2 border-white/45 bg-black">
                 <Image
                   src={b.image}
                   alt=""
@@ -59,7 +59,7 @@ export function HomeBenefitsSection() {
               <h3 className="mt-5 text-base font-semibold leading-snug tracking-tight text-coral">
                 {b.title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-white/85">
+              <p className="mt-2 text-[15px] font-medium leading-relaxed text-white/90 sm:text-base">
                 {b.body}
               </p>
             </div>

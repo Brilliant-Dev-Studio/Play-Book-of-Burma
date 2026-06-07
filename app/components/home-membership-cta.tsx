@@ -4,9 +4,15 @@ import Link from "next/link";
 
 export function HomeMembershipCta({
   variant = "default",
+  tightTop = false,
+  containerClassName,
 }: {
   /** `embedded` = own section + max-width shell for Library (below podcast). */
   variant?: "default" | "embedded";
+  /** Reduce the top padding when the section above already has large bottom spacing. */
+  tightTop?: boolean;
+  /** Override the embedded container shell (e.g. full-width for the portal context). */
+  containerClassName?: string;
 } = {}) {
   const inner = (
     <div className="flex flex-col items-center text-center">
@@ -29,8 +35,16 @@ export function HomeMembershipCta({
 
   if (variant === "embedded") {
     return (
-      <section className="bg-black pb-14 pt-10 sm:pb-16 sm:pt-12 md:pb-20 md:pt-14">
-        <div className="mx-auto w-full max-w-[85%] px-4 sm:px-6 lg:px-8">
+      <section
+        className={`bg-black pb-14 sm:pb-16 md:pb-20 ${
+          tightTop ? "pt-0 sm:pt-0 md:pt-2" : "pt-10 sm:pt-12 md:pt-14"
+        }`}
+      >
+        <div
+          className={
+            containerClassName ?? "mx-auto w-full max-w-[85%] px-4 sm:px-6 lg:px-8"
+          }
+        >
           {inner}
         </div>
       </section>

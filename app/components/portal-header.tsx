@@ -124,8 +124,8 @@ export function PortalHeader() {
 
   return (
     <header className="relative bg-black">
-      <div className="mx-auto w-full max-w-[85%] px-4 py-2.5 sm:px-6 lg:px-8">
-        <div className="flex min-h-17 w-full items-center justify-between gap-4 sm:min-h-21 sm:gap-6 lg:min-h-23">
+      <div className="w-full px-4 py-2.5 sm:px-6 lg:px-10">
+        <div className="flex min-h-16 w-full items-center justify-between gap-4 sm:min-h-18 sm:gap-6 lg:min-h-20">
           <Link
             href="/user-portal"
             className="relative flex min-w-0 shrink-0 items-center outline-offset-4 focus-visible:outline-2 focus-visible:outline-white/80"
@@ -134,7 +134,7 @@ export function PortalHeader() {
               src={logo}
               alt="Story of Burma"
               priority
-              className="h-12 w-auto sm:h-13 md:h-13"
+              className="h-12 w-auto sm:h-13 md:h-14 lg:h-15"
               sizes="(max-width: 768px) 240px, 320px"
             />
           </Link>
@@ -172,8 +172,11 @@ export function PortalHeader() {
                 onClick={() => setMenuOpen((o) => !o)}
                 aria-expanded={menuOpen}
                 aria-haspopup="menu"
-                disabled={loading}
-                className="flex items-center gap-2.5 rounded-full pr-1 outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-white/40 disabled:opacity-60 sm:gap-3"
+                aria-busy={loading || undefined}
+                suppressHydrationWarning
+                className={`flex items-center gap-2.5 rounded-full pr-1 outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-white/40 sm:gap-3 ${
+                  loading ? "opacity-60" : ""
+                }`}
               >
                 <span className="hidden truncate text-[15px] font-semibold tracking-tight text-white sm:block">
                   {displayName}

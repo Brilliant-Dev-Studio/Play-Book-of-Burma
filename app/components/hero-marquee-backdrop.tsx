@@ -208,7 +208,7 @@ export function HeroMarqueeBackdrop() {
         <div className="mx-auto flex min-h-[85vh] w-full max-w-[85%] flex-1">
           <div className="flex w-full flex-col items-start justify-center px-4 py-16 sm:px-6 md:w-1/2 lg:px-8">
             <div className="w-full max-w-3xl text-left text-white">
-              <h1 className="font-[family-name:var(--font-rwst-stack)] text-3xl leading-tight tracking-tight text-balance sm:text-4xl md:text-[2.35rem] md:leading-[1.12] lg:text-5xl">
+              <h1 className="font-[family-name:var(--font-rwst-stack)] text-4xl leading-tight tracking-tight text-balance sm:text-5xl md:text-[2.85rem] md:leading-[1.12] lg:text-6xl">
                 Get Playbook of Top 1 % in Myanmar
               </h1>
               <p className="mt-5 text-sm leading-relaxed text-white/90 sm:text-base">

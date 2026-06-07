@@ -2,10 +2,20 @@ import { DateRangeFilter } from "@/app/admin/components/date-range-filter";
 import { WatchHrSection } from "@/app/admin/components/watch-hr-section";
 import { DemographicProfile } from "@/app/admin/components/demographic-profile";
 import { WatchHrOverviewChart } from "@/app/admin/components/watch-hr-overview-chart";
-import { getSubscriberDemographics } from "@/lib/server/subscribers-stats";
+import {
+  getSubscriberDemographics,
+  getWatchHrStats,
+  getWatchHrByIndustry,
+  getWatchHrMonthlySeries,
+} from "@/lib/server/subscribers-stats";
 
 export default async function AdminSubscribersPage() {
-  const demographics = await getSubscriberDemographics();
+  const [demographics, watchHr, watchHrRows, watchHrSeries] = await Promise.all([
+    getSubscriberDemographics(),
+    getWatchHrStats(),
+    getWatchHrByIndustry(),
+    getWatchHrMonthlySeries(),
+  ]);
 
   return (
     <div className="mx-auto w-full max-w-7xl">
@@ -20,11 +30,16 @@ export default async function AdminSubscribersPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-2">
-        <WatchHrSection />
+        <WatchHrSection
+          subscribers={watchHr.subscribers}
+          audioHours={watchHr.audioHours}
+          videoHours={watchHr.videoHours}
+          rows={watchHrRows}
+        />
         <DemographicProfile {...demographics} />
       </div>
 
-      <WatchHrOverviewChart />
+      <WatchHrOverviewChart data={watchHrSeries} />
     </div>
   );
 }

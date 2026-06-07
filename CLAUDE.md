@@ -32,10 +32,10 @@ There are no tests.
 - `butter` — #fecf73
 - `wine` — #76220b
 
-**Fonts:**
-- `font-sans` → Geist Sans (`--font-geist-sans`)
-- `font-mono` → Geist Mono (`--font-geist-mono`)
-- `font-roman-wood-slide-title` → Cinzel 600/700 (`--font-rwst-stack`) — used for display headings (e.g. auth card `<h1>`)
+**Fonts** (local `next/font/local`, files in [app/assets/](app/assets/), defined in [app/layout.tsx](app/layout.tsx)):
+- `font-sans` → Open Sauce Sans (`--font-open-sauce`) — body/UI, weights 300–900 + italics
+- `font-mono` → Rumble Brave (`--font-rumble-brave`) — decorative accent font
+- `font-roman-wood-slide-title` → Roman Wood Type JNL (`--font-rwst-stack`) — used for display headings (e.g. auth card `<h1>`)
 
 **Shared styling primitives:**
 - [app/components/membership-form-field-styles.ts](app/components/membership-form-field-styles.ts) — exported Tailwind class strings for inputs, labels, textareas, and file inputs. Used by both the membership payment form and auth pages (login/signup). Add new form styles here.

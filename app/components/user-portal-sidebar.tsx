@@ -1,10 +1,6 @@
 "use client";
 
-const FILTER_GROUPS = [
-  { heading: "Playbook", options: ["CEO Playbook"] },
-  { heading: "Industry", options: ["Retails", "FMCG", "Technology"] },
-  { heading: "Skillsets", options: ["Business, Finance & Strategy"] },
-] as const;
+export type FilterGroup = { heading: string; options: string[] };
 
 function IconCheck({ className }: { className?: string }) {
   return (
@@ -47,11 +43,13 @@ export function UserPortalSidebar({
   onToggle,
   onClearAll,
   onClose,
+  filterGroups,
 }: {
   selected: Set<string>;
   onToggle: (option: string) => void;
   onClearAll: () => void;
   onClose: () => void;
+  filterGroups: FilterGroup[];
 }) {
   const totalSelected = selected.size;
 
@@ -60,7 +58,7 @@ export function UserPortalSidebar({
       {/* Header */}
       <div className="px-7 pb-6 pt-10">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="font-[family-name:var(--font-rwst-stack)] text-xl font-bold tracking-tight text-white">
+          <h2 className="font-[family-name:var(--font-rwst-stack)] text-2xl font-bold tracking-tight text-white sm:text-3xl">
             Choose What You Learn
           </h2>
           <button
@@ -81,7 +79,7 @@ export function UserPortalSidebar({
       {/* Filter groups */}
       <div className="flex-1 overflow-y-auto px-7 pb-8 scrollbar-thin [-ms-overflow-style:none] [scrollbar-color:rgba(255,255,255,0.15)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-track]:bg-transparent">
         <div className="flex flex-col gap-6">
-          {FILTER_GROUPS.map((group, idx) => {
+          {filterGroups.map((group, idx) => {
             const groupCount = group.options.filter((o) => selected.has(o)).length;
             return (
               <div

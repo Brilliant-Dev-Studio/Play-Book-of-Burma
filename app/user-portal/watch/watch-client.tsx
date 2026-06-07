@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { toggleBookmark, saveNote } from "./actions";
+import { toggleBookmark, saveNote, saveWatchProgress } from "./actions";
 
 const VidstackPlayer = dynamic(() => import("./vidstack-player"), {
   ssr: false,
@@ -21,6 +21,7 @@ export type WatchLesson = {
   videoUrl: string;
   bookmarked: boolean;
   note: string;
+  progressSeconds: number;
 };
 
 export type WatchVideo = {
@@ -39,7 +40,7 @@ export type WatchVideo = {
   lessons: WatchLesson[];
 };
 
-type Tab = "All Lessons" | "Notes" | "Biography";
+export type Tab = "All Lessons" | "Notes" | "Biography";
 
 function IconDownload({ className }: { className?: string }) {
   return (
@@ -76,9 +77,11 @@ function IconX({ className }: { className?: string }) {
 export function WatchClient({
   video,
   initialLessonIndex = 0,
+  initialTab = "All Lessons",
 }: {
   video: WatchVideo;
   initialLessonIndex?: number;
+  initialTab?: Tab;
 }) {
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [activeIndex, setActiveIndex] = useState(initialLessonIndex);
@@ -133,7 +136,7 @@ export function WatchClient({
 
   return (
     <main className="flex min-h-0 flex-1 flex-col bg-black">
-      <div className="mx-auto w-full max-w-[85%] px-4 pb-8 pt-4 sm:px-6 sm:pb-10 sm:pt-5 lg:px-8 lg:pb-12 lg:pt-6">
+      <div className="w-full px-4 pb-8 pt-4 sm:px-6 sm:pb-10 sm:pt-5 lg:px-10 lg:pb-12 lg:pt-6">
         <div className="relative flex flex-col gap-8 lg:flex-row lg:gap-8">
           {!isPanelOpen && (
             <button
@@ -152,9 +155,14 @@ export function WatchClient({
             <div className="overflow-hidden rounded-2xl">
               {activeLesson ? (
                 <VidstackPlayer
+                  key={activeLesson.id}
                   title={activeLesson.title}
                   src={activeLesson.videoUrl}
                   poster={video.thumbnailUrl}
+                  initialSeconds={activeLesson.progressSeconds}
+                  onTimeUpdate={(cur, dur) => {
+                    void saveWatchProgress(activeLesson.id, cur, dur);
+                  }}
                 />
               ) : (
                 <div className="flex aspect-video w-full items-center justify-center bg-zinc-900 text-white/55">
@@ -220,6 +228,7 @@ export function WatchClient({
               <ClassPanel
                 video={video}
                 activeIndex={activeIndex}
+                initialTab={initialTab}
                 onSelect={setActiveIndex}
                 onClose={() => setIsPanelOpen(false)}
                 noteValue={activeLesson ? noteState[activeLesson.id] ?? "" : ""}
@@ -240,6 +249,7 @@ export function WatchClient({
 function ClassPanel({
   video,
   activeIndex,
+  initialTab = "All Lessons",
   onSelect,
   onClose,
   noteValue,
@@ -249,6 +259,7 @@ function ClassPanel({
 }: {
   video: WatchVideo;
   activeIndex: number;
+  initialTab?: Tab;
   onSelect: (i: number) => void;
   onClose: () => void;
   noteValue: string;
@@ -256,7 +267,7 @@ function ClassPanel({
   onNoteChange: (value: string) => void;
   onNoteBlur: () => void;
 }) {
-  const [activeTab, setActiveTab] = useState<Tab>("All Lessons");
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [descExpanded, setDescExpanded] = useState(false);
   const [expandedLessons, setExpandedLessons] = useState<Set<number>>(new Set());
   const descLong = video.description.length > 160;
@@ -274,7 +285,7 @@ function ClassPanel({
     <div className="rounded-2xl bg-zinc-900/70 ring-1 ring-white/10">
       <div className="flex items-start gap-4 border-b border-white/10 p-5 sm:p-6">
         <Link
-          href={`/click-video-detail?video=${video.id}`}
+          href={`/user-portal/click-video-detail?video=${video.id}`}
           aria-label={`View ${video.title} detail`}
           className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-zinc-800 outline-none transition-opacity hover:opacity-85 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:h-20 sm:w-20"
         >

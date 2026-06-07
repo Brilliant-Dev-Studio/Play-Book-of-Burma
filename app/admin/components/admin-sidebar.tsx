@@ -78,6 +78,29 @@ function IconShield({ className }: { className?: string }) {
     </svg>
   );
 }
+function IconMic({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+    </svg>
+  );
+}
+function IconTag({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z" />
+      <circle cx="7" cy="7" r="1.5" />
+    </svg>
+  );
+}
+function IconSparkles({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1" />
+    </svg>
+  );
+}
 function IconChevron({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
@@ -90,7 +113,10 @@ const NAV: NavItem[] = [
   { label: "Dashboard", href: "/admin", icon: IconDashboard },
   { label: "Submissions", href: "/admin/submissions", icon: IconInbox },
   { label: "Instructors", href: "/admin/instructors", icon: IconUserCircle },
+  { label: "Industries", href: "/admin/industries", icon: IconTag },
+  { label: "Skillsets", href: "/admin/skillsets", icon: IconSparkles },
   { label: "Videos", href: "/admin/videos", icon: IconPlay },
+  { label: "Podcasts", href: "/admin/podcasts", icon: IconMic },
   { label: "Subscribers", href: "/admin/subscribers", icon: IconSubs },
   { label: "Retention", href: "/admin/retention", icon: IconHeart },
   { label: "Users", href: "/admin/users", icon: IconUsers },

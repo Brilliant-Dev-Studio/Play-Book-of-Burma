@@ -1,6 +1,143 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 
+export type WatchHrStats = {
+  subscribers: number;
+  /** Playbook bucket = audio podcasts. No audio playback tracking yet, so 0 for now. */
+  audioHours: number;
+  /** SOB bucket = video courses, from WatchProgress (which only tracks video lessons). */
+  videoHours: number;
+};
+
+export async function getWatchHrStats(): Promise<WatchHrStats> {
+  const [subscribers, agg] = await Promise.all([
+    prisma.user.count({ where: { role: "USER" } }),
+    prisma.watchProgress.aggregate({ _sum: { currentSeconds: true } }),
+  ]);
+
+  const videoSeconds = agg._sum.currentSeconds ?? 0;
+
+  return {
+    subscribers,
+    audioHours: 0,
+    videoHours: videoSeconds / 3600,
+  };
+}
+
+function roundHr(hours: number): number {
+  return Math.round(hours * 10) / 10;
+}
+
+export type WatchHrRow = {
+  id: string;
+  name: string; // industry name
+  type: "Playbook" | "SOB";
+  watchHours: number;
+  pctOfTotal: number;
+};
+
+/**
+ * Watch hours per industry, split by bucket.
+ *  - SOB (video): real WatchProgress seconds, grouped by the lesson's video industry.
+ *  - Playbook (audio): podcasts grouped by industry, but 0 hours until audio playback is tracked.
+ * Sorted by watch hours desc; % of total is share of the grand total across both buckets.
+ */
+export async function getWatchHrByIndustry(): Promise<WatchHrRow[]> {
+  const [progress, podcasts] = await Promise.all([
+    prisma.watchProgress.findMany({
+      select: {
+        currentSeconds: true,
+        lesson: {
+          select: {
+            video: {
+              select: { industry: { select: { id: true, name: true } } },
+            },
+          },
+        },
+      },
+    }),
+    prisma.podcast.findMany({
+      select: { industry: { select: { id: true, name: true } } },
+    }),
+  ]);
+
+  // SOB (video): sum seconds per industry.
+  const videoSeconds = new Map<string, { name: string; seconds: number }>();
+  for (const p of progress) {
+    const ind = p.lesson.video.industry;
+    const entry = videoSeconds.get(ind.id) ?? { name: ind.name, seconds: 0 };
+    entry.seconds += p.currentSeconds;
+    videoSeconds.set(ind.id, entry);
+  }
+
+  // Playbook (audio): industries that have podcasts (0 hours for now).
+  const audioIndustries = new Map<string, string>();
+  for (const pod of podcasts) {
+    audioIndustries.set(pod.industry.id, pod.industry.name);
+  }
+
+  const rows: Omit<WatchHrRow, "id" | "pctOfTotal">[] = [];
+  for (const { name, seconds } of videoSeconds.values()) {
+    rows.push({ name, type: "SOB", watchHours: roundHr(seconds / 3600) });
+  }
+  for (const name of audioIndustries.values()) {
+    rows.push({ name, type: "Playbook", watchHours: 0 });
+  }
+
+  rows.sort((a, b) => b.watchHours - a.watchHours);
+
+  const grandTotal = rows.reduce((sum, r) => sum + r.watchHours, 0);
+  const counters = { Playbook: 0, SOB: 0 };
+
+  return rows.map((r) => {
+    counters[r.type] += 1;
+    const prefix = r.type === "Playbook" ? "POB" : "SOB";
+    return {
+      ...r,
+      id: `#${prefix}-${String(counters[r.type]).padStart(3, "0")}`,
+      pctOfTotal: grandTotal > 0 ? Math.round((r.watchHours / grandTotal) * 100) : 0,
+    };
+  });
+}
+
+export type WatchHrMonthPoint = {
+  month: string;
+  total: number;
+  playbook: number;
+  sob: number;
+};
+
+/** Last 7 calendar months of watch hours, bucketed by lastWatchedAt. */
+export async function getWatchHrMonthlySeries(): Promise<WatchHrMonthPoint[]> {
+  const progress = await prisma.watchProgress.findMany({
+    select: { currentSeconds: true, lastWatchedAt: true },
+  });
+
+  const now = new Date();
+  const buckets: { key: string; label: string; seconds: number }[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    buckets.push({
+      key: `${d.getFullYear()}-${d.getMonth()}`,
+      label: d.toLocaleString("en-US", { month: "short" }),
+      seconds: 0,
+    });
+  }
+  const indexByKey = new Map(buckets.map((b, i) => [b.key, i]));
+
+  for (const p of progress) {
+    const d = p.lastWatchedAt;
+    const i = indexByKey.get(`${d.getFullYear()}-${d.getMonth()}`);
+    if (i !== undefined) buckets[i].seconds += p.currentSeconds;
+  }
+
+  return buckets.map((b) => {
+    const sob = roundHr(b.seconds / 3600);
+    const playbook = 0; // audio not tracked yet
+    return { month: b.label, sob, playbook, total: roundHr(sob + playbook) };
+  });
+}
+
 export type DemographicsStats = {
   totalSubscribers: number;
   malePct: number;

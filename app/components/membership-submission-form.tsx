@@ -22,7 +22,6 @@ const METHOD_OPTIONS: { value: Method; label: string }[] = [
 ];
 
 export function MembershipSubmissionForm() {
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [plan, setPlan] = useState<Plan>("SIX_MONTHS");
@@ -83,7 +82,6 @@ export function MembershipSubmissionForm() {
     e.preventDefault();
     setError(null);
 
-    if (!name.trim()) return setError("Name is required.");
     if (!email.trim()) return setError("Email is required.");
     if (!phone.trim()) return setError("Phone is required.");
     if (!file) return setError("Please attach a payment screenshot.");
@@ -95,7 +93,9 @@ export function MembershipSubmissionForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fullName: name.trim(),
+          // No name field on the form — derive a display name from the email
+          // local-part so the backend (which requires fullName) still works.
+          fullName: email.trim().split("@")[0] || email.trim(),
           email: email.trim(),
           phone: phone.trim(),
           plan,
@@ -106,7 +106,6 @@ export function MembershipSubmissionForm() {
       });
       if (!res.ok) throw new Error((await res.json()).error ?? "Could not submit.");
       setDone(true);
-      setName("");
       setEmail("");
       setPhone("");
       setNote("");
@@ -139,20 +138,6 @@ export function MembershipSubmissionForm() {
   return (
     <form className="flex flex-col gap-5" onSubmit={onSubmit}>
       <div>
-        <label className={membershipFormFieldLabelClass} htmlFor="pay-name">Name</label>
-        <input
-          id="pay-name"
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Your full name"
-          autoComplete="name"
-          className={membershipFormFieldClass}
-          disabled={submitting}
-          required
-        />
-      </div>
-      <div>
         <label className={membershipFormFieldLabelClass} htmlFor="pay-email">Email</label>
         <input
           id="pay-email"
@@ -165,6 +150,9 @@ export function MembershipSubmissionForm() {
           disabled={submitting}
           required
         />
+        <p className="mt-1.5 text-xs leading-relaxed text-white/55">
+          This email will be your login — we&apos;ll send your password here.
+        </p>
       </div>
       <div>
         <label className={membershipFormFieldLabelClass} htmlFor="pay-phone">Phone</label>

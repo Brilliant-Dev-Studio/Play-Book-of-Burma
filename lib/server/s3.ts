@@ -62,13 +62,30 @@ export function keyForSubmissionScreenshot(filename: string): string {
   return `${PREFIX}/submissions/${randomId()}/${sanitizeFilename(filename)}`;
 }
 
-export type UploadKind = "video" | "thumbnail" | "trailer" | "instructor" | "submission";
+export function keyForAudio(filename: string): string {
+  return `${PREFIX}/podcasts/${randomId()}/${sanitizeFilename(filename)}`;
+}
+
+export function keyForGuidebook(filename: string): string {
+  return `${PREFIX}/guidebooks/${randomId()}/${sanitizeFilename(filename)}`;
+}
+
+export type UploadKind =
+  | "video"
+  | "thumbnail"
+  | "trailer"
+  | "instructor"
+  | "submission"
+  | "audio"
+  | "guidebook";
 
 export function keyFor(kind: UploadKind, filename: string): string {
   if (kind === "video") return keyForVideo(filename);
   if (kind === "trailer") return keyForTrailer(filename);
   if (kind === "instructor") return keyForInstructorPhoto(filename);
   if (kind === "submission") return keyForSubmissionScreenshot(filename);
+  if (kind === "audio") return keyForAudio(filename);
+  if (kind === "guidebook") return keyForGuidebook(filename);
   return keyForThumbnail(filename);
 }
 

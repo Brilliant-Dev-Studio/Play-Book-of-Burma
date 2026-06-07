@@ -1,35 +1,48 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
-import popularCardThumb from "@/app/assets/benefits/Ray Dalio - 1.png";
 
-const CARD = {
-  titleLine1: "Learn Finance in 21 Day,",
-  titleLine2: "Become Master at it",
-  metaLine1: "Ko Jason Myint, CEO of",
-  metaLine2: "BYD By Essentials",
-  duration: "1 hour 15 minutes",
-} as const;
+export type FeaturedItem = {
+  id: string;
+  titleLine1: string;
+  titleLine2: string;
+  instructorName: string;
+  instructorTitle: string;
+  duration: string;
+  thumbnailUrl: string;
+};
 
-const CARD_COUNT = 6;
-
-function FeaturedVideoCard({ isFirst }: { isFirst?: boolean }) {
+function FeaturedVideoCard({
+  item,
+  isFirst,
+  isNew,
+}: {
+  item: FeaturedItem;
+  isFirst?: boolean;
+  isNew?: boolean;
+}) {
   return (
     <Link
-      href="/click-video-detail"
+      href={`/click-video-detail?video=${item.id}`}
       data-card={isFirst ? true : undefined}
-      className="group flex w-[284px] shrink-0 snap-start flex-col outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[324px] md:w-[332px]"
-      aria-label={`${CARD.titleLine1} ${CARD.titleLine2}`}
+      className="group flex w-[314px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border-2 border-white/45 bg-black outline-none transition-colors hover:border-white/65 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[354px] md:w-[362px]"
+      aria-label={`${item.titleLine1} ${item.titleLine2}`}
     >
-      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl bg-zinc-900 shadow-[0_16px_48px_rgba(0,0,0,0.5)]">
-        <Image
-          src={popularCardThumb}
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-zinc-900">
+        {isNew ? (
+          <span
+            className="absolute left-3 top-3 z-20 -rotate-3 rounded-full bg-coral px-3 py-1 text-sm font-bold italic text-white shadow-[0_4px_14px_rgba(236,113,71,0.5)] sm:left-4 sm:top-4"
+            aria-label="Newly added"
+          >
+            New!
+          </span>
+        ) : null}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={item.thumbnailUrl}
           alt=""
-          fill
-          className="rounded-t-2xl object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06] group-focus-within:scale-[1.06] motion-reduce:transition-none motion-reduce:group-hover:scale-100 motion-reduce:group-focus-within:scale-100"
-          sizes="(max-width: 640px) 288px, 320px"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06] group-focus-within:scale-[1.06] motion-reduce:transition-none motion-reduce:group-hover:scale-100 motion-reduce:group-focus-within:scale-100"
         />
 
         <div
@@ -58,43 +71,52 @@ function FeaturedVideoCard({ isFirst }: { isFirst?: boolean }) {
 
         {/* Title only — on the card / over the fade */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-4 pb-2 text-center sm:px-5 sm:pb-3">
-          <h3 className="overflow-hidden text-ellipsis text-base font-bold leading-snug tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] sm:text-lg">
-            {`${CARD.titleLine1} ${CARD.titleLine2}`}
+          <h3 className="overflow-hidden text-ellipsis text-lg font-extrabold leading-snug tracking-tight text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.6)] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] sm:text-xl">
+            {`${item.titleLine1}${item.titleLine2 ? " " + item.titleLine2 : ""}`}
           </h3>
         </div>
       </div>
 
       {/* Below the card — not over the image */}
-      <div className="-mt-0.5 relative z-10 flex flex-col items-center px-1 text-center">
+      <div className="relative z-10 flex flex-col items-center px-4 pb-4 pt-4 text-center">
         <span className="h-[3px] w-12 shrink-0 bg-coral" aria-hidden />
-        <p className="mt-1.5 text-sm leading-snug text-white/90">
-          <span className="block w-full truncate">{CARD.metaLine1}</span>
-          <span className="block w-full truncate">{CARD.metaLine2}</span>
+        <p className="mt-2 text-sm font-semibold leading-snug text-white/90 sm:text-[15px]">
+          <span className="block w-full truncate">{item.instructorName},</span>
+          <span className="block w-full truncate">{item.instructorTitle}</span>
         </p>
-        <p className="mt-1 w-full truncate text-xs text-white/70 sm:text-sm">
-          {CARD.duration}
+        <p className="mt-1 w-full truncate text-xs font-medium text-white/70 sm:text-sm">
+          {item.duration}
         </p>
       </div>
     </Link>
   );
 }
 
+type Tab = "popular" | "newlyAdded";
+
 export function HomeFeaturedCarousel({
+  items,
+  newlyAddedItems,
   heading,
   variant = "default",
   showSeeAll = true,
 }: {
+  items: FeaturedItem[];
+  /** When provided, a “Newly added” tab appears next to “Popular”. */
+  newlyAddedItems?: FeaturedItem[];
   /** Page title shown above the tab row (e.g. Library page). */
   heading?: string;
   /** `embedded` = less top padding when not directly under the home hero. */
   variant?: "default" | "embedded";
   /** Hide “See All” when already on the full library view. */
   showSeeAll?: boolean;
-} = {}) {
+}) {
   const scrollerRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<"Popular" | "Coming Soon">(
-    "Popular",
-  );
+  const [tab, setTab] = useState<Tab>("popular");
+
+  const hasTabs = Boolean(newlyAddedItems);
+  const visibleItems =
+    hasTabs && tab === "newlyAdded" ? newlyAddedItems ?? [] : items;
 
   const scrollByDir = useCallback((dir: -1 | 1) => {
     const el = scrollerRef.current;
@@ -110,7 +132,7 @@ export function HomeFeaturedCarousel({
   const sectionPad =
     variant === "embedded"
       ? "bg-black pb-12 pt-4 sm:pb-14 sm:pt-5 md:pb-16 md:pt-6 lg:pb-20 lg:pt-8"
-      : "bg-black pb-16 pt-32 md:pb-20 md:pt-40 lg:pb-24 lg:pt-48 xl:pb-28 xl:pt-56";
+      : "bg-black pb-10 pt-20 md:pb-12 md:pt-24 lg:pb-14 lg:pt-28 xl:pb-16 xl:pt-32";
 
   return (
     <section className={sectionPad}>
@@ -129,35 +151,37 @@ export function HomeFeaturedCarousel({
         ) : null}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-0 text-sm sm:text-[15px]">
-            <button
-              type="button"
-              onClick={() => setActiveTab("Popular")}
-              className={`font-semibold transition-colors ${
-                activeTab === "Popular"
-                  ? "text-white"
-                  : "font-medium text-mist hover:text-white/85"
-              }`}
-            >
-              Popular
-            </button>
-            <span
-              className="mx-3 h-4 w-px shrink-0 bg-white/25 sm:mx-4"
-              aria-hidden
-            />
-            <button
-              type="button"
-              onClick={() => setActiveTab("Coming Soon")}
-              className={`transition-colors ${
-                activeTab === "Coming Soon"
-                  ? "font-semibold text-white"
-                  : "font-medium text-mist hover:text-white/85"
-              }`}
-            >
-              Coming Soon
-            </button>
+            {hasTabs ? (
+              <button
+                type="button"
+                onClick={() => setTab("popular")}
+                className={`font-semibold transition-colors ${
+                  tab === "popular" ? "text-white" : "text-mist hover:text-white/90"
+                }`}
+              >
+                Popular
+              </button>
+            ) : (
+              <span className="font-semibold text-white">Popular</span>
+            )}
+
+            {hasTabs ? (
+              <button
+                type="button"
+                onClick={() => setTab("newlyAdded")}
+                className={`ml-5 font-semibold transition-colors sm:ml-8 ${
+                  tab === "newlyAdded"
+                    ? "text-white"
+                    : "text-mist hover:text-white/90"
+                }`}
+              >
+                Newly added
+              </button>
+            ) : null}
+
             {showSeeAll ? (
               <Link
-                href="/library"
+                href="/watch-all"
                 className="ml-5 font-medium text-mist transition-colors hover:text-white/90 sm:ml-8"
               >
                 See All
@@ -186,20 +210,32 @@ export function HomeFeaturedCarousel({
         </div>
       </div>
 
-      {/* Full-bleed track: cards scroll into viewport edges; insets align row 0 with max-w-[85%] + page padding */}
-      <div
-        ref={scrollerRef}
-        className={[
-          "relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-          variant === "embedded" ? "mt-6 md:mt-7" : "mt-8 md:mt-10",
-        ].join(" ")}
-      >
-        <div className="flex w-max snap-x snap-mandatory gap-4 pl-[calc(7.5vw+1rem)] pr-[calc(7.5vw+1rem)] sm:gap-5 sm:pl-[calc(7.5vw+1.5rem)] sm:pr-[calc(7.5vw+1.5rem)] lg:pl-[calc(7.5vw+2rem)] lg:pr-[calc(7.5vw+2rem)]">
-          {Array.from({ length: CARD_COUNT }, (_, i) => (
-            <FeaturedVideoCard key={i} isFirst={i === 0} />
-          ))}
+      {visibleItems.length === 0 ? (
+        <div className="mx-auto mt-8 w-full max-w-[85%] rounded-2xl border border-white/10 bg-white/[0.04] py-12 text-center text-white/55 sm:mt-10">
+          {hasTabs && tab === "newlyAdded"
+            ? "No newly added videos yet."
+            : "No published videos yet."}
         </div>
-      </div>
+      ) : (
+        <div
+          ref={scrollerRef}
+          className={[
+            "relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+            variant === "embedded" ? "mt-6 md:mt-7" : "mt-8 md:mt-10",
+          ].join(" ")}
+        >
+          <div className="flex w-max snap-x snap-mandatory gap-4 pl-[calc(7.5vw+1rem)] pr-[calc(7.5vw+1rem)] sm:gap-5 sm:pl-[calc(7.5vw+1.5rem)] sm:pr-[calc(7.5vw+1.5rem)] lg:pl-[calc(7.5vw+2rem)] lg:pr-[calc(7.5vw+2rem)]">
+            {visibleItems.map((item, i) => (
+              <FeaturedVideoCard
+                key={item.id}
+                item={item}
+                isFirst={i === 0}
+                isNew={hasTabs && tab === "newlyAdded"}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

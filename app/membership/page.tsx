@@ -5,6 +5,176 @@ import { MembershipSubmissionForm } from "@/app/components/membership-submission
 
 
 
+function IconCheck({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <path d="M5 13l4 4L19 7" />
+    </svg>
+  );
+}
+
+function IconMail({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </svg>
+  );
+}
+
+function IconLock({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <rect x="4" y="11" width="16" height="9" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </svg>
+  );
+}
+
+function IconCursor({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M3 20a6 6 0 0 1 12 0" />
+      <path d="m17 13 4 4-2 1 1 2-2 1-1-2-2 1Z" />
+    </svg>
+  );
+}
+
+function IconKeypad({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M8 7h.01M12 7h.01M16 7h.01M8 12h.01M12 12h.01M16 12h.01M8 17h.01M12 17h.01M16 17h.01" />
+    </svg>
+  );
+}
+
+function TimelineStep({
+  isLast,
+  text,
+  illustration,
+}: {
+  isLast?: boolean;
+  text: React.ReactNode;
+  illustration?: React.ReactNode;
+}) {
+  return (
+    <li className="relative flex gap-4 pb-6 last:pb-0">
+      {/* Bullet + connector */}
+      <div className="relative flex flex-col items-center">
+        <span
+          className="z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-coral text-white shadow-[0_4px_14px_rgba(236,113,71,0.45)]"
+          aria-hidden
+        >
+          <IconCheck className="h-4 w-4" />
+        </span>
+        {!isLast && (
+          <span
+            className="absolute left-1/2 top-9 h-full w-px -translate-x-1/2 bg-gradient-to-b from-coral/55 via-coral/30 to-coral/10"
+            aria-hidden
+          />
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1 pt-1">
+        <p className="text-sm font-semibold leading-snug tracking-tight text-white sm:text-[15px]">
+          {text}
+        </p>
+        {illustration && <div className="mt-3">{illustration}</div>}
+      </div>
+    </li>
+  );
+}
+
+function CredentialChip({
+  icon,
+  label,
+}: {
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-md border border-white/12 bg-zinc-950/70 px-3.5 py-2.5 text-sm text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:text-base">
+      <span className="text-white/85">{icon}</span>
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function MiniStepChip({
+  icon,
+  label,
+}: {
+  icon: React.ReactNode;
+  label: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-zinc-950/70 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-zinc-900 text-white/85">
+        {icon}
+      </span>
+      <p className="min-w-0 text-sm font-semibold leading-tight text-white">
+        {label}
+      </p>
+    </div>
+  );
+}
+
+function ApprovalTimeline() {
+  return (
+    <ol className="relative flex flex-col">
+      <TimelineStep
+        text={
+          <>
+            You will receive <span className="text-coral">email</span> and{" "}
+            <span className="text-coral">password</span> via your email
+          </>
+        }
+        illustration={
+          <div className="flex flex-wrap gap-2">
+            <CredentialChip icon={<IconMail className="h-5 w-5" />} label="Email" />
+            <CredentialChip icon={<IconLock className="h-5 w-5" />} label="Password" />
+          </div>
+        }
+      />
+      <TimelineStep
+        text={
+          <>
+            Log in with your email and password via our{" "}
+            <span className="text-coral">website / app</span>
+          </>
+        }
+        illustration={
+          <div className="flex flex-col gap-2">
+            <MiniStepChip
+              icon={<IconCursor className="h-5 w-5" />}
+              label={
+                <>
+                  Click the <span className="text-coral">Log in</span> button
+                </>
+              }
+            />
+            <MiniStepChip
+              icon={<IconKeypad className="h-5 w-5" />}
+              label="Enter email & password"
+            />
+          </div>
+        }
+      />
+      <TimelineStep
+        isLast
+        text={
+          <>
+            Done — start learning 24/7,{" "}
+            <span className="text-coral">anytime, anywhere</span>
+          </>
+        }
+      />
+    </ol>
+  );
+}
+
 function HowPayStepCard({
   step,
   title,
@@ -345,49 +515,7 @@ export default function MembershipPage() {
             </HowPayStepCard>
 
             <HowPayStepCard step={3} title="Approval in Not more than 30 mins">
-              <div className="space-y-6">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/40">
-                    After approval
-                  </p>
-                  <p className="mt-2 text-sm leading-relaxed text-white/78 [text-wrap:pretty] sm:text-[15px] sm:leading-relaxed">
-                    Once it is approved, we will send log in info to your email
-                  </p>
-                  <ol className="mt-3 space-y-2 border-l border-coral/35 pl-4 text-sm leading-snug text-white/88 sm:text-[15px]">
-                    <li>
-                      <span className="font-semibold text-white/70">1.</span>{" "}
-                      Username
-                    </li>
-                    <li>
-                      <span className="font-semibold text-white/70">2.</span>{" "}
-                      Password
-                    </li>
-                  </ol>
-                </div>
-                <div className="h-px bg-gradient-to-r from-transparent via-white/12 to-transparent" aria-hidden />
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/40">
-                    Next steps
-                  </p>
-                  <p className="mt-2 text-sm leading-relaxed text-white/78 [text-wrap:pretty] sm:text-[15px] sm:leading-relaxed">
-                    Once you receive this log in info,
-                  </p>
-                  <ol className="mt-3 space-y-2 border-l border-coral/35 pl-4 text-sm leading-snug text-white/88 sm:text-[15px]">
-                    <li>
-                      <span className="font-semibold text-white/70">1.</span>{" "}
-                      Click &quot;Log in&quot; Button
-                    </li>
-                    <li>
-                      <span className="font-semibold text-white/70">2.</span>{" "}
-                      Fill Username and Password
-                    </li>
-                    <li>
-                      <span className="font-semibold text-white/70">3.</span>{" "}
-                      Start Learning
-                    </li>
-                  </ol>
-                </div>
-              </div>
+              <ApprovalTimeline />
             </HowPayStepCard>
           </div>
         </section>
