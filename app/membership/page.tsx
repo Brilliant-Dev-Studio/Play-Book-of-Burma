@@ -1,7 +1,21 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import kbzPayLogo from "@/app/assets/kbzpay.png";
 import wavePayLogo from "@/app/assets/wavepay.png";
 import { MembershipSubmissionForm } from "@/app/components/membership-submission-form";
+
+export const metadata: Metadata = {
+  title: "Get Membership",
+  description:
+    "Join Playbook of Burma and unlock exclusive access to video interviews and podcasts with Myanmar's top founders, CEOs, and business experts. Pay via KBZ Pay or Wave Money.",
+  alternates: { canonical: "https://playbookofburma.com/membership" },
+  openGraph: {
+    title: "Get Membership | Playbook of Burma",
+    description:
+      "Join Playbook of Burma and unlock exclusive access to video interviews and podcasts with Myanmar's top founders, CEOs, and business experts. Pay via KBZ Pay or Wave Money.",
+    url: "https://playbookofburma.com/membership",
+  },
+};
 
 
 

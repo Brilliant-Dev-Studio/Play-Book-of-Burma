@@ -1,7 +1,21 @@
+import type { Metadata } from "next";
 import { BackButton } from "@/app/components/back-button";
 import { HomeFeaturedCarousel } from "@/app/components/home-featured-carousel";
 import { HomeMembershipCta } from "@/app/components/home-membership-cta";
 import { getNewlyAddedVideos } from "@/lib/server/popular-videos";
+
+export const metadata: Metadata = {
+  title: "Watch All",
+  description:
+    "Watch all video interviews from Playbook of Burma. Discover the latest business insights from Myanmar's most influential leaders.",
+  alternates: { canonical: "https://playbookofburma.com/watch-all" },
+  openGraph: {
+    title: "Watch All | Playbook of Burma",
+    description:
+      "Watch all video interviews from Playbook of Burma. Discover the latest business insights from Myanmar's most influential leaders.",
+    url: "https://playbookofburma.com/watch-all",
+  },
+};
 
 export default async function WatchAllPage() {
   const latestVideos = await getNewlyAddedVideos();
