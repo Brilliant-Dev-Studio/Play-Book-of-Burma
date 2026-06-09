@@ -3,6 +3,7 @@ import Image from "next/image";
 import kbzPayLogo from "@/app/assets/kbzpay.png";
 import wavePayLogo from "@/app/assets/wavepay.png";
 import { MembershipSubmissionForm } from "@/app/components/membership-submission-form";
+import { BreadcrumbJsonLd, FaqJsonLd } from "@/app/components/json-ld";
 
 export const metadata: Metadata = {
   title: "Get Membership",
@@ -400,6 +401,13 @@ function MembershipFaqPanel({
 export default function MembershipPage() {
   return (
     <main className="relative flex flex-1 flex-col overflow-hidden bg-black pb-20 pt-16 text-white md:pb-28 md:pt-20 lg:pb-32 lg:pt-24">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", href: "/" },
+          { name: "Membership", href: "/membership" },
+        ]}
+      />
+      <FaqJsonLd items={[...FAQ_GENERALS, ...FAQ_PAYMENTS]} />
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_100%_70%_at_50%_-15%,rgba(236,113,71,0.09),transparent_55%)]"
         aria-hidden

@@ -7,6 +7,7 @@ import {
   getNewlyAddedVideos,
 } from "@/lib/server/popular-videos";
 import { getHomePodcastGroups } from "@/lib/server/podcasts";
+import { BreadcrumbJsonLd } from "@/app/components/json-ld";
 
 export const metadata: Metadata = {
   title: "Library",
@@ -30,6 +31,12 @@ export default async function LibraryPage() {
 
   return (
     <main className="flex min-h-0 flex-1 flex-col bg-black font-sans text-white">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", href: "/" },
+          { name: "Library", href: "/library" },
+        ]}
+      />
       <HomeFeaturedCarousel
         items={popularVideos}
         newlyAddedItems={newlyAddedVideos}
