@@ -9,6 +9,8 @@ import {
 import { getHomePodcastGroups } from "@/lib/server/podcasts";
 import { BreadcrumbJsonLd } from "@/app/components/json-ld";
 
+export const revalidate = 3600; // presigned URLs last 4 h; refresh every 1 h
+
 export const metadata: Metadata = {
   title: "Library",
   description:

@@ -25,7 +25,7 @@ async function verify(token: string): Promise<Payload | null> {
   }
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;
   const session = token ? await verify(token) : null;

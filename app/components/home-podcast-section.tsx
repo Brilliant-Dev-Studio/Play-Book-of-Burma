@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { HomePodcastGroup, HomePodcastItem } from "@/lib/server/podcasts";
 import { PodcastPlayerRow } from "./user-portal-podcast-section";
 
@@ -23,30 +23,48 @@ function PlayBadge({ href }: { href: string }) {
 
 function PodcastRow({ item }: { item: HomePodcastItem }) {
   const [expanded, setExpanded] = useState(false);
+  const [isClamped, setIsClamped] = useState(false);
+  const descRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const el = descRef.current;
+    if (!el) return;
+    // Temporarily remove clamp to measure true full height vs clamped height
+    el.style.webkitLineClamp = "unset";
+    const fullH = el.scrollHeight;
+    el.style.webkitLineClamp = "";
+    setIsClamped(fullH > el.clientHeight + 2);
+  }, [item.description]);
+
   return (
     <article className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-7">
-      <div className="group relative aspect-[360/190] w-full max-w-[360px] overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-[0_14px_44px_rgba(0,0,0,0.45)] sm:w-[360px]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={item.thumbnailUrl}
-          alt=""
-          className="absolute inset-0 h-full w-full rounded-2xl object-cover object-center opacity-90 transition-transform duration-500 ease-out [transform-origin:center] scale-[1.18] group-hover:scale-[1.26] group-hover:opacity-100 motion-reduce:scale-[1.18] motion-reduce:transition-none motion-reduce:group-hover:scale-[1.18]"
-        />
-        <PlayBadge href={MEMBERSHIP_HREF} />
+      {/* Thumbnail — fixed size, portal-style gray border frame */}
+      <div className="group w-full shrink-0 rounded-2xl border-2 border-white/45 p-1.25 shadow-[0_14px_44px_rgba(0,0,0,0.45)] transition-colors hover:border-white/65 sm:w-[320px] lg:w-90">
+        <div className="relative aspect-360/230 w-full overflow-hidden rounded-xl bg-white/5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={item.thumbnailUrl}
+            alt=""
+            className="absolute inset-0 h-full w-full rounded-xl object-cover object-center opacity-90 transition-transform duration-500 ease-out origin-center scale-[1.18] group-hover:scale-[1.26] group-hover:opacity-100 motion-reduce:scale-[1.18] motion-reduce:transition-none motion-reduce:group-hover:scale-[1.18]"
+          />
+          <PlayBadge href={MEMBERSHIP_HREF} />
+        </div>
       </div>
 
-      <div className="min-w-0 pt-0 sm:pt-2">
-        <h3 className="text-xl font-semibold tracking-tight text-white">
+      {/* Content — fills remaining width, clipped so it can't overflow */}
+      <div className="min-w-0 flex-1 pt-0 sm:pt-2">
+        <h3 className="line-clamp-2 text-xl font-semibold leading-snug tracking-tight text-white">
           {item.title}
         </h3>
         <p
-          className={`mt-2 max-w-[62ch] text-base leading-relaxed text-white/85 ${
+          ref={descRef}
+          className={`mt-2 text-base leading-relaxed text-white/75 ${
             expanded ? "" : "line-clamp-3"
           }`}
         >
           {item.description}
         </p>
-        {item.description && (
+        {(isClamped || expanded) && (
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
@@ -96,7 +114,7 @@ export function HomePodcastSection({
         </h2>
 
         {groups.length === 0 ? (
-          <div className="mt-10 rounded-2xl border border-white/10 bg-white/[0.04] py-12 text-center text-white/55">
+          <div className="mt-10 rounded-2xl border border-white/10 bg-white/4 py-12 text-center text-white/55">
             No podcasts published yet.
           </div>
         ) : (

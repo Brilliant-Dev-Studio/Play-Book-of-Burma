@@ -1,3 +1,5 @@
+export const revalidate = 3600; // presigned URLs last 4 h; refresh every 1 h
+
 import { HeroMarqueeBackdrop } from "@/app/components/hero-marquee-backdrop";
 import { HomeFeaturedCarousel } from "@/app/components/home-featured-carousel";
 import { HomeBenefitsSection } from "@/app/components/home-benefits-section";

@@ -152,7 +152,7 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
           </button>
         )}
 
-        <audio ref={audioRef} src={item.audioUrl} preload="metadata" />
+        <audio ref={audioRef} src={item.audioUrl} preload="metadata" onError={() => {}} />
 
         <div className="mt-5 flex w-full max-w-[520px] items-center gap-2.5 rounded-2xl bg-zinc-900 px-3.5 py-2.5 ring-1 ring-white/10 sm:gap-3">
           {/* Playback speed */}

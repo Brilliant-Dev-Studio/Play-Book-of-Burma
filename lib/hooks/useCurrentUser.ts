@@ -81,3 +81,8 @@ export function clearCurrentUserCache() {
   cache = { status: "ready", user: null };
   recompute();
 }
+
+export function refreshCurrentUser() {
+  cache = { status: "idle" };
+  void ensureFetch();
+}

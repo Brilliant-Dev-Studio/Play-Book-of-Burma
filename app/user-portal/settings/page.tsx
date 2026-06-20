@@ -1,10 +1,146 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { refreshCurrentUser } from "@/lib/hooks/useCurrentUser";
 
 type Gender = "MALE" | "FEMALE" | "OTHER";
 type Region = "YANGON" | "MANDALAY" | "THAILAND" | "OTHER";
+
+function PhotoUploader({
+  currentUrl,
+  onChange,
+}: {
+  currentUrl: string;
+  onChange: (url: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleFile(file: File) {
+    if (!file.type.startsWith("image/")) {
+      setError("Only image files are allowed.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setError("File too large (max 10 MB).");
+      return;
+    }
+    setError(null);
+    setUploading(true);
+    try {
+      const signRes = await fetch("/api/user/uploads/photo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size }),
+      });
+      if (!signRes.ok) {
+        const d = await signRes.json();
+        setError(d.error ?? "Failed to prepare upload.");
+        return;
+      }
+      const { putUrl, getUrl } = (await signRes.json()) as { putUrl: string; getUrl: string };
+      const putRes = await fetch(putUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!putRes.ok) {
+        setError("Upload failed. Please try again.");
+        return;
+      }
+      onChange(getUrl);
+    } catch {
+      setError("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function onInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) void handleFile(file);
+    e.target.value = "";
+  }
+
+  function onDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file) void handleFile(file);
+  }
+
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+      {/* Avatar preview */}
+      <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white/20 bg-white/5">
+        {currentUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={currentUrl}
+            alt="Profile photo"
+            className="h-full w-full object-cover"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+          />
+        ) : (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className="h-10 w-10 text-white/30"
+            aria-hidden
+          >
+            <path
+              fillRule="evenodd"
+              d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z"
+              clipRule="evenodd"
+            />
+          </svg>
+        )}
+      </div>
+
+      {/* Drop zone + controls */}
+      <div
+        className="flex-1"
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={onDrop}
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => inputRef.current?.click()}
+            className="rounded-md border border-white/20 bg-white/5 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-60"
+          >
+            {uploading ? "Uploading…" : "Upload photo"}
+          </button>
+          {currentUrl && (
+            <button
+              type="button"
+              onClick={() => onChange("")}
+              className="text-sm text-white/50 hover:text-white/80"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+        <p className="mt-1.5 text-xs text-white/40">
+          JPG, PNG, WEBP · max 10 MB. Or drag and drop here.
+        </p>
+        {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={onInputChange}
+        />
+      </div>
+    </div>
+  );
+}
 
 type Me = {
   id: string;
@@ -144,6 +280,7 @@ export default function SettingsPage() {
         return;
       }
       setProfileMsg({ kind: "ok", text: "Profile updated." });
+      refreshCurrentUser();
       router.refresh();
     } finally {
       setProfilePending(false);
@@ -213,17 +350,10 @@ export default function SettingsPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-white/80">Photo URL</label>
-          <input
-            type="url"
-            value={photoUrl}
-            onChange={(e) => setPhotoUrl(e.target.value)}
-            placeholder="https://…"
-            className={inputClass}
-          />
-          <p className="mt-1 text-xs text-white/50">
-            Paste a public image URL. File upload will be available later.
-          </p>
+          <label className="block text-sm font-medium text-white/80">Profile photo</label>
+          <div className="mt-2">
+            <PhotoUploader currentUrl={photoUrl} onChange={setPhotoUrl} />
+          </div>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
