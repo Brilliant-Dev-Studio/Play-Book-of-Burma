@@ -55,6 +55,35 @@ function validate(input: SubscriberFormInput): string[] {
   return errors;
 }
 
+export async function deleteUser(
+  userId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  await requireAdmin();
+  try {
+    await prisma.user.delete({ where: { id: userId } });
+    revalidatePath("/admin/users");
+    return { ok: true };
+  } catch (err) {
+    console.error("deleteUser error:", err);
+    return { ok: false, error: "Failed to delete user." };
+  }
+}
+
+export async function setUserLock(
+  userId: string,
+  isActive: boolean,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  await requireAdmin();
+  try {
+    await prisma.user.update({ where: { id: userId }, data: { isActive } });
+    revalidatePath("/admin/users");
+    return { ok: true };
+  } catch (err) {
+    console.error("setUserLock error:", err);
+    return { ok: false, error: "Failed to update user." };
+  }
+}
+
 export async function regenerateTempPassword(
   userId: string,
 ): Promise<

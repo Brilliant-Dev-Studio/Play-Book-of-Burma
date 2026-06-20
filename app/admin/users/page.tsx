@@ -10,6 +10,7 @@ export default async function AdminUsersPage() {
       id: true,
       email: true,
       displayName: true,
+      isActive: true,
       createdAt: true,
       membership: {
         select: { status: true, plan: true, expiresAt: true },
@@ -41,6 +42,7 @@ export default async function AdminUsersPage() {
           id: u.id,
           email: u.email,
           displayName: u.displayName,
+          isActive: u.isActive,
           createdAt: u.createdAt.toISOString(),
           membership: u.membership
             ? {

@@ -25,6 +25,7 @@ model User {
   resetCode          String?
   resetCodeExpiry    DateTime?
   resetVerified      Boolean     @default(false)
+  isActive           Boolean     @default(true)
   gender             Gender?
   birthYear          Int?
   region             Region?

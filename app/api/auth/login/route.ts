@@ -15,7 +15,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        membership: { select: { status: true, expiresAt: true } },
+      },
+    });
     if (!user) {
       return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
     }
@@ -23,6 +28,21 @@ export async function POST(req: NextRequest) {
     const ok = await verifyPassword(password, user.passwordHash);
     if (!ok) {
       return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+    }
+
+    if (!user.isActive) {
+      return NextResponse.json(
+        { error: "Your account has been suspended. Please contact support." },
+        { status: 403 },
+      );
+    }
+
+    const m = user.membership;
+    if (m?.status === "APPROVED" && m.expiresAt && m.expiresAt < new Date()) {
+      return NextResponse.json(
+        { error: "Your membership plan has expired. Please renew to continue." },
+        { status: 403 },
+      );
     }
 
     const token = await signSession({ uid: user.id, email: user.email, role: user.role });
