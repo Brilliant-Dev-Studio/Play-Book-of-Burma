@@ -10,17 +10,16 @@ export type WatchHrStats = {
 };
 
 export async function getWatchHrStats(): Promise<WatchHrStats> {
-  const [subscribers, agg] = await Promise.all([
+  const [subscribers, videoAgg, audioAgg] = await Promise.all([
     prisma.user.count({ where: { role: "USER" } }),
     prisma.watchProgress.aggregate({ _sum: { currentSeconds: true } }),
+    prisma.podcastProgress.aggregate({ _sum: { currentSeconds: true } }),
   ]);
-
-  const videoSeconds = agg._sum.currentSeconds ?? 0;
 
   return {
     subscribers,
-    audioHours: 0,
-    videoHours: videoSeconds / 3600,
+    audioHours: (audioAgg._sum.currentSeconds ?? 0) / 3600,
+    videoHours: (videoAgg._sum.currentSeconds ?? 0) / 3600,
   };
 }
 
@@ -43,7 +42,7 @@ export type WatchHrRow = {
  * Sorted by watch hours desc; % of total is share of the grand total across both buckets.
  */
 export async function getWatchHrByIndustry(): Promise<WatchHrRow[]> {
-  const [progress, podcasts] = await Promise.all([
+  const [videoProgress, podcastProgress] = await Promise.all([
     prisma.watchProgress.findMany({
       select: {
         currentSeconds: true,
@@ -56,32 +55,40 @@ export async function getWatchHrByIndustry(): Promise<WatchHrRow[]> {
         },
       },
     }),
-    prisma.podcast.findMany({
-      select: { industry: { select: { id: true, name: true } } },
+    prisma.podcastProgress.findMany({
+      select: {
+        currentSeconds: true,
+        podcast: {
+          select: { industry: { select: { id: true, name: true } } },
+        },
+      },
     }),
   ]);
 
   // SOB (video): sum seconds per industry.
   const videoSeconds = new Map<string, { name: string; seconds: number }>();
-  for (const p of progress) {
+  for (const p of videoProgress) {
     const ind = p.lesson.video.industry;
     const entry = videoSeconds.get(ind.id) ?? { name: ind.name, seconds: 0 };
     entry.seconds += p.currentSeconds;
     videoSeconds.set(ind.id, entry);
   }
 
-  // Playbook (audio): industries that have podcasts (0 hours for now).
-  const audioIndustries = new Map<string, string>();
-  for (const pod of podcasts) {
-    audioIndustries.set(pod.industry.id, pod.industry.name);
+  // Playbook (audio): sum seconds per industry from real listen data.
+  const audioSeconds = new Map<string, { name: string; seconds: number }>();
+  for (const p of podcastProgress) {
+    const ind = p.podcast.industry;
+    const entry = audioSeconds.get(ind.id) ?? { name: ind.name, seconds: 0 };
+    entry.seconds += p.currentSeconds;
+    audioSeconds.set(ind.id, entry);
   }
 
   const rows: Omit<WatchHrRow, "id" | "pctOfTotal">[] = [];
   for (const { name, seconds } of videoSeconds.values()) {
     rows.push({ name, type: "SOB", watchHours: roundHr(seconds / 3600) });
   }
-  for (const name of audioIndustries.values()) {
-    rows.push({ name, type: "Playbook", watchHours: 0 });
+  for (const { name, seconds } of audioSeconds.values()) {
+    rows.push({ name, type: "Playbook", watchHours: roundHr(seconds / 3600) });
   }
 
   rows.sort((a, b) => b.watchHours - a.watchHours);
@@ -107,33 +114,46 @@ export type WatchHrMonthPoint = {
   sob: number;
 };
 
-/** Last 7 calendar months of watch hours, bucketed by lastWatchedAt. */
+/** Last 7 calendar months of watch hours, bucketed by lastWatchedAt / lastListenedAt. */
 export async function getWatchHrMonthlySeries(): Promise<WatchHrMonthPoint[]> {
-  const progress = await prisma.watchProgress.findMany({
-    select: { currentSeconds: true, lastWatchedAt: true },
-  });
+  const [videoProgress, podcastProgress] = await Promise.all([
+    prisma.watchProgress.findMany({
+      select: { currentSeconds: true, lastWatchedAt: true },
+    }),
+    prisma.podcastProgress.findMany({
+      select: { currentSeconds: true, lastListenedAt: true },
+    }),
+  ]);
 
   const now = new Date();
-  const buckets: { key: string; label: string; seconds: number }[] = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    buckets.push({
-      key: `${d.getFullYear()}-${d.getMonth()}`,
-      label: d.toLocaleString("en-US", { month: "short" }),
-      seconds: 0,
-    });
-  }
-  const indexByKey = new Map(buckets.map((b, i) => [b.key, i]));
+  const makeBuckets = () => {
+    const b: { key: string; label: string; seconds: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      b.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label: d.toLocaleString("en-US", { month: "short" }), seconds: 0 });
+    }
+    return b;
+  };
 
-  for (const p of progress) {
+  const sobBuckets = makeBuckets();
+  const pobBuckets = makeBuckets();
+  const sobIndex = new Map(sobBuckets.map((b, i) => [b.key, i]));
+  const pobIndex = new Map(pobBuckets.map((b, i) => [b.key, i]));
+
+  for (const p of videoProgress) {
     const d = p.lastWatchedAt;
-    const i = indexByKey.get(`${d.getFullYear()}-${d.getMonth()}`);
-    if (i !== undefined) buckets[i].seconds += p.currentSeconds;
+    const i = sobIndex.get(`${d.getFullYear()}-${d.getMonth()}`);
+    if (i !== undefined) sobBuckets[i].seconds += p.currentSeconds;
+  }
+  for (const p of podcastProgress) {
+    const d = p.lastListenedAt;
+    const i = pobIndex.get(`${d.getFullYear()}-${d.getMonth()}`);
+    if (i !== undefined) pobBuckets[i].seconds += p.currentSeconds;
   }
 
-  return buckets.map((b) => {
+  return sobBuckets.map((b, i) => {
     const sob = roundHr(b.seconds / 3600);
-    const playbook = 0; // audio not tracked yet
+    const playbook = roundHr(pobBuckets[i].seconds / 3600);
     return { month: b.label, sob, playbook, total: roundHr(sob + playbook) };
   });
 }

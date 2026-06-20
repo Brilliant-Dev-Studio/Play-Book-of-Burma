@@ -33,6 +33,7 @@ model User {
   bookmarks          Bookmark[]
   notes              Note[]
   watchProgress      WatchProgress[]
+  podcastProgress    PodcastProgress[]
   playbookAchievements PlaybookAchievement[]
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
@@ -51,25 +52,43 @@ model Bookmark {
 }
 
 model Podcast {
-  id              String   @id @default(cuid())
+  id              String            @id @default(cuid())
   title           String
   description     String
   audioKey        String
   thumbnailKey    String
-  season          Int      @default(1)
-  episodeOrder    Int      @default(0)
-  durationSeconds Int      @default(0)
-  durationLabel   String   @default("")
-  popular         Boolean  @default(false)
+  season          Int               @default(1)
+  episodeOrder    Int               @default(0)
+  durationSeconds Int               @default(0)
+  durationLabel   String            @default("")
+  popular         Boolean           @default(false)
   industryId      String
-  industry        Industry @relation(fields: [industryId], references: [id])
-  publishedAt     DateTime @default(now())
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  industry        Industry          @relation(fields: [industryId], references: [id])
+  podcastProgress PodcastProgress[]
+  publishedAt     DateTime          @default(now())
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
   @@index([season, episodeOrder])
   @@index([popular])
   @@index([industryId])
+}
+
+model PodcastProgress {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  podcastId       String
+  podcast         Podcast   @relation(fields: [podcastId], references: [id], onDelete: Cascade)
+  currentSeconds  Int       @default(0)
+  durationSeconds Int       @default(0)
+  completedAt     DateTime?
+  lastListenedAt  DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([userId, podcastId])
+  @@index([userId, lastListenedAt])
 }
 
 model WatchProgress {

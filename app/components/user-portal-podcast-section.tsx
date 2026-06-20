@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { UserPortalPodcastItem } from "@/lib/server/podcasts";
+import { savePodcastProgress } from "@/app/user-portal/podcast-actions";
+
+const SAVE_INTERVAL_SEC = 10;
 
 function formatTime(sec: number): string {
   if (!Number.isFinite(sec) || sec <= 0) return "0:00";
@@ -22,12 +25,28 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
   const [volume, setVolume] = useState(1);
   const [muted, setMuted] = useState(false);
 
+  // Throttled progress saving — fires at most once per SAVE_INTERVAL_SEC
+  const lastSavedSecRef = useRef<number>(-SAVE_INTERVAL_SEC);
+  function saveProgress(currentTime: number, duration: number) {
+    if (currentTime - lastSavedSecRef.current < SAVE_INTERVAL_SEC) return;
+    lastSavedSecRef.current = currentTime;
+    void savePodcastProgress(item.id, currentTime, duration);
+  }
+
   useEffect(() => {
     const el = audioRef.current;
     if (!el) return;
     const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
-    const onTime = () => setCurrentSec(el.currentTime);
+    const onPause = () => {
+      setIsPlaying(false);
+      // Always save on pause/end regardless of throttle
+      lastSavedSecRef.current = -SAVE_INTERVAL_SEC;
+      void savePodcastProgress(item.id, el.currentTime, el.duration || durationSec);
+    };
+    const onTime = () => {
+      setCurrentSec(el.currentTime);
+      saveProgress(el.currentTime, el.duration || durationSec);
+    };
     const onMeta = () => {
       if (Number.isFinite(el.duration) && el.duration > 0) {
         setDurationSec(el.duration);
@@ -45,7 +64,8 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
       el.removeEventListener("timeupdate", onTime);
       el.removeEventListener("loadedmetadata", onMeta);
     };
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item.id, durationSec]);
 
   function toggle() {
     const el = audioRef.current;
@@ -108,13 +128,13 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
 
   return (
     <article className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-7">
-      <div className="group w-full max-w-[350px] shrink-0 rounded-2xl border-2 border-white/45 p-[5px] shadow-[0_14px_44px_rgba(0,0,0,0.45)] transition-colors hover:border-white/65 sm:w-[350px]">
-        <div className="relative aspect-[360/230] w-full overflow-hidden rounded-xl bg-white/5">
+      <div className="group w-full max-w-87.5 shrink-0 rounded-2xl border-2 border-white/45 p-1.25 shadow-[0_14px_44px_rgba(0,0,0,0.45)] transition-colors hover:border-white/65 sm:w-87.5">
+        <div className="relative aspect-360/230 w-full overflow-hidden rounded-xl bg-white/5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={item.thumbnailUrl}
             alt=""
-            className="absolute inset-0 h-full w-full rounded-xl object-cover object-center opacity-90 transition-transform duration-500 ease-out [transform-origin:center] scale-[1.18] group-hover:scale-[1.26] group-hover:opacity-100 motion-reduce:scale-[1.18] motion-reduce:transition-none motion-reduce:group-hover:scale-[1.18]"
+            className="absolute inset-0 h-full w-full rounded-xl object-cover object-center opacity-90 transition-transform duration-500 ease-out origin-center scale-[1.18] group-hover:scale-[1.26] group-hover:opacity-100 motion-reduce:scale-[1.18] motion-reduce:transition-none motion-reduce:group-hover:scale-[1.18]"
           />
           <button
             type="button"
@@ -154,7 +174,7 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
 
         <audio ref={audioRef} src={item.audioUrl} preload="metadata" onError={() => {}} />
 
-        <div className="mt-5 flex w-full max-w-[520px] items-center gap-2.5 rounded-2xl bg-zinc-900 px-3.5 py-2.5 ring-1 ring-white/10 sm:gap-3">
+        <div className="mt-5 flex w-full max-w-130 items-center gap-2.5 rounded-2xl bg-zinc-900 px-3.5 py-2.5 ring-1 ring-white/10 sm:gap-3">
           {/* Playback speed */}
           <button
             type="button"
@@ -316,7 +336,7 @@ export function UserPortalPodcastSection({
         <h2 className="text-left text-2xl font-semibold tracking-tight text-white sm:text-3xl">
           Listen to Story of Burma Podcast with No Ads
         </h2>
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.04] py-12 text-center text-white/55">
+        <div className="mt-8 rounded-2xl border border-white/10 bg-white/4 py-12 text-center text-white/55">
           No podcasts published yet.
         </div>
       </section>
