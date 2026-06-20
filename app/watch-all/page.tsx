@@ -3,7 +3,7 @@ import { BackButton } from "@/app/components/back-button";
 import { HomeFeaturedCarousel } from "@/app/components/home-featured-carousel";
 import { HomeMembershipCta } from "@/app/components/home-membership-cta";
 import { getNewlyAddedVideos } from "@/lib/server/popular-videos";
-import { BreadcrumbJsonLd } from "@/app/components/json-ld";
+import { BreadcrumbJsonLd, VideoListJsonLd } from "@/app/components/json-ld";
 
 export const revalidate = 3600; // presigned URLs last 4 h; refresh every 1 h
 
@@ -31,6 +31,7 @@ export default async function WatchAllPage() {
           { name: "Watch All", href: "/watch-all" },
         ]}
       />
+      <VideoListJsonLd items={latestVideos} />
       <div className="mx-auto w-full max-w-[85%] px-4 pt-6 sm:px-6 sm:pt-8 lg:px-8">
         <BackButton fallbackHref="/" />
       </div>

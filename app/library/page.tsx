@@ -7,7 +7,7 @@ import {
   getNewlyAddedVideos,
 } from "@/lib/server/popular-videos";
 import { getHomePodcastGroups } from "@/lib/server/podcasts";
-import { BreadcrumbJsonLd } from "@/app/components/json-ld";
+import { BreadcrumbJsonLd, VideoListJsonLd, PodcastListJsonLd } from "@/app/components/json-ld";
 
 export const revalidate = 3600; // presigned URLs last 4 h; refresh every 1 h
 
@@ -39,6 +39,8 @@ export default async function LibraryPage() {
           { name: "Library", href: "/library" },
         ]}
       />
+      <VideoListJsonLd items={popularVideos} />
+      <PodcastListJsonLd items={podcastGroups.flatMap((g) => g.items)} />
       <HomeFeaturedCarousel
         items={popularVideos}
         newlyAddedItems={newlyAddedVideos}

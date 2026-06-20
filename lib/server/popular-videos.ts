@@ -8,7 +8,10 @@ export type PopularVideoItem = {
   titleLine2: string;
   instructorName: string;
   instructorTitle: string;
+  description: string;
   duration: string;
+  durationSeconds: number;
+  publishedAt: string | null; // ISO date string
   thumbnailUrl: string;
 };
 
@@ -18,8 +21,11 @@ const VIDEO_SELECT = {
   id: true,
   titleLine1: true,
   titleLine2: true,
+  description: true,
   thumbnailKey: true,
   durationLabel: true,
+  durationSeconds: true,
+  publishedAt: true,
   instructor: { select: { name: true, title: true } },
 } as const;
 
@@ -27,8 +33,11 @@ type VideoRow = {
   id: string;
   titleLine1: string;
   titleLine2: string | null;
+  description: string;
   thumbnailKey: string;
   durationLabel: string;
+  durationSeconds: number;
+  publishedAt: Date | null;
   instructor: { name: string; title: string };
 };
 
@@ -40,7 +49,10 @@ async function toItems(rows: VideoRow[]): Promise<PopularVideoItem[]> {
       titleLine2: v.titleLine2 ?? "",
       instructorName: v.instructor.name,
       instructorTitle: v.instructor.title,
+      description: v.description,
       duration: v.durationLabel,
+      durationSeconds: v.durationSeconds,
+      publishedAt: v.publishedAt ? v.publishedAt.toISOString() : null,
       thumbnailUrl: await presignGetUrl(v.thumbnailKey, PRESIGN_TTL.image),
     })),
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Submission } from "@/app/admin/components/submissions-table";
 import { regenerateTempPassword } from "@/app/admin/users/actions";
 
@@ -9,6 +9,132 @@ function IconX({ className }: { className?: string }) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
       <path d="M18 6L6 18M6 6l12 12" />
     </svg>
+  );
+}
+
+function IconZoom() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden>
+      <circle cx="11" cy="11" r="8" />
+      <path d="M21 21l-4.35-4.35M11 8v6M8 11h6" />
+    </svg>
+  );
+}
+
+function ScreenshotLightbox({ src, onClose }: { src: string; onClose: () => void }) {
+  const [scale, setScale] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const dragRef = useRef<{ startX: number; startY: number; ox: number; oy: number } | null>(null);
+  const imgRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  // Scroll to zoom
+  function onWheel(e: React.WheelEvent) {
+    e.preventDefault();
+    setScale((s) => Math.min(5, Math.max(1, s - e.deltaY * 0.002)));
+    if (scale <= 1) setOffset({ x: 0, y: 0 });
+  }
+
+  // Double-click to toggle zoom
+  function onDblClick() {
+    if (scale > 1) {
+      setScale(1);
+      setOffset({ x: 0, y: 0 });
+    } else {
+      setScale(2.5);
+    }
+  }
+
+  // Drag to pan
+  function onMouseDown(e: React.MouseEvent) {
+    if (scale <= 1) return;
+    e.preventDefault();
+    dragRef.current = { startX: e.clientX, startY: e.clientY, ox: offset.x, oy: offset.y };
+  }
+  function onMouseMove(e: React.MouseEvent) {
+    if (!dragRef.current) return;
+    setOffset({
+      x: dragRef.current.ox + e.clientX - dragRef.current.startX,
+      y: dragRef.current.oy + e.clientY - dragRef.current.startY,
+    });
+  }
+  function onMouseUp() { dragRef.current = null; }
+
+  // Touch drag
+  const touchRef = useRef<{ startX: number; startY: number; ox: number; oy: number } | null>(null);
+  function onTouchStart(e: React.TouchEvent) {
+    if (scale <= 1) return;
+    const t = e.touches[0];
+    touchRef.current = { startX: t.clientX, startY: t.clientY, ox: offset.x, oy: offset.y };
+  }
+  function onTouchMove(e: React.TouchEvent) {
+    if (!touchRef.current) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    setOffset({
+      x: touchRef.current.ox + t.clientX - touchRef.current.startX,
+      y: touchRef.current.oy + t.clientY - touchRef.current.startY,
+    });
+  }
+  function onTouchEnd() { touchRef.current = null; }
+
+  return (
+    <div
+      className="fixed inset-0 z-999 flex items-center justify-center bg-black/90 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      {/* Close button */}
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Close"
+        className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+      >
+        <IconX className="h-5 w-5" />
+      </button>
+
+      {/* Zoom hint */}
+      <p className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-4 py-1.5 text-xs text-white/60 backdrop-blur-sm select-none">
+        Scroll to zoom · Double-click to toggle · Drag to pan
+      </p>
+
+      {/* Image container */}
+      <div
+        ref={imgRef}
+        className="relative max-h-[90vh] max-w-[90vw] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+        onWheel={onWheel}
+        onDoubleClick={onDblClick}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        style={{ cursor: scale > 1 ? "grab" : "zoom-in" }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt="Payment screenshot"
+          draggable={false}
+          className="block max-h-[90vh] max-w-[90vw] select-none rounded-lg object-contain shadow-2xl"
+          style={{
+            transform: `scale(${scale}) translate(${offset.x / scale}px, ${offset.y / scale}px)`,
+            transition: dragRef.current ? "none" : "transform 0.15s ease-out",
+            transformOrigin: "center center",
+          }}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -39,6 +165,7 @@ export function ApproveSubmissionModal({
     displayName: string | null;
     tempPassword: string;
   } | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [stashCopied, setStashCopied] = useState(false);
   const [regenerated, setRegenerated] = useState<string | null>(null);
@@ -182,14 +309,33 @@ export function ApproveSubmissionModal({
         <div className="grid flex-1 grid-cols-1 gap-6 overflow-y-auto px-6 py-6 lg:grid-cols-[260px_1fr]">
           <div>
             <p className={labelClass}>Payment screenshot</p>
-            <div className="mt-2 aspect-[3/4] w-full overflow-hidden rounded-lg border border-white/10 bg-black/40">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+            <button
+              type="button"
+              onClick={() => setLightboxOpen(true)}
+              aria-label="View full screenshot"
+              className="group mt-2 block w-full cursor-zoom-in overflow-hidden rounded-lg border border-white/10 bg-black/40 transition-colors hover:border-white/30"
+            >
+              <div className="relative aspect-3/4 w-full">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={submission.screenshotUrl}
+                  alt="Payment screenshot"
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/40">
+                  <span className="flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-xs font-semibold text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+                    <IconZoom />
+                    Zoom
+                  </span>
+                </div>
+              </div>
+            </button>
+            {lightboxOpen && (
+              <ScreenshotLightbox
                 src={submission.screenshotUrl}
-                alt="Payment screenshot"
-                className="h-full w-full object-cover"
+                onClose={() => setLightboxOpen(false)}
               />
-            </div>
+            )}
             <div className="mt-4 space-y-3 text-xs">
               <div>
                 <p className={labelClass}>Method</p>

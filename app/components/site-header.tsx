@@ -8,6 +8,47 @@ import { useEffect, useRef, useState } from "react";
 import { useCurrentUser, clearCurrentUserCache } from "@/lib/hooks/useCurrentUser";
 import { logout } from "@/lib/auth";
 
+function UserAvatar({
+  photoUrl,
+  displayName,
+  email,
+  size,
+}: {
+  photoUrl: string | null;
+  displayName: string | null;
+  email: string;
+  size: "sm" | "md";
+}) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const initial = (displayName ?? email ?? "?").charAt(0).toUpperCase();
+  const cls =
+    size === "md"
+      ? "flex h-9 w-9 items-center justify-center rounded-full bg-coral text-sm font-bold text-white"
+      : "flex h-7 w-7 items-center justify-center rounded-full bg-coral text-xs font-bold text-white";
+  const imgCls =
+    size === "md"
+      ? "h-9 w-9 rounded-full object-cover ring-2 ring-white/20"
+      : "h-7 w-7 rounded-full object-cover ring-2 ring-white/20";
+
+  if (photoUrl && !imgFailed) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={photoUrl}
+        alt={displayName ?? "Profile"}
+        className={imgCls}
+        onError={() => setImgFailed(true)}
+      />
+    );
+  }
+  return <span className={cls}>{initial}</span>;
+}
+
+function displayLabel(displayName: string | null, email: string): string {
+  if (displayName) return displayName;
+  return email.split("@")[0];
+}
+
 const mainNavItems = [
   { href: "/", label: "Home" },
   { href: "/membership", label: "Membership" },
@@ -200,20 +241,12 @@ export function SiteHeader() {
                     aria-haspopup="menu"
                     className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                   >
-                    {user.photoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={user.photoUrl}
-                        alt={user.displayName ?? "Profile"}
-                        width={36}
-                        height={36}
-                        className="h-9 w-9 rounded-full object-cover ring-2 ring-white/20"
-                      />
-                    ) : (
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-coral text-sm font-bold text-white">
-                        {(user.displayName ?? user.email ?? "U").charAt(0).toUpperCase()}
-                      </span>
-                    )}
+                    <UserAvatar
+                      photoUrl={user.photoUrl}
+                      displayName={user.displayName}
+                      email={user.email}
+                      size="md"
+                    />
                     <IconChevronDown
                       className={`h-4 w-4 text-white/70 transition-transform duration-200 ${authMenuOpen ? "rotate-180" : ""}`}
                     />
@@ -226,7 +259,7 @@ export function SiteHeader() {
                     >
                       <div className="border-b border-white/10 px-4 py-3">
                         <p className="truncate text-sm font-semibold text-white">
-                          {user.displayName ?? "User"}
+                          {displayLabel(user.displayName, user.email)}
                         </p>
                         {user.email && (
                           <p className="mt-0.5 truncate text-xs text-white/60">
@@ -339,22 +372,14 @@ export function SiteHeader() {
               {!loading && user ? (
                 <>
                   <div className="flex items-center gap-3 border-b border-white/10 py-3.5">
-                    {user.photoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={user.photoUrl}
-                        alt={user.displayName ?? "Profile"}
-                        width={28}
-                        height={28}
-                        className="h-7 w-7 rounded-full object-cover ring-2 ring-white/20"
-                      />
-                    ) : (
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-coral text-xs font-bold text-white">
-                        {(user.displayName ?? user.email ?? "U").charAt(0).toUpperCase()}
-                      </span>
-                    )}
+                    <UserAvatar
+                      photoUrl={user.photoUrl}
+                      displayName={user.displayName}
+                      email={user.email}
+                      size="sm"
+                    />
                     <span className="truncate text-sm font-medium text-white/70">
-                      {user.displayName ?? user.email}
+                      {displayLabel(user.displayName, user.email)}
                     </span>
                   </div>
                   <Link
