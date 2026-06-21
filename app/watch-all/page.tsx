@@ -32,7 +32,7 @@ export default async function WatchAllPage() {
         ]}
       />
       <VideoListJsonLd items={latestVideos} />
-      <div className="mx-auto w-full max-w-[85%] px-4 pt-6 sm:px-6 sm:pt-8 lg:px-8">
+      <div className="mx-auto w-full max-w-[80%] px-4 pt-6 sm:px-6 sm:pt-8 lg:px-8">
         <BackButton fallbackHref="/" />
       </div>
       <HomeFeaturedCarousel

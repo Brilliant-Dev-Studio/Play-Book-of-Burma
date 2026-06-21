@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/server/auth-helpers";
 import { isAllowedKey } from "@/lib/server/s3";
@@ -185,9 +185,18 @@ export async function saveVideo(
   return { ok: true, id };
 }
 
-export async function deleteVideo(id: string) {
+export async function deleteVideo(
+  id: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
   await requireAdmin();
-  await prisma.video.delete({ where: { id } });
-  revalidatePath("/admin/videos");
-  redirect("/admin/videos");
+  try {
+    await prisma.video.delete({ where: { id } });
+    revalidatePath("/admin/videos");
+    return { ok: true };
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return { ok: false, error: `Could not delete video (${err.code}).` };
+    }
+    return { ok: false, error: "Could not delete video." };
+  }
 }

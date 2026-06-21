@@ -26,7 +26,7 @@ function FeaturedVideoCard({
     <Link
       href={`/click-video-detail?video=${item.id}`}
       data-card={isFirst ? true : undefined}
-      className="group flex w-[314px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border-2 border-white/45 bg-black outline-none transition-colors hover:border-white/65 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[354px] md:w-[362px]"
+      className="group flex w-[314px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border-2 border-white/30 bg-black outline-none transition-colors hover:border-white/45 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[354px] md:w-[362px]"
       aria-label={`${item.titleLine1} ${item.titleLine2}`}
     >
       <div className="relative aspect-[3/4] w-full overflow-hidden bg-zinc-900">
@@ -136,7 +136,7 @@ export function HomeFeaturedCarousel({
 
   return (
     <section className={sectionPad}>
-      <div className="mx-auto w-full max-w-[85%] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[80%] px-4 sm:px-6 lg:px-8">
         {heading ? (
           <h1
             className={[
@@ -189,29 +189,11 @@ export function HomeFeaturedCarousel({
             ) : null}
           </div>
 
-          <div className="flex shrink-0 gap-2">
-            <button
-              type="button"
-              aria-label="Scroll left"
-              onClick={() => scrollByDir(-1)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-lg text-white/90 transition-colors hover:bg-white/[0.12] sm:h-11 sm:w-11"
-            >
-              ‹
-            </button>
-            <button
-              type="button"
-              aria-label="Scroll right"
-              onClick={() => scrollByDir(1)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.1] text-lg text-white transition-colors hover:bg-white/[0.16] sm:h-11 sm:w-11"
-            >
-              ›
-            </button>
-          </div>
         </div>
       </div>
 
       {visibleItems.length === 0 ? (
-        <div className="mx-auto mt-8 w-full max-w-[85%] rounded-2xl border border-white/10 bg-white/[0.04] py-12 text-center text-white/55 sm:mt-10">
+        <div className="mx-auto mt-8 w-full max-w-[80%] rounded-2xl border border-white/10 bg-white/[0.04] py-12 text-center text-white/55 sm:mt-10">
           {hasTabs && tab === "newlyAdded"
             ? "No newly added videos yet."
             : "No published videos yet."}

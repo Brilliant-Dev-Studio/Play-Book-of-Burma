@@ -39,7 +39,7 @@ function PodcastRow({ item }: { item: HomePodcastItem }) {
   return (
     <article className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-7">
       {/* Thumbnail — fixed size, portal-style gray border frame */}
-      <div className="group w-full shrink-0 rounded-2xl border-2 border-white/45 p-1.25 shadow-[0_14px_44px_rgba(0,0,0,0.45)] transition-colors hover:border-white/65 sm:w-[320px] lg:w-90">
+      <div className="group w-full shrink-0 rounded-2xl border-2 border-white/30 p-1.25 shadow-[0_14px_44px_rgba(0,0,0,0.45)] transition-colors hover:border-white/45 sm:w-[320px] lg:w-90">
         <div className="relative aspect-360/230 w-full overflow-hidden rounded-xl bg-white/5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -104,11 +104,11 @@ export function HomePodcastSection({
   const sectionPad =
     variant === "embedded"
       ? "bg-black pt-8 pb-14 sm:pt-10 sm:pb-16 md:pt-12 md:pb-20 lg:pb-24"
-      : "bg-black py-10 md:py-12 lg:py-16 xl:py-20";
+      : "bg-black py-5 md:py-7 lg:py-6 xl:py-9";
 
   return (
     <section className={sectionPad}>
-      <div className="mx-auto w-full max-w-[85%] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[80%] px-4 sm:px-6 lg:px-8">
         <h2 className="text-left text-2xl font-semibold tracking-tight text-white sm:text-3xl">
           Listen to Story of Burma Podcast with No Ads
         </h2>

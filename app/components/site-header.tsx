@@ -172,7 +172,7 @@ export function SiteHeader() {
             onClick={() => setMenuOpen(false)}
           />
         ) : null}
-        <div className="relative z-50 mx-auto w-full max-w-[85%] px-4 py-2.5 sm:px-6 lg:px-8">
+        <div className="relative z-50 mx-auto w-full max-w-[80%] px-4 py-2.5 sm:px-6 lg:px-8">
           <div className="flex min-h-16 w-full items-center justify-between gap-4 sm:min-h-18 sm:gap-6 lg:min-h-20">
             <Link
               href="/"

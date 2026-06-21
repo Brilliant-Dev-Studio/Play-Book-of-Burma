@@ -60,7 +60,7 @@ function StoreBadge({
 export function SiteFooter() {
   return (
     <footer className="border-t border-white/15 bg-black pb-10 pt-8 sm:pb-14 sm:pt-10">
-      <div className="mx-auto w-full max-w-[85%] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[80%] px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
           <section>
             <h3 className="text-left text-lg font-semibold tracking-tight text-white sm:text-xl">

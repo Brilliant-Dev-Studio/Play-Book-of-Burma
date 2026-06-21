@@ -1,7 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import kbzPayLogo from "@/app/assets/kbzpay.png";
-import wavePayLogo from "@/app/assets/wavepay.png";
 import { MembershipSubmissionForm } from "@/app/components/membership-submission-form";
 import { BreadcrumbJsonLd, FaqJsonLd } from "@/app/components/json-ld";
 
@@ -28,164 +25,40 @@ function IconCheck({ className }: { className?: string }) {
   );
 }
 
-function IconMail({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="m3 7 9 6 9-6" />
-    </svg>
-  );
-}
 
-function IconLock({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
-      <rect x="4" y="11" width="16" height="9" rx="2" />
-      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-    </svg>
-  );
-}
 
-function IconCursor({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
-      <circle cx="9" cy="8" r="3.5" />
-      <path d="M3 20a6 6 0 0 1 12 0" />
-      <path d="m17 13 4 4-2 1 1 2-2 1-1-2-2 1Z" />
-    </svg>
-  );
-}
-
-function IconKeypad({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <path d="M8 7h.01M12 7h.01M16 7h.01M8 12h.01M12 12h.01M16 12h.01M8 17h.01M12 17h.01M16 17h.01" />
-    </svg>
-  );
-}
-
-function TimelineStep({
-  isLast,
-  text,
-  illustration,
-}: {
-  isLast?: boolean;
-  text: React.ReactNode;
-  illustration?: React.ReactNode;
-}) {
-  return (
-    <li className="relative flex gap-4 pb-6 last:pb-0">
-      {/* Bullet + connector */}
-      <div className="relative flex flex-col items-center">
-        <span
-          className="z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-coral text-white shadow-[0_4px_14px_rgba(236,113,71,0.45)]"
-          aria-hidden
-        >
-          <IconCheck className="h-4 w-4" />
-        </span>
-        {!isLast && (
-          <span
-            className="absolute left-1/2 top-9 h-full w-px -translate-x-1/2 bg-gradient-to-b from-coral/55 via-coral/30 to-coral/10"
-            aria-hidden
-          />
-        )}
-      </div>
-
-      <div className="min-w-0 flex-1 pt-1">
-        <p className="text-sm font-semibold leading-snug tracking-tight text-white sm:text-[15px]">
-          {text}
-        </p>
-        {illustration && <div className="mt-3">{illustration}</div>}
-      </div>
-    </li>
-  );
-}
-
-function CredentialChip({
-  icon,
-  label,
-}: {
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-md border border-white/12 bg-zinc-950/70 px-3.5 py-2.5 text-sm text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:text-base">
-      <span className="text-white/85">{icon}</span>
-      <span>{label}</span>
-    </div>
-  );
-}
-
-function MiniStepChip({
-  icon,
-  label,
-}: {
-  icon: React.ReactNode;
-  label: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-zinc-950/70 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-zinc-900 text-white/85">
-        {icon}
-      </span>
-      <p className="min-w-0 text-sm font-semibold leading-tight text-white">
-        {label}
-      </p>
-    </div>
-  );
-}
+const APPROVAL_STEPS = [
+  {
+    title: "Received Password",
+    description: "You will receive your password via email",
+  },
+  {
+    title: "Log in Your Account",
+    description: "You can log in using your email and password through the website or app",
+  },
+  {
+    title: "Completed",
+    description: "You can now learn from the best CEOs in Myanmar at anytime, anywhere",
+  },
+] as const;
 
 function ApprovalTimeline() {
   return (
-    <ol className="relative flex flex-col">
-      <TimelineStep
-        text={
-          <>
-            You will receive <span className="text-coral">email</span> and{" "}
-            <span className="text-coral">password</span> via your email
-          </>
-        }
-        illustration={
-          <div className="flex flex-wrap gap-2">
-            <CredentialChip icon={<IconMail className="h-5 w-5" />} label="Email" />
-            <CredentialChip icon={<IconLock className="h-5 w-5" />} label="Password" />
+    <ol className="flex flex-col gap-6">
+      {APPROVAL_STEPS.map((step) => (
+        <li key={step.title} className="flex items-start gap-4">
+          <span
+            className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-coral shadow-[0_4px_14px_rgba(236,113,71,0.45)]"
+            aria-hidden
+          >
+            <IconCheck className="h-4 w-4 text-white" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-base font-bold leading-snug text-white">{step.title}</p>
+            <p className="mt-1 text-sm leading-relaxed text-white/70">{step.description}</p>
           </div>
-        }
-      />
-      <TimelineStep
-        text={
-          <>
-            Log in with your email and password via our{" "}
-            <span className="text-coral">website / app</span>
-          </>
-        }
-        illustration={
-          <div className="flex flex-col gap-2">
-            <MiniStepChip
-              icon={<IconCursor className="h-5 w-5" />}
-              label={
-                <>
-                  Click the <span className="text-coral">Log in</span> button
-                </>
-              }
-            />
-            <MiniStepChip
-              icon={<IconKeypad className="h-5 w-5" />}
-              label="Enter email & password"
-            />
-          </div>
-        }
-      />
-      <TimelineStep
-        isLast
-        text={
-          <>
-            Done — start learning 24/7,{" "}
-            <span className="text-coral">anytime, anywhere</span>
-          </>
-        }
-      />
+        </li>
+      ))}
     </ol>
   );
 }
@@ -194,43 +67,32 @@ function HowPayStepCard({
   step,
   title,
   children,
-  emphasized,
+  accent,
 }: {
   step: number;
   title: string;
   children: React.ReactNode;
-  emphasized?: boolean;
+  accent?: boolean;
 }) {
   return (
     <div
       className={[
-        "relative flex min-h-0 flex-col rounded-2xl border border-white/12 bg-zinc-900/90 shadow-[0_16px_48px_rgba(0,0,0,0.35)]",
-        emphasized
-          ? "px-5 pb-7 pt-10 sm:px-7 sm:pb-8 sm:pt-11 md:min-h-[26rem] md:px-8 md:pb-9 md:pt-12 lg:min-h-[28rem]"
-          : "px-5 pb-6 pt-10 sm:px-6 sm:pb-7 sm:pt-11",
-        emphasized
-          ? "ring-1 ring-coral/20 shadow-[0_20px_56px_rgba(0,0,0,0.4)]"
-          : "",
+        "relative flex h-full flex-col rounded-2xl border bg-zinc-900/90 px-6 pb-8 pt-12 shadow-[0_16px_48px_rgba(0,0,0,0.35)] sm:px-7 sm:pb-9 sm:pt-14",
+        accent
+          ? "border-coral/25 ring-1 ring-coral/20 shadow-[0_20px_56px_rgba(0,0,0,0.4)]"
+          : "border-white/12",
       ].join(" ")}
     >
       <div
-        className={[
-          "absolute left-1/2 top-0 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-coral font-bold text-white shadow-[0_4px_16px_rgba(236,113,71,0.45)]",
-          emphasized ? "h-11 w-11 text-lg" : "h-10 w-10 text-base",
-        ].join(" ")}
+        className="absolute left-1/2 top-0 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-coral text-2xl font-bold text-white shadow-[0_4px_16px_rgba(236,113,71,0.45)]"
         aria-hidden
       >
         {step}
       </div>
-      <h3
-        className={[
-          "text-pretty pr-1 font-semibold leading-snug tracking-tight text-white",
-          emphasized ? "text-xl sm:text-2xl" : "text-xl",
-        ].join(" ")}
-      >
+      <h3 className="text-pretty text-center text-xl font-semibold leading-snug tracking-tight text-white">
         {title}
       </h3>
-      <div className={emphasized ? "mt-5 min-h-0 flex-1 md:mt-6" : "mt-4 min-h-0 flex-1"}>
+      <div className="mt-6 min-h-0 flex-1">
         {children}
       </div>
     </div>
@@ -417,7 +279,7 @@ export default function MembershipPage() {
         aria-hidden
       />
 
-      <div className="relative z-10 mx-auto w-full max-w-[85%] px-4 sm:px-6 lg:max-w-[min(85%,1400px)] lg:px-8">
+      <div className="relative z-10 mx-auto w-full max-w-[80%] px-4 sm:px-6 lg:max-w-[min(80%,1400px)] lg:px-8">
         <header className="flex flex-col items-center text-center">
           <span
             className="mb-4 h-1 w-10 rounded-full bg-coral shadow-[0_0_20px_rgba(236,113,71,0.45)]"
@@ -456,83 +318,24 @@ export default function MembershipPage() {
             How do I pay?
           </h2>
 
-          <div className="mx-auto mt-10 grid w-full gap-6 sm:mt-12 sm:gap-8 md:mt-14 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-10">
-            <HowPayStepCard step={1} title="Choose your payment method">
-              <div className="flex w-full flex-col">
-                <div className="flex w-full items-center gap-4 sm:gap-5">
-                  <Image
-                    src={kbzPayLogo}
-                    alt="KBZ Pay"
-                    width={48}
-                    height={48}
-                    className="h-12 w-12 shrink-0 rounded-md object-contain shadow-sm"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-coral/95">
-                      KBZ Pay
-                    </p>
-                    <p className="mt-1 text-[15px] font-semibold leading-snug tracking-tight text-white">
-                      Account
-                    </p>
-                    <dl className="mt-3 grid gap-x-4 gap-y-2.5 sm:grid-cols-[minmax(0,4.5rem)_1fr] sm:gap-x-5">
-                      <div className="sm:contents">
-                        <dt className="text-xs font-medium text-white/45 sm:pt-0.5">Name</dt>
-                        <dd className="text-sm font-medium leading-snug text-white/92 sm:min-w-0">
-                          Htet Naing Oo
-                        </dd>
-                      </div>
-                      <div className="sm:contents">
-                        <dt className="text-xs font-medium text-white/45 sm:pt-0.5">Number</dt>
-                        <dd className="font-mono text-[15px] font-medium tabular-nums tracking-wide text-white sm:min-w-0">
-                          09763600983
-                        </dd>
-                      </div>
-                    </dl>
-                  </div>
-                </div>
-                <div
-                  className="my-4 h-px w-full shrink-0 bg-white/[0.08] sm:my-5"
-                  aria-hidden
+          <div className="mx-auto mt-10 grid w-full items-stretch gap-6 sm:mt-12 sm:gap-8 md:mt-14 md:grid-cols-3 lg:gap-10">
+            <HowPayStepCard step={1} title="Scan the MMQR Here">
+              <div className="flex flex-col items-center gap-5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/mmqr.png"
+                  alt="MMQR payment code"
+                  className="w-full max-w-55 rounded-xl object-contain shadow-lg"
                 />
-                <div className="flex w-full items-center gap-4 sm:gap-5">
-                  <Image
-                    src={wavePayLogo}
-                    alt="Wave Money"
-                    width={48}
-                    height={48}
-                    className="h-12 w-12 shrink-0 rounded-md object-contain shadow-sm"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#fecf73]">
-                      Wave Money
-                    </p>
-                    <p className="mt-1 text-[15px] font-semibold leading-snug tracking-tight text-white">
-                      Account
-                    </p>
-                    <dl className="mt-3 grid gap-x-4 gap-y-2.5 sm:grid-cols-[minmax(0,4.5rem)_1fr] sm:gap-x-5">
-                      <div className="sm:contents">
-                        <dt className="text-xs font-medium text-white/45 sm:pt-0.5">Name</dt>
-                        <dd className="text-sm font-medium leading-snug text-white/92 sm:min-w-0">
-                          Htet Naing Oo
-                        </dd>
-                      </div>
-                      <div className="sm:contents">
-                        <dt className="text-xs font-medium text-white/45 sm:pt-0.5">Number</dt>
-                        <dd className="font-mono text-[15px] font-medium tabular-nums tracking-wide text-white sm:min-w-0">
-                          09763600983
-                        </dd>
-                      </div>
-                    </dl>
-                  </div>
-                </div>
+                <p className="text-xs leading-relaxed text-white/55">
+                  <span className="font-semibold text-white/75">Note:</span> MMQR can accept KBZ
+                  Pay, Wave Money, OK$, CB Pay, uabpay, A+ Wallet, CTZ Pay, Yoma, Trusty, Zego,
+                  Mpitesan
+                </p>
               </div>
             </HowPayStepCard>
 
-            <HowPayStepCard
-              step={2}
-              title="Fill in the following information"
-              emphasized
-            >
+            <HowPayStepCard step={2} title="Fill in the following information" accent>
               <MembershipSubmissionForm />
             </HowPayStepCard>
 

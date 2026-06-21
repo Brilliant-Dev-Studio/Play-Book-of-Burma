@@ -173,7 +173,7 @@ export function HeroMarqueeBackdrop() {
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* Match SiteHeader / section rails — marquee clips inside 85% instead of full-bleed past content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="flex w-full max-w-[85%] flex-col justify-center gap-3 overflow-hidden opacity-[0.97] sm:gap-5">
+          <div className="flex w-full max-w-[80%] flex-col justify-center gap-3 overflow-hidden opacity-[0.97] sm:gap-5">
             <MarqueeRow variant="wide" motionClass={MARQUEE_MOTION.topRow} />
             <div className="relative w-full">
               <MarqueeRow
@@ -205,7 +205,7 @@ export function HeroMarqueeBackdrop() {
 
       {/* Hero copy — same horizontal rail as SiteHeader (max-w + px), left column */}
       <div className="relative z-20 flex min-h-[85vh] w-full flex-1">
-        <div className="mx-auto flex min-h-[85vh] w-full max-w-[85%] flex-1">
+        <div className="mx-auto flex min-h-[85vh] w-full max-w-[80%] flex-1">
           <div className="flex w-full flex-col items-start justify-center px-4 py-16 sm:px-6 md:w-1/2 lg:px-8">
             <div className="w-full max-w-3xl text-left text-white">
               <h1 className="font-[family-name:var(--font-rwst-stack)] text-4xl leading-tight tracking-tight text-balance sm:text-5xl md:text-[2.85rem] md:leading-[1.12] lg:text-6xl">

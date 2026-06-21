@@ -8,82 +8,70 @@ import {
   membershipFormTextareaClass,
 } from "@/app/components/membership-form-field-styles";
 
-type Plan = "SIX_MONTHS" | "TWELVE_MONTHS";
-type Method = "KBZ_PAY" | "WAVE_MONEY";
+const COUNTRY_CODES = [
+  { code: "+95",  flag: "🇲🇲", label: "MM" },
+  { code: "+66",  flag: "🇹🇭", label: "TH" },
+  { code: "+65",  flag: "🇸🇬", label: "SG" },
+  { code: "+60",  flag: "🇲🇾", label: "MY" },
+  { code: "+62",  flag: "🇮🇩", label: "ID" },
+  { code: "+63",  flag: "🇵🇭", label: "PH" },
+  { code: "+84",  flag: "🇻🇳", label: "VN" },
+  { code: "+86",  flag: "🇨🇳", label: "CN" },
+  { code: "+1",   flag: "🇺🇸", label: "US" },
+] as const;
 
-const PLAN_OPTIONS: { value: Plan; label: string; price: string }[] = [
-  { value: "SIX_MONTHS", label: "6 Months", price: "180,000 MMK" },
-  { value: "TWELVE_MONTHS", label: "12 Months", price: "360,000 MMK" },
-];
+async function compressImage(f: File): Promise<File> {
+  if (!f.type.startsWith("image/")) return f;
+  const bitmap = await createImageBitmap(f).catch(() => null);
+  if (!bitmap) return f;
+  const MAX_DIM = 1800;
+  const scale = Math.min(1, MAX_DIM / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return f;
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close?.();
+  const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, "image/jpeg", 0.82));
+  if (!blob) return f;
+  const base = f.name.replace(/\.[^.]+$/, "") || "screenshot";
+  return new File([blob], `${base}.jpg`, { type: "image/jpeg" });
+}
 
-const METHOD_OPTIONS: { value: Method; label: string }[] = [
-  { value: "KBZ_PAY", label: "KBZ Pay" },
-  { value: "WAVE_MONEY", label: "Wave Money" },
-];
+async function uploadScreenshot(original: File): Promise<string> {
+  const f = await compressImage(original);
+  const presign = await fetch("/api/membership/sign-screenshot", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ filename: f.name, contentType: f.type, size: f.size }),
+  });
+  if (!presign.ok) throw new Error((await presign.json()).error ?? "Could not start upload.");
+  const { url, key, headers } = (await presign.json()) as {
+    url: string; key: string; headers: Record<string, string>;
+  };
+  const put = await fetch(url, { method: "PUT", headers, body: f });
+  if (!put.ok) throw new Error("Upload failed. Please try again.");
+  return key;
+}
 
 export function MembershipSubmissionForm() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [dialCode, setDialCode] = useState("+95");
   const [phone, setPhone] = useState("");
-  const [plan, setPlan] = useState<Plan>("SIX_MONTHS");
-  const [method, setMethod] = useState<Method>("KBZ_PAY");
   const [note, setNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
-
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
-  async function compressImage(f: File): Promise<File> {
-    if (!f.type.startsWith("image/")) return f;
-    const bitmap = await createImageBitmap(f).catch(() => null);
-    if (!bitmap) return f;
-
-    const MAX_DIM = 1800;
-    const scale = Math.min(1, MAX_DIM / Math.max(bitmap.width, bitmap.height));
-    const w = Math.round(bitmap.width * scale);
-    const h = Math.round(bitmap.height * scale);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return f;
-    ctx.drawImage(bitmap, 0, 0, w, h);
-    bitmap.close?.();
-
-    const blob: Blob | null = await new Promise((resolve) =>
-      canvas.toBlob(resolve, "image/jpeg", 0.82),
-    );
-    if (!blob) return f;
-
-    const baseName = f.name.replace(/\.[^.]+$/, "") || "screenshot";
-    return new File([blob], `${baseName}.jpg`, { type: "image/jpeg" });
-  }
-
-  async function uploadScreenshot(original: File): Promise<string> {
-    const f = await compressImage(original);
-    const presign = await fetch("/api/membership/sign-screenshot", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filename: f.name, contentType: f.type, size: f.size }),
-    });
-    if (!presign.ok) throw new Error((await presign.json()).error ?? "Could not start upload.");
-    const { url, key, headers } = (await presign.json()) as {
-      url: string;
-      key: string;
-      headers: Record<string, string>;
-    };
-    const put = await fetch(url, { method: "PUT", headers, body: f });
-    if (!put.ok) throw new Error("Upload failed. Please try again.");
-    return key;
-  }
-
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
-
+    if (!name.trim()) return setError("Name is required.");
     if (!email.trim()) return setError("Email is required.");
-    if (!phone.trim()) return setError("Phone is required.");
+    if (!phone.trim()) return setError("Phone number is required.");
     if (!file) return setError("Please attach a payment screenshot.");
 
     setSubmitting(true);
@@ -93,19 +81,18 @@ export function MembershipSubmissionForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          // No name field on the form — derive a display name from the email
-          // local-part so the backend (which requires fullName) still works.
-          fullName: email.trim().split("@")[0] || email.trim(),
+          fullName: name.trim(),
           email: email.trim(),
-          phone: phone.trim(),
-          plan,
-          paymentMethod: method,
+          phone: `${dialCode}${phone.trim()}`,
+          plan: "SIX_MONTHS",
+          paymentMethod: "KBZ_PAY",
           screenshotKey,
           note: note.trim() || undefined,
         }),
       });
       if (!res.ok) throw new Error((await res.json()).error ?? "Could not submit.");
       setDone(true);
+      setName("");
       setEmail("");
       setPhone("");
       setNote("");
@@ -127,7 +114,7 @@ export function MembershipSubmissionForm() {
         <button
           type="button"
           onClick={() => setDone(false)}
-          className="mt-4 rounded-lg border border-white/15 px-4 py-2 text-xs font-semibold text-white/80 transition-colors hover:bg-white/[0.06]"
+          className="mt-4 rounded-lg border border-white/15 px-4 py-2 text-xs font-semibold text-white/80 transition-colors hover:bg-white/6"
         >
           Submit another
         </button>
@@ -136,7 +123,24 @@ export function MembershipSubmissionForm() {
   }
 
   return (
-    <form className="flex flex-col gap-5" onSubmit={onSubmit}>
+    <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+      {/* Name */}
+      <div>
+        <label className={membershipFormFieldLabelClass} htmlFor="pay-name">Name</label>
+        <input
+          id="pay-name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Your full name"
+          autoComplete="name"
+          className={membershipFormFieldClass}
+          disabled={submitting}
+          required
+        />
+      </div>
+
+      {/* Email */}
       <div>
         <label className={membershipFormFieldLabelClass} htmlFor="pay-email">Email</label>
         <input
@@ -150,62 +154,45 @@ export function MembershipSubmissionForm() {
           disabled={submitting}
           required
         />
-        <p className="mt-1.5 text-xs leading-relaxed text-white/55">
+        <p className="mt-1.5 text-xs leading-relaxed text-white/45">
           This email will be your login — we&apos;ll send your password here.
         </p>
       </div>
-      <div>
-        <label className={membershipFormFieldLabelClass} htmlFor="pay-phone">Phone</label>
-        <input
-          id="pay-phone"
-          type="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="09xxxxxxxx"
-          autoComplete="tel"
-          className={membershipFormFieldClass}
-          disabled={submitting}
-          required
-        />
-      </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label className={membershipFormFieldLabelClass} htmlFor="pay-plan">Plan</label>
+      {/* Phone with country code */}
+      <div>
+        <label className={membershipFormFieldLabelClass} htmlFor="pay-phone">Ph Number</label>
+        <div className="flex gap-2">
           <select
-            id="pay-plan"
-            value={plan}
-            onChange={(e) => setPlan(e.target.value as Plan)}
-            className={membershipFormFieldClass}
+            value={dialCode}
+            onChange={(e) => setDialCode(e.target.value)}
             disabled={submitting}
+            aria-label="Country code"
+            className="shrink-0 rounded-xl border border-white/[0.12] bg-zinc-950/55 px-3 py-3 text-sm text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] outline-none transition-[border-color,background-color] hover:border-white/[0.2] hover:bg-zinc-950/70 focus:border-coral/50 focus:bg-zinc-950/80 focus:shadow-[0_0_0_3px_rgba(236,113,71,0.2)] disabled:opacity-60"
           >
-            {PLAN_OPTIONS.map((p) => (
-              <option key={p.value} value={p.value} className="bg-zinc-900">
-                {p.label} — {p.price}
+            {COUNTRY_CODES.map((c) => (
+              <option key={c.code} value={c.code} className="bg-zinc-900">
+                {c.flag} {c.label} {c.code}
               </option>
             ))}
           </select>
-        </div>
-        <div>
-          <label className={membershipFormFieldLabelClass} htmlFor="pay-method">Payment method</label>
-          <select
-            id="pay-method"
-            value={method}
-            onChange={(e) => setMethod(e.target.value as Method)}
-            className={membershipFormFieldClass}
+          <input
+            id="pay-phone"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="09xxxxxxxx"
+            autoComplete="tel-national"
+            className={`${membershipFormFieldClass} flex-1`}
             disabled={submitting}
-          >
-            {METHOD_OPTIONS.map((m) => (
-              <option key={m.value} value={m.value} className="bg-zinc-900">
-                {m.label}
-              </option>
-            ))}
-          </select>
+            required
+          />
         </div>
       </div>
 
+      {/* Screenshot */}
       <div>
-        <label className={membershipFormFieldLabelClass} htmlFor="pay-screenshot">Payment screenshot</label>
+        <label className={membershipFormFieldLabelClass} htmlFor="pay-screenshot">Upload Payment Screenshot</label>
         <input
           id="pay-screenshot"
           type="file"
@@ -217,6 +204,7 @@ export function MembershipSubmissionForm() {
         />
       </div>
 
+      {/* Note */}
       <div>
         <label className={membershipFormFieldLabelClass} htmlFor="pay-note">Note</label>
         <textarea
@@ -236,11 +224,11 @@ export function MembershipSubmissionForm() {
         </div>
       )}
 
-      <div className="flex justify-end border-t border-white/[0.08] pt-4">
+      <div className="flex justify-end border-t border-white/[0.08] pt-3">
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-xl bg-coral px-7 py-3 text-sm font-bold tracking-wide text-white shadow-[0_8px_28px_rgba(236,113,71,0.35)] transition-[transform,box-shadow,opacity] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(236,113,71,0.42)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral motion-reduce:hover:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-xl bg-coral px-7 py-3 text-sm font-bold uppercase tracking-widest text-white shadow-[0_8px_28px_rgba(236,113,71,0.35)] transition-[transform,box-shadow,opacity] duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(236,113,71,0.42)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral motion-reduce:hover:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitting ? "SUBMITTING…" : "SUBMIT"}
         </button>

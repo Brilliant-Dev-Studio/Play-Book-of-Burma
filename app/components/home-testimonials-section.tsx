@@ -68,8 +68,8 @@ function TestimonialCard({
 
 export function HomeTestimonialsSection() {
   return (
-    <section className="bg-black py-10 md:py-12 lg:py-16 xl:py-20">
-      <div className="mx-auto w-full max-w-[85%] px-4 sm:px-6 lg:px-8">
+    <section className="bg-black py-5 md:py-7 lg:py-6 xl:py-9">
+      <div className="mx-auto w-full max-w-[80%] px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-left text-lg font-semibold tracking-tight text-white sm:text-xl">
             Feedback of the Audiences

@@ -57,7 +57,7 @@ export function ProgressClient({
 }) {
   return (
     <main className="min-h-0 flex-1 bg-black">
-      <div className="mx-auto w-full max-w-[85%] px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
+      <div className="mx-auto w-full max-w-[80%] px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
         <ContinuesWatchingSection items={continueWatching} />
         <YourNotesSection items={notes} />
         <YourBookmarksSection items={bookmarks} />

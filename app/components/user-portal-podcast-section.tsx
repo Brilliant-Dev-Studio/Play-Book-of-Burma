@@ -128,7 +128,7 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
 
   return (
     <article className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-7">
-      <div className="group w-full max-w-87.5 shrink-0 rounded-2xl border-2 border-white/45 p-1.25 shadow-[0_14px_44px_rgba(0,0,0,0.45)] transition-colors hover:border-white/65 sm:w-87.5">
+      <div className="group w-full max-w-87.5 shrink-0 rounded-2xl border border-white/10 p-1.25 shadow-[0_14px_44px_rgba(0,0,0,0.45)] transition-colors hover:border-white/20 sm:w-87.5">
         <div className="relative aspect-360/230 w-full overflow-hidden rounded-xl bg-white/5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

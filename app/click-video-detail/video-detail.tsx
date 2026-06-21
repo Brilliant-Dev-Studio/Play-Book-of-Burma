@@ -16,11 +16,11 @@ export async function VideoDetail({
   basePath: string;
 }) {
   // Container width follows the header for each context: the portal header is
-  // full-width (lg:px-10); the marketing site header is capped at max-w-[85%].
+  // full-width (lg:px-10); the marketing site header is capped at max-w-[80%].
   const shell =
     variant === "portal"
       ? "w-full px-4 sm:px-6 lg:px-10"
-      : "mx-auto w-full max-w-[85%] px-4 sm:px-6 lg:px-8";
+      : "mx-auto w-full max-w-[80%] px-4 sm:px-6 lg:px-8";
 
   if (!videoId) {
     const fallback = await prisma.video.findFirst({

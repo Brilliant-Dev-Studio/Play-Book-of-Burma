@@ -42,7 +42,7 @@ export function HomeMembershipCta({
       >
         <div
           className={
-            containerClassName ?? "mx-auto w-full max-w-[85%] px-4 sm:px-6 lg:px-8"
+            containerClassName ?? "mx-auto w-full max-w-[80%] px-4 sm:px-6 lg:px-8"
           }
         >
           {inner}
