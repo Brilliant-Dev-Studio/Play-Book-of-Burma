@@ -214,9 +214,17 @@ export function PortalHeader() {
                         {user.email}
                       </p>
                     )}
-                    {user?.membership?.plan && (
-                      <span className="mt-2 inline-flex items-center rounded-full bg-coral/15 px-2.5 py-0.5 text-[11px] font-semibold text-coral">
-                        {user.membership.plan === "SIX_MONTHS" ? "6 Month Plan" : "12 Month Plan"}
+                    {user && (
+                      <span className={`mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                        user.membership?.plan
+                          ? "bg-coral/15 text-coral"
+                          : "bg-white/8 text-white/50"
+                      }`}>
+                        {user.membership?.plan === "SIX_MONTHS"
+                          ? "6 Month Plan"
+                          : user.membership?.plan === "TWELVE_MONTHS"
+                          ? "12 Month Plan"
+                          : "No Active Plan"}
                       </span>
                     )}
                   </div>

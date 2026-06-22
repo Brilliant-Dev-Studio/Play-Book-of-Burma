@@ -68,7 +68,7 @@ function PodcastRow({ item }: { item: HomePodcastItem }) {
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="mt-2 block text-sm font-semibold text-coral hover:text-coral/80 transition-colors"
+            className="mt-2 block text-xs font-medium text-coral hover:text-coral/80 transition-colors"
           >
             {expanded ? "show less" : "read more"}
           </button>

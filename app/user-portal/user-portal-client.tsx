@@ -152,7 +152,7 @@ export function UserPortalClient({
               type="button"
               onClick={() => setIsOpen((o) => !o)}
               aria-expanded={isOpen}
-              className="hidden items-center gap-2 rounded-md border border-white/15 bg-white/[0.06] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/[0.12] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral lg:inline-flex"
+              className="hidden items-center gap-2 rounded-md border border-white/15 bg-white/6 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/12 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral lg:inline-flex"
             >
               <IconFilter className="h-4 w-4 text-coral" />
               <span>{isOpen ? "Hide Filters" : "Show Filters"}</span>
@@ -219,55 +219,6 @@ export function UserPortalClient({
 function NewlyAddedSection({ items }: { items: NewlyAddedItem[] }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
 
-  return (
-    <section>
-      <div className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
-        <div className="min-w-0 flex-1">
-          <h2 className="font-roman-wood-slide-title text-3xl font-bold leading-relaxed tracking-wide text-white sm:text-4xl sm:leading-relaxed md:text-5xl md:leading-[1.4]">
-            If you Dream Big, Will you give us 15 mins a day to change your life?
-          </h2>
-          <div className="mt-2 flex items-center gap-4">
-            <p className="text-base font-bold text-white sm:text-lg">
-              Newly Added to your playbooks
-            </p>
-            <Link
-              href="/user-portal/library"
-              className="shrink-0 text-sm font-medium text-coral transition-opacity hover:opacity-75"
-            >
-              View All
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {items.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] py-16 text-center text-white/55">
-          No published videos yet.
-        </div>
-      ) : (
-        <div
-          ref={scrollerRef}
-          className="overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          <div className="flex w-max snap-x snap-mandatory gap-4 pr-4 sm:gap-5 sm:pr-6 lg:pr-10">
-            {items.map((item) => (
-              <PlaybookVideoCard
-                key={item.id}
-                {...item}
-                showNewBadge
-                layout="carousel"
-              />
-            ))}
-          </div>
-        </div>
-      )}
-    </section>
-  );
-}
-
-function WatchAllPlaybooksSection({ items }: { items: NewlyAddedItem[] }) {
-  const scrollerRef = useRef<HTMLDivElement>(null);
-
   const scrollByDir = useCallback((dir: -1 | 1) => {
     const el = scrollerRef.current;
     if (!el) return;
@@ -278,11 +229,16 @@ function WatchAllPlaybooksSection({ items }: { items: NewlyAddedItem[] }) {
   }, []);
 
   return (
-    <section className="mt-12 sm:mt-14 md:mt-16">
-      <div className="mb-6 flex items-center justify-between gap-4 sm:mb-8">
-        <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl md:text-3xl">
-          Watch All the Playbooks
-        </h2>
+    <section>
+      <div className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
+        <div className="min-w-0 flex-1">
+          <h2 className="font-roman-wood-slide-title text-3xl font-bold leading-relaxed tracking-wide text-white sm:text-4xl sm:leading-relaxed md:text-5xl md:leading-[1.4]">
+            If you Dream Big, Will you give us 15 mins a day to change your life?
+          </h2>
+          <p className="mt-2 text-base font-bold text-white sm:text-lg">
+            Newly Added to your playbooks
+          </p>
+        </div>
         <div className="flex shrink-0 gap-2">
           <button
             type="button"
@@ -310,14 +266,37 @@ function WatchAllPlaybooksSection({ items }: { items: NewlyAddedItem[] }) {
       ) : (
         <div
           ref={scrollerRef}
-          className="overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
         >
           <div className="flex w-max snap-x snap-mandatory gap-4 pr-4 sm:gap-5 sm:pr-6 lg:pr-10">
             {items.map((item) => (
-              <PlaybookVideoCard key={item.id} {...item} layout="carousel" />
+              <PlaybookVideoCard
+                key={item.id}
+                {...item}
+                showNewBadge
+                layout="carousel"
+              />
             ))}
           </div>
         </div>
+      )}
+    </section>
+  );
+}
+
+function WatchAllPlaybooksSection({ items }: { items: NewlyAddedItem[] }) {
+  return (
+    <section className="mt-12 sm:mt-14 md:mt-16">
+      <h2 className="mb-6 text-xl font-bold tracking-tight text-white sm:mb-8 sm:text-2xl md:text-3xl">
+        Watch All the Playbooks
+      </h2>
+
+      {items.length === 0 ? (
+        <div className="rounded-2xl border border-white/10 bg-white/4 py-16 text-center text-white/55">
+          No published videos yet.
+        </div>
+      ) : (
+        <PlaybookVideoGrid items={items} />
       )}
     </section>
   );
@@ -330,7 +309,7 @@ function FilteredPlaybooksSection({ items }: { items: NewlyAddedItem[] }) {
         Filtered Playbooks
       </h2>
       {items.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] py-16 text-center text-white/55">
+        <div className="rounded-2xl border border-white/10 bg-white/4 py-16 text-center text-white/55">
           No videos match your filters.
         </div>
       ) : (
@@ -376,7 +355,7 @@ function PlaybookVideoCard({
       className={`group flex flex-col overflow-hidden rounded-2xl border-2 border-white/45 bg-black outline-none transition-colors hover:border-white/65 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black ${layoutClass}`}
       aria-label={`${titleLine1} ${titleLine2}`}
     >
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-zinc-900">
+      <div className="relative aspect-3/4 w-full overflow-hidden bg-zinc-900">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={thumbnailUrl}
@@ -425,7 +404,7 @@ function PlaybookVideoCard({
       </div>
 
       <div className="relative z-10 flex flex-col items-center px-4 pb-4 pt-4 text-center">
-        <span className="h-[3px] w-12 shrink-0 bg-coral" aria-hidden />
+        <span className="h-0.75 w-12 shrink-0 bg-coral" aria-hidden />
         <p className="mt-2 text-sm font-semibold leading-snug text-white/90 sm:text-[15px]">
           <span className="block w-full truncate">{instructorName},</span>
           <span className="block w-full truncate">{instructorTitle}</span>
@@ -466,7 +445,7 @@ function ContinuesWatchingSection({
             type="button"
             aria-label="Scroll left"
             onClick={() => scrollByDir(-1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-lg text-white/90 transition-colors hover:bg-white/[0.12] sm:h-11 sm:w-11"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/6 text-lg text-white/90 transition-colors hover:bg-white/12 sm:h-11 sm:w-11"
           >
             ‹
           </button>
@@ -474,7 +453,7 @@ function ContinuesWatchingSection({
             type="button"
             aria-label="Scroll right"
             onClick={() => scrollByDir(1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.1] text-lg text-white transition-colors hover:bg-white/[0.16] sm:h-11 sm:w-11"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/10 text-lg text-white transition-colors hover:bg-white/16 sm:h-11 sm:w-11"
           >
             ›
           </button>
@@ -482,13 +461,13 @@ function ContinuesWatchingSection({
       </div>
 
       {items.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] py-12 text-center text-white/55">
+        <div className="rounded-2xl border border-white/10 bg-white/4 py-12 text-center text-white/55">
           Nothing in progress yet — start a lesson to see it here.
         </div>
       ) : (
         <div
           ref={scrollerRef}
-          className="overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
         >
           <div className="flex w-max snap-x snap-mandatory gap-4 pr-4 sm:gap-5 sm:pr-6 lg:pr-10">
             {items.map((item) => (
@@ -516,7 +495,7 @@ function ContinuesWatchingCard({
       data-cw-card
       className="group flex w-72 shrink-0 snap-start flex-col outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-80 md:w-88"
     >
-      <div className="rounded-2xl border-2 border-white/45 p-[5px] transition-colors group-hover:border-white/65">
+      <div className="rounded-2xl border-2 border-white/45 p-1.25 transition-colors group-hover:border-white/65">
         <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-zinc-900">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
