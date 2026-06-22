@@ -100,16 +100,19 @@ export function HomeFeaturedCarousel({
   heading,
   variant = "default",
   showSeeAll = true,
+  newlyAddedViewAllHref,
 }: {
   items: FeaturedItem[];
-  /** When provided, a “Newly added” tab appears next to “Popular”. */
+  /** When provided, a "Newly added" tab appears next to "Popular". */
   newlyAddedItems?: FeaturedItem[];
   /** Page title shown above the tab row (e.g. Library page). */
   heading?: string;
   /** `embedded` = less top padding when not directly under the home hero. */
   variant?: "default" | "embedded";
-  /** Hide “See All” when already on the full library view. */
+  /** Hide "See All" when already on the full library view. */
   showSeeAll?: boolean;
+  /** When provided, shows a "View All" link next to the "Newly added" tab. */
+  newlyAddedViewAllHref?: string;
 }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [tab, setTab] = useState<Tab>("popular");
@@ -166,17 +169,27 @@ export function HomeFeaturedCarousel({
             )}
 
             {hasTabs ? (
-              <button
-                type="button"
-                onClick={() => setTab("newlyAdded")}
-                className={`ml-5 font-semibold transition-colors sm:ml-8 ${
-                  tab === "newlyAdded"
-                    ? "text-white"
-                    : "text-mist hover:text-white/90"
-                }`}
-              >
-                Newly added
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => setTab("newlyAdded")}
+                  className={`ml-5 font-semibold transition-colors sm:ml-8 ${
+                    tab === "newlyAdded"
+                      ? "text-white"
+                      : "text-mist hover:text-white/90"
+                  }`}
+                >
+                  Newly added
+                </button>
+                {newlyAddedViewAllHref ? (
+                  <Link
+                    href={newlyAddedViewAllHref}
+                    className="ml-3 font-medium text-coral transition-opacity hover:opacity-75 sm:ml-4"
+                  >
+                    View All
+                  </Link>
+                ) : null}
+              </>
             ) : null}
 
             {showSeeAll ? (

@@ -48,13 +48,19 @@ export async function VideoDetail({
     ? watchPath
     : `/login?next=${encodeURIComponent(watchPath)}`;
 
-  const [thumbnailUrl, trailerUrl, guidebookUrl, skillsetImageUrls] = await Promise.all([
+  const [thumbnailUrl, trailerUrl, trailerThumbnailUrl, guidebookUrl, guidebookCoverUrl, skillsetImageUrls] = await Promise.all([
     presignGetUrl(video.thumbnailKey, PRESIGN_TTL.image),
     video.trailerKey
       ? presignGetUrl(video.trailerKey, PRESIGN_TTL.video)
       : Promise.resolve<string | null>(null),
+    video.trailerThumbnailKey
+      ? presignGetUrl(video.trailerThumbnailKey, PRESIGN_TTL.image)
+      : Promise.resolve<string | null>(null),
     video.guidebookKey
       ? presignGetUrl(video.guidebookKey, PRESIGN_TTL.image)
+      : Promise.resolve<string | null>(null),
+    video.guidebookCoverKey
+      ? presignGetUrl(video.guidebookCoverKey, PRESIGN_TTL.image)
       : Promise.resolve<string | null>(null),
     Promise.all(
       video.skillsetItems.map((s) =>
@@ -77,7 +83,7 @@ export async function VideoDetail({
             draggable={false}
           />
           <div
-            className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(90deg,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.94)_22%,rgba(0,0,0,0.78)_38%,rgba(0,0,0,0.45)_55%,rgba(0,0,0,0.18)_72%,transparent_90%)] max-md:bg-[linear-gradient(180deg,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.75)_35%,rgba(0,0,0,0.45)_60%,rgba(0,0,0,0.2)_80%,transparent_100%)]"
+            className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(90deg,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.94)_22%,rgba(0,0,0,0.78)_38%,rgba(0,0,0,0.45)_55%,rgba(0,0,0,0.18)_72%,transparent_82%,rgba(0,0,0,0.45)_90%,rgba(0,0,0,0.78)_95%,rgba(0,0,0,0.96)_100%)] max-md:bg-[linear-gradient(180deg,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.75)_35%,rgba(0,0,0,0.45)_60%,rgba(0,0,0,0.2)_80%,transparent_100%)]"
             aria-hidden
           />
         </div>
@@ -104,12 +110,22 @@ export async function VideoDetail({
                 {video.description}
               </p>
 
-              <Link
-                href={startWatchingHref}
-                className="mt-6 inline-flex items-center gap-2 rounded-md bg-coral px-5 py-2.5 text-sm font-bold text-black transition-colors hover:bg-coral/90 sm:mt-8 sm:px-6 sm:py-3 sm:text-base"
-              >
-                ▶ Start watching
-              </Link>
+              <div className="mt-6 flex flex-wrap items-center gap-3 sm:mt-8">
+                <Link
+                  href={startWatchingHref}
+                  className="inline-flex items-center gap-2 rounded-md bg-coral px-5 py-2.5 text-sm font-bold text-black transition-colors hover:bg-coral/90 sm:px-6 sm:py-3 sm:text-base"
+                >
+                  ▶ Start watching
+                </Link>
+                {trailerUrl && (
+                  <a
+                    href="#trailer"
+                    className="inline-flex items-center gap-2 rounded-md border border-white/25 bg-white/10 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-white/20 sm:px-6 sm:py-3 sm:text-base"
+                  >
+                    ▶ Watch Trailer
+                  </a>
+                )}
+              </div>
             </div>
           </div>
           <div className="hidden min-h-[min(68dvh,620px)] md:block md:min-w-0 md:flex-1" aria-hidden />
@@ -122,13 +138,15 @@ export async function VideoDetail({
       </div>
 
       {trailerUrl && (
-        <section className="w-full shrink-0 bg-black py-16 md:py-20 lg:py-24 xl:py-28">
+        <section id="trailer" className="w-full shrink-0 bg-black py-16 md:py-20 lg:py-24 xl:py-28">
           <div className={shell}>
-            <TrailerSection
-              trailerUrl={trailerUrl}
-              posterUrl={thumbnailUrl}
-              title={`${title} — Trailer`}
-            />
+            <div className="mx-auto max-w-4xl">
+              <TrailerSection
+                trailerUrl={trailerUrl}
+                posterUrl={trailerThumbnailUrl ?? thumbnailUrl}
+                title={`${title} — Trailer`}
+              />
+            </div>
           </div>
         </section>
       )}
@@ -143,7 +161,7 @@ export async function VideoDetail({
               {video.skillsetItems.map((s, i) => (
                 <article
                   key={s.id}
-                  className="group relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-zinc-900 shadow-[0_16px_48px_rgba(0,0,0,0.5)] ring-1 ring-white/10"
+                  className="group relative aspect-3/4 w-full overflow-hidden rounded-2xl bg-zinc-900 shadow-[0_16px_48px_rgba(0,0,0,0.5)] ring-1 ring-white/10"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -155,14 +173,14 @@ export async function VideoDetail({
                     className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.95)_0%,rgba(0,0,0,0.82)_28%,rgba(0,0,0,0.45)_50%,rgba(0,0,0,0.15)_68%,transparent_82%)]"
                     aria-hidden
                   />
-                  <span className="absolute left-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-coral text-base font-bold text-white shadow-[0_4px_14px_rgba(236,113,71,0.5)] sm:left-4 sm:top-4 sm:h-10 sm:w-10 sm:text-lg">
+                  <span className="absolute left-3 top-3 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-coral text-xl font-bold text-white shadow-[0_4px_14px_rgba(236,113,71,0.5)] sm:left-4 sm:top-4 sm:h-14 sm:w-14 sm:text-2xl">
                     {i + 1}
                   </span>
                   <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-5 sm:px-6 sm:pb-6">
-                    <h3 className="text-lg font-bold leading-snug tracking-tight text-white sm:text-xl">
+                    <h3 className="line-clamp-2 text-lg font-bold leading-snug tracking-tight text-white sm:text-xl">
                       {s.title}
                     </h3>
-                    <p className="mt-3 text-sm leading-relaxed text-white/80 sm:text-[0.95rem]">
+                    <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-white/80 sm:text-[0.95rem]">
                       <span className="font-medium text-white">Description: </span>
                       {s.description}
                     </p>
@@ -175,13 +193,13 @@ export async function VideoDetail({
       )}
 
       <section className="w-full shrink-0 bg-black pb-16 md:pb-20 lg:pb-24 xl:pb-28">
-        <div className="w-full px-4 sm:px-6 lg:px-10">
+        <div className={shell}>
           <h2 className="mb-8 text-2xl font-bold tracking-tight text-white sm:text-3xl md:mb-10 md:text-4xl">
             Lessons Plan
           </h2>
 
           {video.lessons.length === 0 ? (
-            <p className="rounded-2xl border border-white/10 bg-white/[0.04] py-12 text-center text-white/55">
+            <p className="rounded-2xl border border-white/10 bg-white/4 py-12 text-center text-white/55">
               No lessons in this course yet.
             </p>
           ) : (
@@ -191,7 +209,7 @@ export async function VideoDetail({
                   key={lesson.id}
                   className="group border border-white/10 bg-zinc-900/90"
                 >
-                  <summary className="flex cursor-pointer list-none items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-white/[0.04] sm:px-6 sm:py-5 [&::-webkit-details-marker]:hidden">
+                  <summary className="flex cursor-pointer list-none items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-white/4 sm:px-6 sm:py-5 [&::-webkit-details-marker]:hidden">
                     <span className="w-6 shrink-0 text-base font-medium tabular-nums text-white sm:text-lg">
                       {index + 1}
                     </span>
@@ -208,7 +226,7 @@ export async function VideoDetail({
                       ▼
                     </span>
                   </summary>
-                  <div className="border-t border-white/[0.06] bg-black/25 px-5 py-4 pl-[3.25rem] text-sm leading-relaxed text-white/80 sm:px-6 sm:pl-14 sm:text-[15px]">
+                  <div className="border-t border-white/6 bg-black/25 px-5 py-4 pl-13 text-sm leading-relaxed text-white/80 sm:px-6 sm:pl-14 sm:text-[15px]">
                     {lesson.details || "No description for this lesson."}
                   </div>
                 </details>
@@ -218,10 +236,10 @@ export async function VideoDetail({
 
           {guidebookUrl && (
             <div className="mt-6 flex flex-col gap-5 border border-white/10 bg-zinc-900/90 p-5 sm:mt-8 sm:flex-row sm:gap-7 sm:p-7 md:mt-10">
-              <div className="relative aspect-[3/4] w-full shrink-0 overflow-hidden rounded-lg bg-zinc-800 sm:w-40 md:w-48">
+              <div className="relative aspect-3/4 w-full shrink-0 overflow-hidden rounded-lg bg-zinc-800 sm:w-40 md:w-48">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={thumbnailUrl}
+                  src={guidebookCoverUrl ?? thumbnailUrl}
                   alt=""
                   className="absolute inset-0 h-full w-full object-cover object-center"
                 />
@@ -285,11 +303,12 @@ export async function VideoDetail({
         </div>
       </section>
 
-      <HomeMembershipCta
-        variant="embedded"
-        tightTop
-        containerClassName={variant === "portal" ? shell : undefined}
-      />
+      {variant !== "portal" && (
+        <HomeMembershipCta
+          variant="embedded"
+          tightTop
+        />
+      )}
     </main>
   );
 }

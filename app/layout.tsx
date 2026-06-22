@@ -120,7 +120,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${openSauce.variable} ${rumbleBrave.variable} ${romanWoodType.variable} h-full antialiased`}
+      className={`${openSauce.variable} ${rumbleBrave.variable} ${romanWoodType.variable} h-full scroll-smooth antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
         <NavigationProgress />

@@ -9,6 +9,11 @@ export type CurrentUser = {
   photoUrl: string | null;
   role: "USER" | "ADMIN";
   mustChangePassword: boolean;
+  membership: {
+    plan: "SIX_MONTHS" | "TWELVE_MONTHS" | null;
+    status: string;
+    expiresAt: string | null;
+  } | null;
 };
 
 type State = {

@@ -52,7 +52,15 @@ export default async function EditVideoPage({
     trailerUrl: video.trailerKey
       ? await presignGetUrl(video.trailerKey, PRESIGN_TTL.video)
       : undefined,
+    trailerThumbnailKey: video.trailerThumbnailKey ?? undefined,
+    trailerThumbnailUrl: video.trailerThumbnailKey
+      ? await presignGetUrl(video.trailerThumbnailKey, PRESIGN_TTL.image)
+      : undefined,
     guidebookKey: video.guidebookKey ?? undefined,
+    guidebookCoverKey: video.guidebookCoverKey ?? undefined,
+    guidebookCoverUrl: video.guidebookCoverKey
+      ? await presignGetUrl(video.guidebookCoverKey, PRESIGN_TTL.image)
+      : undefined,
     durationSeconds: video.durationSeconds,
     durationLabel: video.durationLabel,
     status: video.status,
@@ -76,7 +84,7 @@ export default async function EditVideoPage({
   return (
     <div className="mx-auto w-full max-w-7xl">
       <div className="mb-6">
-        <h1 className="font-[family-name:var(--font-rwst-stack)] text-3xl font-bold tracking-tight text-white">
+        <h1 className="font-(family-name:--font-rwst-stack) text-3xl font-bold tracking-tight text-white">
           Edit Video
         </h1>
         <p className="mt-1 text-sm text-white/55">

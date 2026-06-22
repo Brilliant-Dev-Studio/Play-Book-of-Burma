@@ -262,7 +262,7 @@ function MembershipFaqPanel({
 
 export default function MembershipPage() {
   return (
-    <main className="relative flex flex-1 flex-col overflow-hidden bg-black pb-20 pt-16 text-white md:pb-28 md:pt-20 lg:pb-32 lg:pt-24">
+    <main className="relative flex flex-1 flex-col overflow-hidden bg-black pb-16 pt-14 text-white md:pb-22 md:pt-16 lg:pb-24 lg:pt-20">
       <BreadcrumbJsonLd
         items={[
           { name: "Home", href: "/" },
@@ -290,7 +290,7 @@ export default function MembershipPage() {
           </h1>
         </header>
 
-        <div className="mx-auto mt-12 flex w-full flex-col items-stretch justify-center gap-8 sm:mt-14 sm:gap-10 md:mt-16 md:flex-row md:items-center md:justify-center md:gap-5 lg:mt-20 lg:gap-7 xl:gap-9">
+        <div className="mx-auto mt-10 flex w-full flex-col items-stretch justify-center gap-8 sm:mt-12 sm:gap-10 md:mt-14 md:flex-row md:items-center md:justify-center md:gap-5 lg:mt-16 lg:gap-7 xl:gap-9">
           {PLANS.map((plan) => (
             <div
               key={plan.id}
@@ -308,7 +308,7 @@ export default function MembershipPage() {
         </div>
 
         <section
-          className="mt-20  pt-16 sm:mt-24 sm:pt-20 md:mt-28 md:pt-24"
+          className="mt-14 sm:mt-16 md:mt-20"
           aria-labelledby="how-pay-heading"
         >
           <h2
@@ -346,7 +346,7 @@ export default function MembershipPage() {
         </section>
 
         <section
-          className="mt-20  pt-16 sm:mt-24 sm:pt-20 md:mt-28 md:pt-24"
+          className="mt-14 sm:mt-16 md:mt-20"
           aria-labelledby="faq-heading"
         >
           <h2

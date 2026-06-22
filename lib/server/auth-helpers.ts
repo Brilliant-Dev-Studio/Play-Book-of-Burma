@@ -42,6 +42,7 @@ export async function getCurrentUser() {
       gender: true,
       birthYear: true,
       region: true,
+      membership: { select: { plan: true, status: true, expiresAt: true } },
     },
   });
   return user;

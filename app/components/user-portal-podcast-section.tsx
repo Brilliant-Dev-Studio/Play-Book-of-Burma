@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { UserPortalPodcastItem } from "@/lib/server/podcasts";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { HomePodcastGroup, UserPortalPodcastItem } from "@/lib/server/podcasts";
 import { savePodcastProgress } from "@/app/user-portal/podcast-actions";
 
 const SAVE_INTERVAL_SEC = 10;
@@ -128,7 +128,7 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
 
   return (
     <article className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-7">
-      <div className="group w-full max-w-87.5 shrink-0 rounded-2xl border border-white/10 p-1.25 shadow-[0_14px_44px_rgba(0,0,0,0.45)] transition-colors hover:border-white/20 sm:w-87.5">
+      <div className="group w-full max-w-87.5 shrink-0 rounded-2xl border-2 border-white/30 p-1.25 shadow-[0_14px_44px_rgba(0,0,0,0.45)] transition-colors hover:border-white/45 sm:w-87.5">
         <div className="relative aspect-360/230 w-full overflow-hidden rounded-xl bg-white/5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -325,12 +325,23 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
   );
 }
 
+const PODCAST_LIMIT = 5;
+
 export function UserPortalPodcastSection({
-  items,
+  groups,
 }: {
-  items: UserPortalPodcastItem[];
+  groups: HomePodcastGroup[];
 }) {
-  if (items.length === 0) {
+  const labels = useMemo(() => groups.map((g) => g.label), [groups]);
+  const [activeTab, setActiveTab] = useState<string>(labels[0] ?? "");
+  const [showAll, setShowAll] = useState(false);
+
+  const activeGroup = groups.find((g) => g.label === activeTab) ?? groups[0];
+  const allItems = activeGroup?.items ?? [];
+  const visibleItems = showAll ? allItems : allItems.slice(0, PODCAST_LIMIT);
+  const hiddenCount = allItems.length - PODCAST_LIMIT;
+
+  if (groups.length === 0) {
     return (
       <section className="mt-12 sm:mt-14 md:mt-16">
         <h2 className="text-left text-2xl font-semibold tracking-tight text-white sm:text-3xl">
@@ -349,11 +360,42 @@ export function UserPortalPodcastSection({
         Listen to Story of Burma Podcast with No Ads
       </h2>
 
+      <div className="mt-5 flex flex-wrap items-center gap-0 text-sm sm:mt-6 sm:text-[15px]">
+        {labels.map((label, i) => (
+          <span key={label} className="flex items-center">
+            {i > 0 && (
+              <span className="mx-3 h-4 w-px shrink-0 bg-white/25 sm:mx-4" aria-hidden />
+            )}
+            <button
+              type="button"
+              onClick={() => { setActiveTab(label); setShowAll(false); }}
+              className={`transition-colors ${
+                activeTab === label
+                  ? "font-semibold text-white"
+                  : "font-medium text-mist hover:text-white/85"
+              }`}
+            >
+              {label}
+            </button>
+          </span>
+        ))}
+      </div>
+
       <div className="mt-6 space-y-10 sm:mt-8 sm:space-y-12">
-        {items.map((item) => (
+        {visibleItems.map((item) => (
           <PodcastPlayerRow key={item.id} item={item} />
         ))}
       </div>
+
+      {!showAll && hiddenCount > 0 && (
+        <button
+          type="button"
+          onClick={() => setShowAll(true)}
+          className="mt-8 text-sm font-semibold text-coral transition-opacity hover:opacity-75"
+        >
+          See All ({allItems.length})
+        </button>
+      )}
     </section>
   );
 }

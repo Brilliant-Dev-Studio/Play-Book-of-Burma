@@ -1,12 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
 import {
   UserPortalSidebar,
   type FilterGroup,
 } from "@/app/components/user-portal-sidebar";
 import { UserPortalPodcastSection } from "@/app/components/user-portal-podcast-section";
-import type { UserPortalPodcastItem } from "@/lib/server/podcasts";
+import type { HomePodcastGroup } from "@/lib/server/podcasts";
 
 function IconFilter({ className }: { className?: string }) {
   return (
@@ -67,8 +68,6 @@ export type ContinueWatchingItem = {
   subtitle: string;
 };
 
-const PLAYBOOKS_INITIAL_VISIBLE = 3;
-const PLAYBOOKS_LOAD_MORE_STEP = 6;
 
 function filterPlaybooks(
   items: NewlyAddedItem[],
@@ -109,7 +108,7 @@ export function UserPortalClient({
   allPlaybooks: NewlyAddedItem[];
   filterGroups: FilterGroup[];
   continueWatching: ContinueWatchingItem[];
-  podcasts: UserPortalPodcastItem[];
+  podcasts: HomePodcastGroup[];
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isOpen, setIsOpen] = useState(true);
@@ -148,7 +147,7 @@ export function UserPortalClient({
       <main className="flex min-w-0 flex-1 flex-col">
         {/* Filter toolbar — sticky on scroll; border spans full main width, content aligned with header container */}
         <div className="sticky top-0 z-30 border-b border-white/10 bg-zinc-950/85 backdrop-blur-md">
-          <div className="flex w-full flex-wrap items-center gap-2 px-4 py-3 sm:gap-3 sm:px-6 sm:py-4 lg:px-10">
+          <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-2 px-4 py-3 sm:gap-3 sm:px-6 sm:py-4 lg:px-10">
             <button
               type="button"
               onClick={() => setIsOpen((o) => !o)}
@@ -200,7 +199,7 @@ export function UserPortalClient({
         </div>
 
         {/* Page body — aligned with header container */}
-        <div className="flex min-h-0 w-full flex-1 flex-col px-4 py-10 sm:px-6 sm:py-12 lg:px-10 lg:py-14">
+        <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col px-4 py-10 sm:px-6 sm:py-12 lg:px-10 lg:py-14">
           {hasActiveFilter ? (
             <FilteredPlaybooksSection items={filteredPlaybooks} />
           ) : (
@@ -208,7 +207,7 @@ export function UserPortalClient({
               <NewlyAddedSection items={newlyAdded} />
               <WatchAllPlaybooksSection items={allPlaybooks} />
               <ContinuesWatchingSection items={continueWatching} />
-              <UserPortalPodcastSection items={podcasts} />
+              <UserPortalPodcastSection groups={podcasts} />
             </>
           )}
         </div>
@@ -220,44 +219,24 @@ export function UserPortalClient({
 function NewlyAddedSection({ items }: { items: NewlyAddedItem[] }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
 
-  const scrollByDir = useCallback((dir: -1 | 1) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const firstCard = el.querySelector<HTMLElement>("[data-card]");
-    const gapSource = firstCard?.parentElement ?? el;
-    const gap = Number.parseFloat(getComputedStyle(gapSource).gap || "0");
-    const step = firstCard ? firstCard.offsetWidth + gap : el.clientWidth * 0.85;
-    el.scrollBy({ left: dir * step, behavior: "smooth" });
-  }, []);
-
   return (
     <section>
       <div className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
         <div className="min-w-0 flex-1">
-          <h2 className="font-roman-wood-slide-title text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
+          <h2 className="font-roman-wood-slide-title text-3xl font-bold leading-relaxed tracking-wide text-white sm:text-4xl sm:leading-relaxed md:text-5xl md:leading-[1.4]">
             If you Dream Big, Will you give us 15 mins a day to change your life?
           </h2>
-          <p className="mt-2 text-base font-bold text-white sm:text-lg">
-            Newly Added to your playbooks
-          </p>
-        </div>
-        <div className="flex shrink-0 gap-2">
-          <button
-            type="button"
-            aria-label="Scroll left"
-            onClick={() => scrollByDir(-1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-lg text-white/90 transition-colors hover:bg-white/[0.12] sm:h-11 sm:w-11"
-          >
-            ‹
-          </button>
-          <button
-            type="button"
-            aria-label="Scroll right"
-            onClick={() => scrollByDir(1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.1] text-lg text-white transition-colors hover:bg-white/[0.16] sm:h-11 sm:w-11"
-          >
-            ›
-          </button>
+          <div className="mt-2 flex items-center gap-4">
+            <p className="text-base font-bold text-white sm:text-lg">
+              Newly Added to your playbooks
+            </p>
+            <Link
+              href="/user-portal/library"
+              className="shrink-0 text-sm font-medium text-coral transition-opacity hover:opacity-75"
+            >
+              View All
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -287,39 +266,58 @@ function NewlyAddedSection({ items }: { items: NewlyAddedItem[] }) {
 }
 
 function WatchAllPlaybooksSection({ items }: { items: NewlyAddedItem[] }) {
-  const [visibleCount, setVisibleCount] = useState(PLAYBOOKS_INITIAL_VISIBLE);
-  const visible = items.slice(0, visibleCount);
-  const hasMore = visibleCount < items.length;
+  const scrollerRef = useRef<HTMLDivElement>(null);
+
+  const scrollByDir = useCallback((dir: -1 | 1) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const firstCard = el.querySelector<HTMLElement>("[data-card]");
+    const gap = Number.parseFloat(getComputedStyle(el).gap || "0");
+    const step = firstCard ? firstCard.offsetWidth + gap : el.clientWidth * 0.85;
+    el.scrollBy({ left: dir * step, behavior: "smooth" });
+  }, []);
 
   return (
     <section className="mt-12 sm:mt-14 md:mt-16">
-      <h2 className="mb-6 text-xl font-bold tracking-tight text-white sm:mb-8 sm:text-2xl md:text-3xl">
-        Watch All the Playbooks
-      </h2>
+      <div className="mb-6 flex items-center justify-between gap-4 sm:mb-8">
+        <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl md:text-3xl">
+          Watch All the Playbooks
+        </h2>
+        <div className="flex shrink-0 gap-2">
+          <button
+            type="button"
+            aria-label="Scroll left"
+            onClick={() => scrollByDir(-1)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/6 text-lg text-white/90 transition-colors hover:bg-white/12 sm:h-11 sm:w-11"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            aria-label="Scroll right"
+            onClick={() => scrollByDir(1)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/10 text-lg text-white transition-colors hover:bg-white/16 sm:h-11 sm:w-11"
+          >
+            ›
+          </button>
+        </div>
+      </div>
 
       {items.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] py-16 text-center text-white/55">
+        <div className="rounded-2xl border border-white/10 bg-white/4 py-16 text-center text-white/55">
           No published videos yet.
         </div>
       ) : (
-        <>
-          <PlaybookVideoGrid items={visible} />
-          {hasMore && (
-            <div className="mt-8 flex justify-center sm:mt-10">
-              <button
-                type="button"
-                onClick={() =>
-                  setVisibleCount((n) =>
-                    Math.min(n + PLAYBOOKS_LOAD_MORE_STEP, items.length),
-                  )
-                }
-                className="rounded-full border border-white/20 bg-white/[0.06] px-8 py-3 text-sm font-semibold text-white transition-colors hover:border-coral/40 hover:bg-coral/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
-              >
-                Load more
-              </button>
-            </div>
-          )}
-        </>
+        <div
+          ref={scrollerRef}
+          className="overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          <div className="flex w-max snap-x snap-mandatory gap-4 pr-4 sm:gap-5 sm:pr-6 lg:pr-10">
+            {items.map((item) => (
+              <PlaybookVideoCard key={item.id} {...item} layout="carousel" />
+            ))}
+          </div>
+        </div>
       )}
     </section>
   );

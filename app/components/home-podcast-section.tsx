@@ -68,22 +68,24 @@ function PodcastRow({ item }: { item: HomePodcastItem }) {
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="mt-2 block text-sm font-semibold text-coral underline decoration-coral/70 underline-offset-4 hover:decoration-coral"
+            className="mt-2 block text-sm font-semibold text-coral hover:text-coral/80 transition-colors"
           >
-            {expanded ? "Show less" : "Read more"}
+            {expanded ? "show less" : "read more"}
           </button>
         )}
         <Link
           href={MEMBERSHIP_HREF}
-          className="mt-3 flex w-fit items-center gap-1 text-lg font-semibold text-coral underline decoration-coral/70 underline-offset-4 hover:decoration-coral"
+          className="mt-3 flex w-fit items-center gap-2 text-lg font-bold text-coral transition-opacity hover:opacity-80"
         >
           Watch Now
-          <span aria-hidden>→</span>
+          <span aria-hidden className="text-base">→</span>
         </Link>
       </div>
     </article>
   );
 }
+
+const PODCAST_LIMIT = 5;
 
 export function HomePodcastSection({
   groups,
@@ -98,8 +100,12 @@ export function HomePodcastSection({
 }) {
   const labels = useMemo(() => groups.map((g) => g.label), [groups]);
   const [activeTab, setActiveTab] = useState<string>(labels[0] ?? "");
+  const [showAll, setShowAll] = useState(false);
 
   const activeGroup = groups.find((g) => g.label === activeTab) ?? groups[0];
+  const allItems = activeGroup?.items ?? [];
+  const visibleItems = showAll ? allItems : allItems.slice(0, PODCAST_LIMIT);
+  const hiddenCount = allItems.length - PODCAST_LIMIT;
 
   const sectionPad =
     variant === "embedded"
@@ -136,7 +142,7 @@ export function HomePodcastSection({
                   )}
                   <button
                     type="button"
-                    onClick={() => setActiveTab(label)}
+                    onClick={() => { setActiveTab(label); setShowAll(false); }}
                     className={`transition-colors ${
                       activeTab === label
                         ? "font-semibold text-white"
@@ -156,7 +162,7 @@ export function HomePodcastSection({
                   : "mt-10 space-y-14"
               }
             >
-              {activeGroup?.items.map((item) =>
+              {visibleItems.map((item) =>
                 withPlayer ? (
                   <PodcastPlayerRow key={item.id} item={item} />
                 ) : (
@@ -164,6 +170,16 @@ export function HomePodcastSection({
                 ),
               )}
             </div>
+
+            {!showAll && hiddenCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowAll(true)}
+                className="mt-8 text-sm font-semibold text-coral transition-opacity hover:opacity-75"
+              >
+                See All ({allItems.length})
+              </button>
+            )}
           </>
         )}
       </div>

@@ -47,6 +47,7 @@ export default async function LibraryPage() {
         heading="Play book of Burma"
         variant="embedded"
         showSeeAll={false}
+        newlyAddedViewAllHref="/watch-all"
       />
       <HomePodcastSection groups={podcastGroups} variant="embedded" />
       <HomeMembershipCta variant="embedded" />

@@ -25,6 +25,8 @@ export type VideoFormInitial = Partial<VideoFormInput> & {
   id?: string;
   thumbnailUrl?: string;
   trailerUrl?: string;
+  trailerThumbnailUrl?: string;
+  guidebookCoverUrl?: string;
   lessons?: LessonRow[];
 };
 
@@ -83,11 +85,17 @@ export function VideoUploadForm({
     initial?.skillsetId ?? skillsets[0]?.id ?? "",
   );
   const [guidebookKey, setGuidebookKey] = useState<string>(initial?.guidebookKey ?? "");
+  const [guidebookCoverKey, setGuidebookCoverKey] = useState<string>(initial?.guidebookCoverKey ?? "");
+  const guidebookCoverRef = useRef<DeferredImageUploadHandle>(null);
+  const [guidebookCoverStaged, setGuidebookCoverStaged] = useState(false);
 
   const existingThumbnailKey = initial?.thumbnailKey ?? "";
   const [thumbStaged, setThumbStaged] = useState(false);
   const thumbnailRef = useRef<DeferredImageUploadHandle>(null);
   const [trailerKey, setTrailerKey] = useState<string>(initial?.trailerKey ?? "");
+  const [trailerThumbnailKey, setTrailerThumbnailKey] = useState<string>(initial?.trailerThumbnailKey ?? "");
+  const trailerThumbnailRef = useRef<DeferredImageUploadHandle>(null);
+  const [trailerThumbnailStaged, setTrailerThumbnailStaged] = useState(false);
 
   const [lessons, setLessons] = useState<LessonRow[]>(
     initial?.lessons && initial.lessons.length > 0 ? initial.lessons : [emptyLesson()],
@@ -109,7 +117,11 @@ export function VideoUploadForm({
     [totalDurationSeconds],
   );
 
-  function buildPayload(thumbnailKey: string): VideoFormInput {
+  function buildPayload(
+    thumbnailKey: string,
+    resolvedTrailerThumbnailKey?: string,
+    resolvedGuidebookCoverKey?: string,
+  ): VideoFormInput {
     return {
       id: initial?.id,
       type: "VIDEO",
@@ -122,7 +134,9 @@ export function VideoUploadForm({
       instructorId,
       thumbnailKey,
       trailerKey: trailerKey || undefined,
+      trailerThumbnailKey: (resolvedTrailerThumbnailKey ?? trailerThumbnailKey) || undefined,
       guidebookKey: guidebookKey || undefined,
+      guidebookCoverKey: (resolvedGuidebookCoverKey ?? guidebookCoverKey) || undefined,
       durationSeconds: totalDurationSeconds,
       durationLabel: totalDurationLabel,
       status: "PUBLISHED",
@@ -144,7 +158,27 @@ export function VideoUploadForm({
         return;
       }
 
-      const result = await saveVideo(buildPayload(thumbnailKey), true);
+      let resolvedTrailerThumbnailKey: string | undefined;
+      try {
+        const uploaded = await trailerThumbnailRef.current?.upload();
+        if (uploaded) resolvedTrailerThumbnailKey = uploaded.key;
+      } catch (err) {
+        setErrors([err instanceof Error ? err.message : "Trailer thumbnail upload failed."]);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+
+      let resolvedGuidebookCoverKey: string | undefined;
+      try {
+        const uploaded = await guidebookCoverRef.current?.upload();
+        if (uploaded) resolvedGuidebookCoverKey = uploaded.key;
+      } catch (err) {
+        setErrors([err instanceof Error ? err.message : "Guidebook cover upload failed."]);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+
+      const result = await saveVideo(buildPayload(thumbnailKey, resolvedTrailerThumbnailKey, resolvedGuidebookCoverKey), true);
       if (!result.ok) {
         setErrors(result.errors);
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -230,6 +264,23 @@ export function VideoUploadForm({
           </div>
 
           <div>
+            <p className={labelClass}>Trailer Thumbnail (optional)</p>
+            <div className="mt-2">
+              <DeferredImageUpload
+                ref={trailerThumbnailRef}
+                kind="thumbnail"
+                height={200}
+                currentUrl={
+                  trailerThumbnailKey === (initial?.trailerThumbnailKey ?? "")
+                    ? initial?.trailerThumbnailUrl
+                    : undefined
+                }
+                onStagedChange={setTrailerThumbnailStaged}
+              />
+            </div>
+          </div>
+
+          <div>
             <p className={labelClass}>Guidebook PDF (optional)</p>
             <div className="mt-2">
               <S3Uploader
@@ -237,6 +288,23 @@ export function VideoUploadForm({
                 height={180}
                 currentKey={guidebookKey}
                 onComplete={({ key }) => setGuidebookKey(key)}
+              />
+            </div>
+          </div>
+
+          <div>
+            <p className={labelClass}>Guidebook Cover Image (optional)</p>
+            <div className="mt-2">
+              <DeferredImageUpload
+                ref={guidebookCoverRef}
+                kind="thumbnail"
+                height={200}
+                currentUrl={
+                  guidebookCoverKey === (initial?.guidebookCoverKey ?? "")
+                    ? initial?.guidebookCoverUrl
+                    : undefined
+                }
+                onStagedChange={setGuidebookCoverStaged}
               />
             </div>
           </div>

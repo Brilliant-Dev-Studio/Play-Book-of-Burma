@@ -27,7 +27,9 @@ export type VideoFormInput = {
   instructorId: string;
   thumbnailKey: string;
   trailerKey?: string;
+  trailerThumbnailKey?: string;
   guidebookKey?: string;
+  guidebookCoverKey?: string;
   durationSeconds: number;
   durationLabel: string;
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
@@ -98,8 +100,12 @@ async function validate(input: VideoFormInput): Promise<string[]> {
     errors.push("Thumbnail upload is required.");
   if (input.trailerKey && !isAllowedKey(input.trailerKey))
     errors.push("Trailer upload is invalid.");
+  if (input.trailerThumbnailKey && !isAllowedKey(input.trailerThumbnailKey))
+    errors.push("Trailer thumbnail upload is invalid.");
   if (input.guidebookKey && !isAllowedKey(input.guidebookKey))
     errors.push("Guidebook upload is invalid.");
+  if (input.guidebookCoverKey && !isAllowedKey(input.guidebookCoverKey))
+    errors.push("Guidebook cover image upload is invalid.");
   if (!input.durationLabel) errors.push("Duration label is required.");
   if (input.lessons.length === 0) {
     errors.push("At least one lesson is required.");
@@ -143,7 +149,9 @@ export async function saveVideo(
     instructorId: cleaned.instructorId,
     thumbnailKey: cleaned.thumbnailKey,
     trailerKey: cleaned.trailerKey?.trim() || null,
+    trailerThumbnailKey: cleaned.trailerThumbnailKey?.trim() || null,
     guidebookKey: cleaned.guidebookKey?.trim() || null,
+    guidebookCoverKey: cleaned.guidebookCoverKey?.trim() || null,
     durationSeconds: Number.isFinite(cleaned.durationSeconds) ? cleaned.durationSeconds : 0,
     durationLabel: cleaned.durationLabel,
     status,

@@ -214,6 +214,11 @@ export function PortalHeader() {
                         {user.email}
                       </p>
                     )}
+                    {user?.membership?.plan && (
+                      <span className="mt-2 inline-flex items-center rounded-full bg-coral/15 px-2.5 py-0.5 text-[11px] font-semibold text-coral">
+                        {user.membership.plan === "SIX_MONTHS" ? "6 Month Plan" : "12 Month Plan"}
+                      </span>
+                    )}
                   </div>
 
                   {/* Mobile-only nav items */}
@@ -228,7 +233,7 @@ export function PortalHeader() {
                           onClick={() => setMenuOpen(false)}
                           role="menuitem"
                           aria-current={active ? "page" : undefined}
-                          className={`flex items-center gap-2.5 px-4 py-3 text-sm font-medium transition-colors hover:bg-white/[0.06] ${
+                          className={`flex items-center gap-2.5 px-4 py-3 text-sm font-medium transition-colors hover:bg-white/6 ${
                             active ? "border-l-2 border-coral bg-coral/10 text-coral" : "text-white"
                           }`}
                         >
@@ -243,7 +248,7 @@ export function PortalHeader() {
                     href="/user-portal/settings"
                     onClick={() => setMenuOpen(false)}
                     role="menuitem"
-                    className="block px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-white/[0.06]"
+                    className="block px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-white/6"
                   >
                     Settings
                   </Link>
@@ -252,7 +257,7 @@ export function PortalHeader() {
                       href="/admin"
                       onClick={() => setMenuOpen(false)}
                       role="menuitem"
-                      className="block border-t border-white/10 px-4 py-3 text-sm font-medium text-coral transition-colors hover:bg-white/[0.06]"
+                      className="block border-t border-white/10 px-4 py-3 text-sm font-medium text-coral transition-colors hover:bg-white/6"
                     >
                       Admin Dashboard
                     </Link>
@@ -261,7 +266,7 @@ export function PortalHeader() {
                     type="button"
                     onClick={handleSignOut}
                     role="menuitem"
-                    className="block w-full border-t border-white/10 px-4 py-3 text-left text-sm font-medium text-white transition-colors hover:bg-white/[0.06]"
+                    className="block w-full border-t border-white/10 px-4 py-3 text-left text-sm font-medium text-white transition-colors hover:bg-white/6"
                   >
                     Sign Out
                   </button>

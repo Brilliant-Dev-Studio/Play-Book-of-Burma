@@ -169,7 +169,7 @@ function MarqueeRow({
 
 export function HeroMarqueeBackdrop() {
   return (
-    <section className="relative isolate min-h-[85vh] w-full flex-1 bg-black">
+    <section className="relative isolate min-h-[70svh] w-full flex-1 bg-black">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* Match SiteHeader / section rails — marquee clips inside 85% instead of full-bleed past content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -204,11 +204,11 @@ export function HeroMarqueeBackdrop() {
       </div>
 
       {/* Hero copy — same horizontal rail as SiteHeader (max-w + px), left column */}
-      <div className="relative z-20 flex min-h-[85vh] w-full flex-1">
-        <div className="mx-auto flex min-h-[85vh] w-full max-w-[80%] flex-1">
+      <div className="relative z-20 flex min-h-[70svh] w-full flex-1">
+        <div className="mx-auto flex min-h-[70svh] w-full max-w-[80%] flex-1">
           <div className="flex w-full flex-col items-start justify-center px-4 py-16 sm:px-6 md:w-1/2 lg:px-8">
             <div className="w-full max-w-3xl text-left text-white">
-              <h1 className="font-[family-name:var(--font-rwst-stack)] text-4xl leading-tight tracking-tight text-balance sm:text-5xl md:text-[2.85rem] md:leading-[1.12] lg:text-6xl">
+              <h1 className="font-[family-name:var(--font-rwst-stack)] text-4xl leading-relaxed tracking-wide text-balance sm:text-5xl sm:leading-relaxed md:text-[2.85rem] md:leading-[1.4] lg:text-6xl lg:leading-[1.4]">
                 Get Playbook of Top 1 % in Myanmar
               </h1>
               <p className="mt-5 text-sm leading-relaxed text-white/90 sm:text-base">
@@ -223,7 +223,7 @@ export function HeroMarqueeBackdrop() {
                     className="h-px w-8 shrink-0 bg-coral"
                     aria-hidden
                   />
-                  <h2 className="text-base font-semibold tracking-tight text-white sm:text-lg">
+                  <h2 className="text-base font-semibold tracking-wide text-white sm:text-lg">
                     Choose What You Learn
                   </h2>
                 </div>
@@ -232,7 +232,7 @@ export function HeroMarqueeBackdrop() {
               </div>
             </div>
           </div>
-          <div className="hidden min-h-[85vh] md:block md:w-1/2" aria-hidden />
+          <div className="hidden min-h-[70svh] md:block md:w-1/2" aria-hidden />
         </div>
       </div>
     </section>

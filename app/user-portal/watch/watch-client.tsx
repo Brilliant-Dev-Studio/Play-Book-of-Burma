@@ -136,7 +136,7 @@ export function WatchClient({
 
   return (
     <main className="flex min-h-0 flex-1 flex-col bg-black">
-      <div className="w-full px-4 pb-8 pt-4 sm:px-6 sm:pb-10 sm:pt-5 lg:px-10 lg:pb-12 lg:pt-6">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-4 sm:px-6 sm:pb-10 sm:pt-5 lg:px-10 lg:pb-12 lg:pt-6">
         <div className="relative flex flex-col gap-8 lg:flex-row lg:gap-8">
           {!isPanelOpen && (
             <button
@@ -171,22 +171,7 @@ export function WatchClient({
               )}
             </div>
 
-            {activeLesson && (
-              <div className="mt-6">
-                <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                  {activeIndex + 1}. {activeLesson.title}
-                </h1>
-                <p className="mt-3 text-sm leading-relaxed text-white/85 sm:text-base">
-                  <span className="font-medium text-white">Description: </span>
-                  {[video.description, activeLesson.details]
-                    .map((s) => s?.trim())
-                    .filter(Boolean)
-                    .join(" ")}
-                </p>
-              </div>
-            )}
-
-            <div className="mt-6 flex flex-wrap gap-3 sm:gap-4">
+            <div className="mt-4 flex flex-wrap gap-3 sm:gap-4">
               {video.guidebookUrl && (
                 <a
                   href={video.guidebookUrl}
@@ -211,13 +196,25 @@ export function WatchClient({
                     : "bg-zinc-900/80 text-white ring-white/10 hover:bg-zinc-900"
                 }`}
               >
-                <IconBookmark
-                  className="h-6 w-6"
-                  filled={isBookmarked}
-                />
+                <IconBookmark className="h-6 w-6" filled={isBookmarked} />
                 {isBookmarked ? "Bookmarked" : "Bookmark"}
               </button>
             </div>
+
+            {activeLesson && (
+              <div className="mt-6">
+                <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                  {activeIndex + 1}. {activeLesson.title}
+                </h1>
+                <p className="mt-3 text-sm leading-relaxed text-white/85 sm:text-base">
+                  <span className="font-medium text-white">Description: </span>
+                  {[video.description, activeLesson.details]
+                    .map((s) => s?.trim())
+                    .filter(Boolean)
+                    .join(" ")}
+                </p>
+              </div>
+            )}
           </div>
 
           {isPanelOpen && (

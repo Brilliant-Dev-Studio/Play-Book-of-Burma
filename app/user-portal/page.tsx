@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { presignGetUrl, PRESIGN_TTL } from "@/lib/server/s3";
 import { requireSession } from "@/lib/server/auth-helpers";
-import { getUserPortalPodcasts } from "@/lib/server/podcasts";
+import { getHomePodcastGroups } from "@/lib/server/podcasts";
 import {
   UserPortalClient,
   type ContinueWatchingItem,
@@ -64,7 +64,7 @@ export default async function UserPortalPage() {
         },
       },
     }),
-    getUserPortalPodcasts(),
+    getHomePodcastGroups(),
   ]);
 
   const filterGroups = [

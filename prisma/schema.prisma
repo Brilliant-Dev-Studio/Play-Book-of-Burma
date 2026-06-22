@@ -261,8 +261,10 @@ model Video {
   instructorId        String
   instructor          Instructor     @relation(fields: [instructorId], references: [id])
   thumbnailKey        String
-  trailerKey          String?
-  guidebookKey        String?
+  trailerKey              String?
+  trailerThumbnailKey     String?
+  guidebookKey            String?
+  guidebookCoverKey       String?
   durationSeconds     Int            @default(0)
   durationLabel       String
   status              PublishStatus  @default(DRAFT)
