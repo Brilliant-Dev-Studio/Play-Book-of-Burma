@@ -161,18 +161,20 @@ export async function saveVideo(
   let id = cleaned.id;
   try {
     if (id) {
-      await prisma.$transaction([
-        prisma.lesson.deleteMany({ where: { videoId: id } }),
-        prisma.skillsetItem.deleteMany({ where: { videoId: id } }),
-        prisma.video.update({
-          where: { id },
-          data: {
-            ...data,
-            lessons: { create: cleaned.lessons.map((l, i) => ({ ...l, order: i })) },
-            skillsetItems: { create: cleaned.skillsetItems.map((s, i) => ({ ...s, order: i })) },
+      await prisma.video.update({
+        where: { id },
+        data: {
+          ...data,
+          lessons: {
+            deleteMany: {},
+            create: cleaned.lessons.map((l, i) => ({ ...l, order: i })),
           },
-        }),
-      ]);
+          skillsetItems: {
+            deleteMany: {},
+            create: cleaned.skillsetItems.map((s, i) => ({ ...s, order: i })),
+          },
+        },
+      });
     } else {
       const created = await prisma.video.create({
         data: {
