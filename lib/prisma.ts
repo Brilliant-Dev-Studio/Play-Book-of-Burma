@@ -1,10 +1,9 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaNeonHttp } from "@prisma/adapter-neon";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 function createPrismaClient() {
-  return new PrismaClient({
-    adapter: new PrismaNeonHttp(process.env.DATABASE_URL!, {}),
-  }).$extends({
+  const adapter = new PrismaPg(process.env.DATABASE_URL_UNPOOLED!);
+  return new PrismaClient({ adapter }).$extends({
     query: {
       $allModels: {
         async $allOperations({ args, query }) {
