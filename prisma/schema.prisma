@@ -261,6 +261,7 @@ model Video {
   instructorId        String
   instructor          Instructor     @relation(fields: [instructorId], references: [id])
   thumbnailKey        String
+  heroImageKey            String?
   trailerKey              String?
   trailerThumbnailKey     String?
   guidebookKey            String?

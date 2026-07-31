@@ -5,6 +5,7 @@ import { presignGetUrl, PRESIGN_TTL } from "@/lib/server/s3";
 import { getSession } from "@/lib/server/auth-helpers";
 import { HomeMembershipCta } from "@/app/components/home-membership-cta";
 import { TrailerSection } from "./trailer-section";
+import { SkillsetCarousel } from "./skillset-carousel";
 
 export async function VideoDetail({
   videoId,
@@ -48,8 +49,11 @@ export async function VideoDetail({
     ? watchPath
     : `/login?next=${encodeURIComponent(watchPath)}`;
 
-  const [thumbnailUrl, trailerUrl, trailerThumbnailUrl, guidebookUrl, guidebookCoverUrl, skillsetImageUrls] = await Promise.all([
+  const [thumbnailUrl, heroImageUrl, trailerUrl, trailerThumbnailUrl, guidebookUrl, guidebookCoverUrl, skillsetImageUrls] = await Promise.all([
     presignGetUrl(video.thumbnailKey, PRESIGN_TTL.image),
+    video.heroImageKey
+      ? presignGetUrl(video.heroImageKey, PRESIGN_TTL.image)
+      : Promise.resolve<string | null>(null),
     video.trailerKey
       ? presignGetUrl(video.trailerKey, PRESIGN_TTL.video)
       : Promise.resolve<string | null>(null),
@@ -77,7 +81,7 @@ export async function VideoDetail({
         <div className="absolute inset-0 z-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={thumbnailUrl}
+            src={heroImageUrl ?? thumbnailUrl}
             alt=""
             className="h-full w-full object-cover object-center"
             draggable={false}
@@ -157,37 +161,7 @@ export async function VideoDetail({
             <h2 className="mb-8 text-2xl font-bold tracking-tight text-white sm:text-3xl md:mb-10 md:text-4xl">
               Skillset You will Learn
             </h2>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:gap-7 lg:grid-cols-3 lg:gap-8">
-              {video.skillsetItems.map((s, i) => (
-                <article
-                  key={s.id}
-                  className="group relative aspect-3/4 w-full overflow-hidden rounded-2xl bg-zinc-900 shadow-[0_16px_48px_rgba(0,0,0,0.5)] ring-1 ring-white/10"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={skillsetImageUrls[i]}
-                    alt=""
-                    className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
-                  />
-                  <div
-                    className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.95)_0%,rgba(0,0,0,0.82)_28%,rgba(0,0,0,0.45)_50%,rgba(0,0,0,0.15)_68%,transparent_82%)]"
-                    aria-hidden
-                  />
-                  <span className="absolute left-3 top-3 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-coral text-xl font-bold text-white shadow-[0_4px_14px_rgba(236,113,71,0.5)] sm:left-4 sm:top-4 sm:h-14 sm:w-14 sm:text-2xl">
-                    {i + 1}
-                  </span>
-                  <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-5 sm:px-6 sm:pb-6">
-                    <h3 className="line-clamp-2 text-lg font-bold leading-snug tracking-tight text-white sm:text-xl">
-                      {s.title}
-                    </h3>
-                    <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-white/80 sm:text-[0.95rem]">
-                      <span className="font-medium text-white">Description: </span>
-                      {s.description}
-                    </p>
-                  </div>
-                </article>
-              ))}
-            </div>
+            <SkillsetCarousel items={video.skillsetItems} imageUrls={skillsetImageUrls} />
           </div>
         </section>
       )}

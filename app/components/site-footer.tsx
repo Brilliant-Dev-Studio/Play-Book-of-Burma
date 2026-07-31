@@ -101,6 +101,11 @@ export function SiteFooter() {
                   Login
                 </Link>
               </li>
+              <li>
+                <Link href="/terms" className="hover:text-white">
+                  Terms &amp; Conditions
+                </Link>
+              </li>
             </ul>
           </section>
 

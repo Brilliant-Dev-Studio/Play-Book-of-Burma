@@ -48,6 +48,10 @@ export default async function EditVideoPage({
     instructorId: video.instructorId,
     thumbnailKey: video.thumbnailKey,
     thumbnailUrl: await presignGetUrl(video.thumbnailKey, PRESIGN_TTL.image),
+    heroImageKey: video.heroImageKey ?? undefined,
+    heroImageUrl: video.heroImageKey
+      ? await presignGetUrl(video.heroImageKey, PRESIGN_TTL.image)
+      : undefined,
     trailerKey: video.trailerKey ?? undefined,
     trailerUrl: video.trailerKey
       ? await presignGetUrl(video.trailerKey, PRESIGN_TTL.video)

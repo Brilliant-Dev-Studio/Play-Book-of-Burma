@@ -26,6 +26,7 @@ export type VideoFormInput = {
   description: string;
   instructorId: string;
   thumbnailKey: string;
+  heroImageKey?: string;
   trailerKey?: string;
   trailerThumbnailKey?: string;
   guidebookKey?: string;
@@ -98,6 +99,8 @@ async function validate(input: VideoFormInput): Promise<string[]> {
   }
   if (!input.thumbnailKey || !isAllowedKey(input.thumbnailKey))
     errors.push("Thumbnail upload is required.");
+  if (input.heroImageKey && !isAllowedKey(input.heroImageKey))
+    errors.push("Hero image upload is invalid.");
   if (input.trailerKey && !isAllowedKey(input.trailerKey))
     errors.push("Trailer upload is invalid.");
   if (input.trailerThumbnailKey && !isAllowedKey(input.trailerThumbnailKey))
@@ -148,6 +151,7 @@ export async function saveVideo(
     description: cleaned.description,
     instructorId: cleaned.instructorId,
     thumbnailKey: cleaned.thumbnailKey,
+    heroImageKey: cleaned.heroImageKey?.trim() || null,
     trailerKey: cleaned.trailerKey?.trim() || null,
     trailerThumbnailKey: cleaned.trailerThumbnailKey?.trim() || null,
     guidebookKey: cleaned.guidebookKey?.trim() || null,

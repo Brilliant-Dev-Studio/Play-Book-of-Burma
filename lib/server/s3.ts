@@ -50,6 +50,10 @@ export function keyForThumbnail(filename: string): string {
   return `${PREFIX}/thumbnails/${randomId()}/${sanitizeFilename(filename)}`;
 }
 
+export function keyForHeroImage(filename: string): string {
+  return `${PREFIX}/hero/${randomId()}/${sanitizeFilename(filename)}`;
+}
+
 export function keyForTrailer(filename: string): string {
   return `${PREFIX}/trailers/${randomId()}/${sanitizeFilename(filename)}`;
 }
@@ -73,6 +77,7 @@ export function keyForGuidebook(filename: string): string {
 export type UploadKind =
   | "video"
   | "thumbnail"
+  | "hero"
   | "trailer"
   | "instructor"
   | "submission"
@@ -86,6 +91,7 @@ export function keyFor(kind: UploadKind, filename: string): string {
   if (kind === "submission") return keyForSubmissionScreenshot(filename);
   if (kind === "audio") return keyForAudio(filename);
   if (kind === "guidebook") return keyForGuidebook(filename);
+  if (kind === "hero") return keyForHeroImage(filename);
   return keyForThumbnail(filename);
 }
 

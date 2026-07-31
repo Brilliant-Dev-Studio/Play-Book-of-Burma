@@ -24,6 +24,7 @@ type SkillsetRow = { title: string; description: string; imageKey: string };
 export type VideoFormInitial = Partial<VideoFormInput> & {
   id?: string;
   thumbnailUrl?: string;
+  heroImageUrl?: string;
   trailerUrl?: string;
   trailerThumbnailUrl?: string;
   guidebookCoverUrl?: string;
@@ -92,6 +93,8 @@ export function VideoUploadForm({
   const existingThumbnailKey = initial?.thumbnailKey ?? "";
   const [thumbStaged, setThumbStaged] = useState(false);
   const thumbnailRef = useRef<DeferredImageUploadHandle>(null);
+  const heroImageRef = useRef<DeferredImageUploadHandle>(null);
+  const [heroImageStaged, setHeroImageStaged] = useState(false);
   const [trailerKey, setTrailerKey] = useState<string>(initial?.trailerKey ?? "");
   const [trailerThumbnailKey, setTrailerThumbnailKey] = useState<string>(initial?.trailerThumbnailKey ?? "");
   const trailerThumbnailRef = useRef<DeferredImageUploadHandle>(null);
@@ -119,6 +122,7 @@ export function VideoUploadForm({
 
   function buildPayload(
     thumbnailKey: string,
+    resolvedHeroImageKey?: string,
     resolvedTrailerThumbnailKey?: string,
     resolvedGuidebookCoverKey?: string,
   ): VideoFormInput {
@@ -133,6 +137,7 @@ export function VideoUploadForm({
       description,
       instructorId,
       thumbnailKey,
+      heroImageKey: (resolvedHeroImageKey ?? initial?.heroImageKey) || undefined,
       trailerKey: trailerKey || undefined,
       trailerThumbnailKey: (resolvedTrailerThumbnailKey ?? trailerThumbnailKey) || undefined,
       guidebookKey: guidebookKey || undefined,
@@ -158,6 +163,16 @@ export function VideoUploadForm({
         return;
       }
 
+      let resolvedHeroImageKey: string | undefined;
+      try {
+        const uploaded = await heroImageRef.current?.upload();
+        if (uploaded) resolvedHeroImageKey = uploaded.key;
+      } catch (err) {
+        setErrors([err instanceof Error ? err.message : "Hero image upload failed."]);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+
       let resolvedTrailerThumbnailKey: string | undefined;
       try {
         const uploaded = await trailerThumbnailRef.current?.upload();
@@ -178,7 +193,10 @@ export function VideoUploadForm({
         return;
       }
 
-      const result = await saveVideo(buildPayload(thumbnailKey, resolvedTrailerThumbnailKey, resolvedGuidebookCoverKey), true);
+      const result = await saveVideo(
+        buildPayload(thumbnailKey, resolvedHeroImageKey, resolvedTrailerThumbnailKey, resolvedGuidebookCoverKey),
+        true,
+      );
       if (!result.ok) {
         setErrors(result.errors);
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -246,6 +264,21 @@ export function VideoUploadForm({
                 height={240}
                 currentUrl={initial?.thumbnailUrl}
                 onStagedChange={setThumbStaged}
+              />
+            </div>
+          </div>
+
+          <div>
+            <p className={labelClass}>Hero Banner Image (optional — wide, high-res; falls back to thumbnail)</p>
+            <div className="mt-2">
+              <DeferredImageUpload
+                ref={heroImageRef}
+                kind="hero"
+                height={200}
+                currentUrl={
+                  (initial?.heroImageKey ?? "") ? initial?.heroImageUrl : undefined
+                }
+                onStagedChange={setHeroImageStaged}
               />
             </div>
           </div>

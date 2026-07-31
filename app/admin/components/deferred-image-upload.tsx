@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 
-type Kind = "thumbnail" | "instructor";
+type Kind = "thumbnail" | "instructor" | "hero";
 
 type UploadResult = { key: string; location: string };
 
