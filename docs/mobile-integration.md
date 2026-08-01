@@ -7,12 +7,16 @@ the API. Full reference: [auth.md](auth.md), [API.md](API.md),
 ## Base domain
 
 ```
-https://playbookofburma.com
+https://www.playbookofburma.com
 ```
 
 That's the only base URL to hard-code for production. All routes below are
-relative to it, e.g. `https://playbookofburma.com/api/auth/login`.
+relative to it, e.g. `https://www.playbookofburma.com/api/auth/login`.
 
+- Use the `www` host, not the apex (`playbookofburma.com`) — the apex
+  redirects to `www` but its own TLS edge has been intermittently broken
+  (`SSL_ERROR_SYSCALL`, cert not served) even though Vercel's dashboard shows
+  it as "Valid Configuration". `www` has been verified working end-to-end.
 - HTTPS is already enforced (Vercel) — iOS App Transport Security needs no
   exceptions.
 - CORS is not relevant to `URLSession`/Alamofire calls (CORS is a
@@ -125,7 +129,7 @@ struct LoginResponse: Decodable {
 }
 
 func login(email: String, password: String) async throws -> LoginResponse {
-  var req = URLRequest(url: URL(string: "https://playbookofburma.com/api/auth/login")!)
+  var req = URLRequest(url: URL(string: "https://www.playbookofburma.com/api/auth/login")!)
   req.httpMethod = "POST"
   req.setValue("application/json", forHTTPHeaderField: "Content-Type")
   req.httpBody = try JSONEncoder().encode(["email": email, "password": password])
@@ -137,11 +141,71 @@ func login(email: String, password: String) async throws -> LoginResponse {
 }
 
 func authorizedRequest(_ path: String, token: String) -> URLRequest {
-  var req = URLRequest(url: URL(string: "https://playbookofburma.com\(path)")!)
+  var req = URLRequest(url: URL(string: "https://www.playbookofburma.com\(path)")!)
   req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
   return req
 }
 ```
+
+## Profile photo edit
+
+Two calls: presign an upload, PUT the image straight to S3, then save the
+resulting URL onto the user.
+
+**1. Presign**
+```
+POST /api/user/uploads/photo
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{ "filename": "avatar.jpg", "contentType": "image/jpeg", "size": 482913 }
+```
+`contentType` must start with `image/`; `size` (bytes, optional) is capped at
+10 MB server-side.
+
+`200`
+```json
+{
+  "putUrl": "https://<bucket>.s3.<region>.amazonaws.com/playbookofburma/instructors/...?X-Amz-...",
+  "getUrl": "https://<bucket>.s3.<region>.amazonaws.com/playbookofburma/instructors/...?X-Amz-...",
+  "key": "playbookofburma/instructors/ab12cd34/avatar.jpg"
+}
+```
+Errors: `401` no session, `400 { "error": "Missing filename or contentType." }`, `400 { "error": "Only image files are allowed." }`, `400 { "error": "File too large (max 10 MB)." }`.
+
+**2. Upload the bytes directly to S3** — not to your API, straight to `putUrl`:
+```
+PUT <putUrl>
+Content-Type: image/jpeg
+
+<raw image bytes>
+```
+`200`/`204` with an empty body on success (that's S3, not your app's API).
+
+**3. Save it on the profile**
+```
+PATCH /api/user/profile
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{ "photoUrl": "<getUrl from step 1>" }
+```
+`200 { "ok": true }`
+
+Fetch `GET /api/auth/me` again afterward to get the updated `photoUrl` back
+into the UI.
+
+### ⚠ Known gotcha — the saved URL expires
+
+`getUrl` is a **presigned URL with a 4-hour expiry** (`PRESIGN_TTL.image` in
+[lib/server/s3.ts](../lib/server/s3.ts)), but `/api/user/profile` stores
+whatever string you send in `photoUrl` verbatim — nothing re-presigns it on
+read (`getCurrentUser()` returns the raw DB value). So a profile photo saved
+this way **stops loading ~4 hours after upload**. This is an existing
+backend gap, not something wrong on the client side. If you're hitting this,
+flag it — the real fix is storing `key` instead of `photoUrl` and having
+`/api/auth/me` presign it fresh on every read, same as thumbnails elsewhere
+in the app.
 
 ## Once auth is bound
 

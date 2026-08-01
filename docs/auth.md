@@ -28,7 +28,7 @@ headers, Swift snippet).
 
 ```swift
 // Login
-var request = URLRequest(url: URL(string: "https://playbookofburma.com/api/auth/login")!)
+var request = URLRequest(url: URL(string: "https://www.playbookofburma.com/api/auth/login")!)
 request.httpMethod = "POST"
 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 request.httpBody = try JSONEncoder().encode(["email": email, "password": password])
@@ -37,7 +37,7 @@ let res = try JSONDecoder().decode(LoginResponse.self, from: data) // has `.toke
 // Save res.token to Keychain.
 
 // Every authenticated request after that:
-var req = URLRequest(url: URL(string: "https://playbookofburma.com/api/videos")!)
+var req = URLRequest(url: URL(string: "https://www.playbookofburma.com/api/videos")!)
 req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 ```
 
