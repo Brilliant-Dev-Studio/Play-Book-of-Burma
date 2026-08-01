@@ -28,19 +28,16 @@ async function verify(token: string): Promise<Payload | null> {
 // Native apps (URLSession, Alamofire, etc.) don't send an Origin header and
 // aren't subject to CORS at all — this is only relevant for browser-based
 // callers (Expo web dev server, a future web dashboard, WKWebView, Swagger's
-// "Try it out"). Configure additional origins via CORS_ALLOWED_ORIGINS
-// ("https://a.com,https://b.com") — no wildcards, must match exactly.
-const DEV_ORIGINS = [
-  "http://localhost:8081", // Expo web (`expo start --web`)
-  "http://localhost:19006", // Expo web, older default port
-];
-const CORS_ALLOWED_ORIGINS = [
-  ...DEV_ORIGINS,
-  ...(process.env.CORS_ALLOWED_ORIGINS ?? "")
-    .split(",")
-    .map((o) => o.trim())
-    .filter(Boolean),
-];
+// "Try it out"). Any localhost/127.0.0.1 origin (any port) is allowed by
+// default — Expo/Vite/CRA/Next all pick different ports, and this only
+// matters for someone already running a browser on the developer's own
+// machine. Configure non-local origins via CORS_ALLOWED_ORIGINS
+// ("https://a.com,https://b.com") — no wildcards there, must match exactly.
+const LOCALHOST_ORIGIN_RE = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+const CORS_ALLOWED_ORIGINS = (process.env.CORS_ALLOWED_ORIGINS ?? "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Methods": "GET, POST, PATCH, PUT, DELETE, OPTIONS",
@@ -49,9 +46,13 @@ const CORS_HEADERS = {
   "Access-Control-Max-Age": "86400",
 };
 
+function isAllowedOrigin(origin: string): boolean {
+  return LOCALHOST_ORIGIN_RE.test(origin) || CORS_ALLOWED_ORIGINS.includes(origin);
+}
+
 function withCors(req: NextRequest, res: NextResponse): NextResponse {
   const origin = req.headers.get("origin") ?? "";
-  if (CORS_ALLOWED_ORIGINS.includes(origin)) {
+  if (isAllowedOrigin(origin)) {
     res.headers.set("Access-Control-Allow-Origin", origin);
     res.headers.set("Vary", "Origin");
   }
