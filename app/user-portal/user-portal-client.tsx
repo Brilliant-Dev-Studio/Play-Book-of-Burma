@@ -352,7 +352,7 @@ function PlaybookVideoCard({
     <a
       href={`/user-portal/click-video-detail?video=${id}`}
       data-card
-      className={`group flex flex-col overflow-hidden rounded-2xl border-2 border-white/45 bg-black outline-none transition-colors hover:border-white/65 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black ${layoutClass}`}
+      className={`group flex flex-col overflow-hidden rounded-2xl border border-white/25 bg-black outline-none transition-colors hover:border-white/40 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black ${layoutClass}`}
       aria-label={`${titleLine1} ${titleLine2}`}
     >
       <div className="relative aspect-3/4 w-full overflow-hidden bg-zinc-900">
@@ -388,10 +388,11 @@ function PlaybookVideoCard({
         )}
 
         <span
-          className="pointer-events-none absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
+          className="pointer-events-none absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center opacity-0 scale-50 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-100 group-hover:opacity-50 group-focus-visible:scale-100 group-focus-visible:opacity-50 motion-reduce:scale-100 motion-reduce:opacity-50 motion-reduce:transition-none"
           aria-hidden
         >
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-coral text-black shadow-lg transition-transform group-hover:scale-105 sm:h-12 sm:w-12">
+          <span className="absolute h-11 w-11 rounded-full bg-coral/60 opacity-0 transition-opacity duration-500 group-hover:animate-ping group-hover:opacity-100 group-focus-visible:animate-ping group-focus-visible:opacity-100 motion-reduce:hidden sm:h-12 sm:w-12" />
+          <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-coral text-black shadow-lg transition-transform duration-300 ease-out group-hover:scale-110 sm:h-12 sm:w-12">
             <span className="ml-0.5 text-2xl leading-none">▶</span>
           </span>
         </span>

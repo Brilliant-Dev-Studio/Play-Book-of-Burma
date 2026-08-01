@@ -21,9 +21,21 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
   const [currentSec, setCurrentSec] = useState(0);
   const [durationSec, setDurationSec] = useState(item.durationSeconds || 0);
   const [expanded, setExpanded] = useState(false);
+  const [isClamped, setIsClamped] = useState(false);
+  const descRef = useRef<HTMLParagraphElement>(null);
   const [rate, setRate] = useState(1);
   const [volume, setVolume] = useState(1);
   const [muted, setMuted] = useState(false);
+
+  useEffect(() => {
+    const el = descRef.current;
+    if (!el) return;
+    // Temporarily remove clamp to measure true full height vs clamped height
+    el.style.webkitLineClamp = "unset";
+    const fullH = el.scrollHeight;
+    el.style.webkitLineClamp = "";
+    setIsClamped(fullH > el.clientHeight + 2);
+  }, [item.description]);
 
   // Throttled progress saving — fires at most once per SAVE_INTERVAL_SEC
   const lastSavedSecRef = useRef<number>(-SAVE_INTERVAL_SEC);
@@ -128,7 +140,7 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
 
   return (
     <article className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-7">
-      <div className="group w-full max-w-87.5 shrink-0 rounded-2xl border-2 border-white/30 p-1.25 shadow-[0_14px_44px_rgba(0,0,0,0.45)] transition-colors hover:border-white/45 sm:w-87.5">
+      <div className="group w-full max-w-87.5 shrink-0 rounded-2xl border border-white/25 p-1.25 shadow-[0_14px_44px_rgba(0,0,0,0.45)] transition-colors hover:border-white/40 sm:w-87.5">
         <div className="relative aspect-360/230 w-full overflow-hidden rounded-xl bg-white/5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -140,9 +152,12 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
             type="button"
             onClick={toggle}
             aria-label={isPlaying ? "Pause" : "Play"}
-            className="absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+            className={`absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center scale-50 opacity-0 outline-none transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-100 group-hover:opacity-50 focus-visible:scale-100 focus-visible:opacity-50 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-transparent motion-reduce:scale-100 motion-reduce:opacity-50 motion-reduce:transition-none ${isPlaying ? "scale-100! opacity-50!" : ""}`}
           >
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-coral text-black shadow-lg transition-transform hover:scale-105 sm:h-12 sm:w-12">
+            <span
+              className={`absolute h-11 w-11 rounded-full bg-coral/60 opacity-0 transition-opacity duration-500 group-hover:animate-ping group-hover:opacity-100 motion-reduce:hidden sm:h-12 sm:w-12 ${isPlaying ? "hidden" : ""}`}
+            />
+            <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-coral text-black shadow-lg transition-transform duration-300 ease-out hover:scale-110 sm:h-12 sm:w-12">
               <span className="text-2xl leading-none">
                 {isPlaying ? "❚❚" : <span className="ml-0.5">▶</span>}
               </span>
@@ -156,13 +171,14 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
           {item.title}
         </h3>
         <p
+          ref={descRef}
           className={`mt-2 max-w-[80ch] text-base leading-relaxed text-white/85 ${
             expanded ? "" : "line-clamp-5"
           }`}
         >
           {item.description}
         </p>
-        {item.description && (
+        {(isClamped || expanded) && (
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}

@@ -11,10 +11,11 @@ function PlayBadge({ href }: { href: string }) {
   return (
     <Link
       href={href}
-      className="absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+      className="absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center opacity-0 scale-50 outline-none transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-100 group-hover:opacity-50 focus-visible:opacity-50 focus-visible:scale-100 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-transparent motion-reduce:scale-100 motion-reduce:opacity-50 motion-reduce:transition-none"
       aria-label="Become a member to listen"
     >
-      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-coral text-black shadow-lg transition-transform hover:scale-105 sm:h-12 sm:w-12">
+      <span className="absolute h-11 w-11 rounded-full bg-coral/60 opacity-0 transition-opacity duration-500 group-hover:animate-ping group-hover:opacity-100 motion-reduce:hidden sm:h-12 sm:w-12" />
+      <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-coral text-black shadow-lg transition-transform duration-300 ease-out hover:scale-110 sm:h-12 sm:w-12">
         <span className="ml-0.5 text-2xl leading-none">▶</span>
       </span>
     </Link>
@@ -39,7 +40,7 @@ function PodcastRow({ item }: { item: HomePodcastItem }) {
   return (
     <article className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-7">
       {/* Thumbnail — fixed size, portal-style gray border frame */}
-      <div className="group w-full shrink-0 rounded-2xl border-2 border-white/30 p-1.25 shadow-[0_14px_44px_rgba(0,0,0,0.45)] transition-colors hover:border-white/45 sm:w-[320px] lg:w-90">
+      <div className="group w-full shrink-0 rounded-2xl border border-white/25 p-1.25 shadow-[0_14px_44px_rgba(0,0,0,0.45)] transition-colors hover:border-white/40 sm:w-[320px] lg:w-90">
         <div className="relative aspect-360/230 w-full overflow-hidden rounded-xl bg-white/5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

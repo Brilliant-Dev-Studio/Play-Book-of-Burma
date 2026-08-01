@@ -4,6 +4,9 @@ All routes live under `app/api/**/route.ts` (Next.js App Router route handlers).
 `app/admin/**` has no `route.ts` files — admin mutations go through Server
 Actions, not HTTP endpoints, and are not covered here.
 
+Base domain: `https://www.playbookofburma.com` (not the apex — see
+[mobile-integration.md](mobile-integration.md)).
+
 ## Auth model
 
 Every route below authenticates via `getSession()`
@@ -14,7 +17,7 @@ Routes check this manually and return `401`/`403` JSON rather than redirecting
 Components/pages).
 
 - **Public** — no session needed.
-- **Session** — valid session cookie required, `401 { error: "Unauthenticated." }` otherwise.
+- **Session** — valid session cookie (web) **or** `Authorization: Bearer <token>` (native/mobile — token comes from `POST /api/auth/login`, see [auth.md](auth.md)) required, `401 { error: "Unauthenticated." }` otherwise.
 - **Admin** — session + `role === "ADMIN"`, `403 { error: "Forbidden." }` otherwise.
 - **Member** — session + an active `Membership` with `status: "APPROVED"` and `expiresAt` in the future, `403 { error: "Active membership required." }` otherwise.
 
@@ -30,7 +33,7 @@ Public. Authenticates and sets the session cookie.
 | | |
 |---|---|
 | Body | `{ email: string, password: string }` |
-| 200 | `{ ok: true, mustChangePassword: boolean, role: string }` |
+| 200 | `{ ok: true, mustChangePassword: boolean, role: string, token: string, expiresIn: number }` |
 | 400 | `{ error: "Email and password are required." }` |
 | 401 | `{ error: "Invalid email or password." }` |
 | 403 | `{ error: "Your account has been suspended. Please contact support." }` |
@@ -185,6 +188,28 @@ Member. `200 { lesson: { id, videoId, order, title, videoUrl, durationLabel, dur
 Member. Grouped listing with presigned media URLs.
 
 `200 { groups: [{ label: "Popular" | "Season N", items: [{ id, title, description, thumbnailUrl, audioUrl, durationLabel, durationSeconds, season, publishedAt }] }] }` (empty `groups: []` if none published)
+
+---
+
+## Public (no auth)
+
+Unauthenticated equivalents for pre-login/guest browse screens (landing
+page, mobile "browse before you join"). No session, no membership, no
+`Authorization` header. Separate route files — none of the member-only
+routes above were modified. Full detail + examples:
+[public-api.md](public-api.md), [video-detail.md](video-detail.md).
+
+### `GET /api/public/videos`
+Public. Same as `GET /api/videos` (industry/skillset/sort/page/limit), no auth.
+
+### `GET /api/public/videos/random`
+Public. `limit?` (default 12, max 50) random `PUBLISHED` videos, fresh shuffle every call.
+
+### `GET /api/public/videos/{id}`
+Public. Same shape as `GET /api/videos/{id}`, **including** `guidebookUrl`/`guidebookCoverUrl`. Lesson `videoUrl` still excluded (same as the member route — requires `GET /api/videos/{id}/lessons/{lessonId}` + membership).
+
+### `GET /api/public/podcasts`
+Public. Same as `GET /api/podcasts`, including playable `audioUrl` — full episodes, not previews.
 
 ---
 
