@@ -8,11 +8,11 @@ function notFound() {
 
 // Public, unauthenticated equivalent of GET /api/videos/{id} — no session or
 // membership required. Used for guest/pre-login detail screens ("Start Now"
-// / "Trailer"). Mirrors the private route's shape minus guidebookUrl /
-// guidebookCoverUrl (paid downloadable resource — no reason to expose it
-// pre-membership) and lesson videoUrl (already excluded in the private
-// route too; still requires GET /api/videos/{id}/lessons/{lessonId} +
-// membership). Separate file so the original route's auth is untouched.
+// / "Trailer"). Mirrors the private route's shape in full, including
+// guidebookUrl/guidebookCoverUrl. Lesson videoUrl is still excluded (same as
+// the private route) — that still requires
+// GET /api/videos/{id}/lessons/{lessonId} + membership. Separate file so the
+// original route's auth is untouched.
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -29,6 +29,8 @@ export async function GET(
       thumbnailKey: true,
       trailerKey: true,
       trailerThumbnailKey: true,
+      guidebookKey: true,
+      guidebookCoverKey: true,
       durationLabel: true,
       durationSeconds: true,
       publishedAt: true,
@@ -69,12 +71,15 @@ export async function GET(
 
   if (!video) return notFound();
 
-  const [thumbnailUrl, trailerUrl, trailerThumbnailUrl, instructorPhotoUrl] = await Promise.all([
-    presignGetUrl(video.thumbnailKey, PRESIGN_TTL.image),
-    video.trailerKey ? presignGetUrl(video.trailerKey, PRESIGN_TTL.video) : null,
-    video.trailerThumbnailKey ? presignGetUrl(video.trailerThumbnailKey, PRESIGN_TTL.image) : null,
-    presignGetUrl(video.instructor.photoKey, PRESIGN_TTL.image),
-  ]);
+  const [thumbnailUrl, trailerUrl, trailerThumbnailUrl, guidebookUrl, guidebookCoverUrl, instructorPhotoUrl] =
+    await Promise.all([
+      presignGetUrl(video.thumbnailKey, PRESIGN_TTL.image),
+      video.trailerKey ? presignGetUrl(video.trailerKey, PRESIGN_TTL.video) : null,
+      video.trailerThumbnailKey ? presignGetUrl(video.trailerThumbnailKey, PRESIGN_TTL.image) : null,
+      video.guidebookKey ? presignGetUrl(video.guidebookKey, PRESIGN_TTL.video) : null,
+      video.guidebookCoverKey ? presignGetUrl(video.guidebookCoverKey, PRESIGN_TTL.image) : null,
+      presignGetUrl(video.instructor.photoKey, PRESIGN_TTL.image),
+    ]);
 
   const skillsetItemsWithUrls = await Promise.all(
     video.skillsetItems.map(async (si) => ({
@@ -95,6 +100,8 @@ export async function GET(
       thumbnailUrl,
       trailerUrl,
       trailerThumbnailUrl,
+      guidebookUrl,
+      guidebookCoverUrl,
       durationLabel: video.durationLabel,
       durationSeconds: video.durationSeconds,
       publishedAt: video.publishedAt?.toISOString() ?? null,

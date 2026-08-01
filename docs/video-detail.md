@@ -8,11 +8,10 @@ Two routes back this screen now:
 
 ## `GET /api/public/videos/{id}`
 
-No `Authorization` header needed. Same base domain as the other public
-routes (`https://www.playbookofburma.com`).
+No `Authorization` header needed.
 
 ```
-GET /api/public/videos/{id}
+GET https://www.playbookofburma.com/api/public/videos/{id}
 ```
 
 **200**
@@ -26,6 +25,8 @@ GET /api/public/videos/{id}
     "thumbnailUrl": "https://<bucket>.s3.../thumbnails/...?X-Amz-...",
     "trailerUrl": "https://<bucket>.s3.../trailers/...?X-Amz-...",
     "trailerThumbnailUrl": "https://<bucket>.s3.../thumbnails/...?X-Amz-...",
+    "guidebookUrl": "https://<bucket>.s3.../guidebooks/...?X-Amz-...",
+    "guidebookCoverUrl": "https://<bucket>.s3.../thumbnails/...?X-Amz-...",
     "durationLabel": "1 hour 15 minutes",
     "durationSeconds": 4500,
     "publishedAt": "2026-04-01T00:00:00.000Z",
@@ -50,14 +51,14 @@ GET /api/public/videos/{id}
 
 **404** `{ "error": "Video not found." }` — unpublished or bad id.
 
-**Deliberately excluded vs. the private route:** `guidebookUrl` and
-`guidebookCoverUrl` (paid downloadable resource — only available to
-members) and lesson `videoUrl` (paid, always was gated behind the separate
-lesson-fetch call anyway). `trailerUrl` is included, same as the private
-route — it's meant to be freely watchable as a hook, matching the "Watch
-Trailer" card in the screenshot. Wire the guest screen's "Start Now" button
-to a login/signup prompt — actual lesson playback still needs
-`/api/videos/{id}/lessons/{lessonId}` + membership.
+**Same shape as the private route, including `guidebookUrl` /
+`guidebookCoverUrl`** — the PDF guidebook is available pre-login too (by
+request, 2026-08-01). Only lesson `videoUrl` stays excluded (was always
+gated behind the separate lesson-fetch call, same as the private route).
+`trailerUrl` is included, meant to be freely watchable as a hook, matching
+the "Watch Trailer" card in the screenshot. Wire the guest screen's
+"Start Now" button to a login/signup prompt — actual lesson **video**
+playback still needs `/api/videos/{id}/lessons/{lessonId}` + membership.
 
 ---
 
@@ -70,7 +71,7 @@ real session exists. Requires a session + active membership —
 before `/api/public/videos/{id}` existed).
 
 ```
-GET /api/videos/{id}
+GET https://www.playbookofburma.com/api/videos/{id}
 Authorization: Bearer <token>
 ```
 
@@ -118,7 +119,7 @@ duration, details). Getting the actual playable lesson video is a second
 call:
 
 ```
-GET /api/videos/{id}/lessons/{lessonId}
+GET https://www.playbookofburma.com/api/videos/{id}/lessons/{lessonId}
 ```
 `200 { "lesson": { id, videoId, order, title, videoUrl, durationLabel, durationSeconds, details } }`
 
@@ -132,6 +133,4 @@ screenshot).
 ### Guest/pre-login use
 
 Use `GET /api/public/videos/{id}` (above) for the guest screen instead — it
-returns the same shape minus `guidebookUrl`/`guidebookCoverUrl`, no auth
-needed. Switch to `GET /api/videos/{id}` + membership once the user logs in
-if you want the guidebook fields too.
+returns the identical shape, no auth needed.
