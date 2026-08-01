@@ -1,7 +1,9 @@
 # Auth API
 
 Routes under `app/api/auth/**/route.ts`. See [API.md](API.md) for the full
-platform reference and the session model.
+platform reference, and [mobile-integration.md](mobile-integration.md) for a
+step-by-step guide to binding a native client (base domain, required
+headers, Swift snippet).
 
 ## Session model
 
@@ -26,7 +28,7 @@ platform reference and the session model.
 
 ```swift
 // Login
-var request = URLRequest(url: URL(string: "https://yourdomain.com/api/auth/login")!)
+var request = URLRequest(url: URL(string: "https://playbookofburma.com/api/auth/login")!)
 request.httpMethod = "POST"
 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 request.httpBody = try JSONEncoder().encode(["email": email, "password": password])
@@ -35,7 +37,7 @@ let res = try JSONDecoder().decode(LoginResponse.self, from: data) // has `.toke
 // Save res.token to Keychain.
 
 // Every authenticated request after that:
-var req = URLRequest(url: URL(string: "https://yourdomain.com/api/videos")!)
+var req = URLRequest(url: URL(string: "https://playbookofburma.com/api/videos")!)
 req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 ```
 
@@ -49,7 +51,8 @@ Swagger's "Try it out"); configure allowed origins via the
 
 ## `POST /api/auth/login`
 
-Authenticates and sets the session cookie.
+Authenticates. Sets the session cookie (web) and returns a bearer `token`
+(native) — see [Session model](#session-model) above.
 
 **Body**
 ```json
@@ -195,9 +198,9 @@ session.
 
 ## Typical flows
 
-**Login**
+**Login** (web sets a cookie; native gets `token` back — see above)
 ```
-POST /api/auth/login  { email, password }  → session cookie set
+POST /api/auth/login  { email, password }  → cookie set (web) / { token } (native)
 GET  /api/auth/me                          → current user
 ```
 

@@ -27,12 +27,20 @@ async function verify(token: string): Promise<Payload | null> {
 
 // Native apps (URLSession, Alamofire, etc.) don't send an Origin header and
 // aren't subject to CORS at all — this is only relevant for browser-based
-// callers (a future web dashboard, WKWebView, Swagger's "Try it out").
-// Configure real origins via CORS_ALLOWED_ORIGINS ("https://a.com,https://b.com").
-const CORS_ALLOWED_ORIGINS = (process.env.CORS_ALLOWED_ORIGINS ?? "")
-  .split(",")
-  .map((o) => o.trim())
-  .filter(Boolean);
+// callers (Expo web dev server, a future web dashboard, WKWebView, Swagger's
+// "Try it out"). Configure additional origins via CORS_ALLOWED_ORIGINS
+// ("https://a.com,https://b.com") — no wildcards, must match exactly.
+const DEV_ORIGINS = [
+  "http://localhost:8081", // Expo web (`expo start --web`)
+  "http://localhost:19006", // Expo web, older default port
+];
+const CORS_ALLOWED_ORIGINS = [
+  ...DEV_ORIGINS,
+  ...(process.env.CORS_ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean),
+];
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Methods": "GET, POST, PATCH, PUT, DELETE, OPTIONS",
