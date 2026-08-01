@@ -2,9 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { HomePodcastGroup, UserPortalPodcastItem } from "@/lib/server/podcasts";
-import { savePodcastProgress } from "@/app/user-portal/podcast-actions";
-
-const SAVE_INTERVAL_SEC = 10;
+import { usePodcastPlayer } from "@/app/user-portal/podcast-player-context";
 
 function formatTime(sec: number): string {
   if (!Number.isFinite(sec) || sec <= 0) return "0:00";
@@ -16,16 +14,18 @@ function formatTime(sec: number): string {
 }
 
 export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentSec, setCurrentSec] = useState(0);
-  const [durationSec, setDurationSec] = useState(item.durationSeconds || 0);
+  const player = usePodcastPlayer();
+  const isCurrent = player.current?.id === item.id;
+  const isPlaying = isCurrent && player.isPlaying;
+  const currentSec = isCurrent ? player.currentSec : 0;
+  const durationSec = isCurrent && player.durationSec ? player.durationSec : item.durationSeconds || 0;
+  const rate = isCurrent ? player.rate : 1;
+  const volume = isCurrent ? player.volume : 1;
+  const muted = isCurrent ? player.muted : false;
+
   const [expanded, setExpanded] = useState(false);
   const [isClamped, setIsClamped] = useState(false);
   const descRef = useRef<HTMLParagraphElement>(null);
-  const [rate, setRate] = useState(1);
-  const [volume, setVolume] = useState(1);
-  const [muted, setMuted] = useState(false);
 
   useEffect(() => {
     const el = descRef.current;
@@ -37,104 +37,24 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
     setIsClamped(fullH > el.clientHeight + 2);
   }, [item.description]);
 
-  // Throttled progress saving — fires at most once per SAVE_INTERVAL_SEC
-  const lastSavedSecRef = useRef<number>(-SAVE_INTERVAL_SEC);
-  function saveProgress(currentTime: number, duration: number) {
-    if (currentTime - lastSavedSecRef.current < SAVE_INTERVAL_SEC) return;
-    lastSavedSecRef.current = currentTime;
-    void savePodcastProgress(item.id, currentTime, duration);
-  }
-
-  useEffect(() => {
-    const el = audioRef.current;
-    if (!el) return;
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => {
-      setIsPlaying(false);
-      // Always save on pause/end regardless of throttle
-      lastSavedSecRef.current = -SAVE_INTERVAL_SEC;
-      void savePodcastProgress(item.id, el.currentTime, el.duration || durationSec);
-    };
-    const onTime = () => {
-      setCurrentSec(el.currentTime);
-      saveProgress(el.currentTime, el.duration || durationSec);
-    };
-    const onMeta = () => {
-      if (Number.isFinite(el.duration) && el.duration > 0) {
-        setDurationSec(el.duration);
-      }
-    };
-    el.addEventListener("play", onPlay);
-    el.addEventListener("pause", onPause);
-    el.addEventListener("ended", onPause);
-    el.addEventListener("timeupdate", onTime);
-    el.addEventListener("loadedmetadata", onMeta);
-    return () => {
-      el.removeEventListener("play", onPlay);
-      el.removeEventListener("pause", onPause);
-      el.removeEventListener("ended", onPause);
-      el.removeEventListener("timeupdate", onTime);
-      el.removeEventListener("loadedmetadata", onMeta);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [item.id, durationSec]);
-
   function toggle() {
-    const el = audioRef.current;
-    if (!el) return;
-    if (el.paused) {
-      void el.play();
-    } else {
-      el.pause();
-    }
+    player.playItem(item);
   }
 
   function seek(e: React.MouseEvent<HTMLDivElement>) {
-    const el = audioRef.current;
-    if (!el || !durationSec) return;
+    if (!isCurrent || !durationSec) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-    el.currentTime = ratio * durationSec;
-    setCurrentSec(el.currentTime);
+    player.seekTo(ratio * durationSec);
   }
 
   function skip(delta: number) {
-    const el = audioRef.current;
-    if (!el) return;
-    const max = durationSec || el.duration || 0;
-    el.currentTime = Math.min(max, Math.max(0, el.currentTime + delta));
-    setCurrentSec(el.currentTime);
-  }
-
-  const SPEEDS = [1, 1.25, 1.5, 1.75, 2];
-  function cycleRate() {
-    setRate((r) => {
-      const next = SPEEDS[(SPEEDS.indexOf(r) + 1) % SPEEDS.length];
-      if (audioRef.current) audioRef.current.playbackRate = next;
-      return next;
-    });
-  }
-
-  function changeVolume(v: number) {
-    setVolume(v);
-    setMuted(v === 0);
-    const el = audioRef.current;
-    if (el) {
-      el.volume = v;
-      el.muted = v === 0;
-    }
-  }
-
-  function toggleMute() {
-    setMuted((m) => {
-      const next = !m;
-      if (audioRef.current) audioRef.current.muted = next;
-      return next;
-    });
+    if (!isCurrent) return;
+    player.skip(delta);
   }
 
   const pct = durationSec > 0 ? Math.min(100, (currentSec / durationSec) * 100) : 0;
-  const timeLabel = isPlaying || currentSec > 0
+  const timeLabel = isCurrent && (isPlaying || currentSec > 0)
     ? `${formatTime(currentSec)} / ${item.durationLabel || formatTime(durationSec)}`
     : item.durationLabel || formatTime(durationSec);
 
@@ -188,13 +108,11 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
           </button>
         )}
 
-        <audio ref={audioRef} src={item.audioUrl} preload="metadata" onError={() => {}} />
-
         <div className="mt-5 flex w-full max-w-130 items-center gap-2.5 rounded-2xl bg-zinc-900 px-3.5 py-2.5 ring-1 ring-white/10 sm:gap-3">
           {/* Playback speed */}
           <button
             type="button"
-            onClick={cycleRate}
+            onClick={player.cycleRate}
             aria-label="Playback speed"
             className="shrink-0 text-xs font-semibold tabular-nums text-white/80 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
           >
@@ -299,7 +217,7 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
           <div className="hidden shrink-0 items-center gap-1.5 sm:flex">
             <button
               type="button"
-              onClick={toggleMute}
+              onClick={player.toggleMute}
               aria-label={muted ? "Unmute" : "Mute"}
               className="shrink-0 text-white/80 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
             >
@@ -330,7 +248,7 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
               max={1}
               step={0.01}
               value={muted ? 0 : volume}
-              onChange={(e) => changeVolume(Number(e.target.value))}
+              onChange={(e) => player.setVolume(Number(e.target.value))}
               aria-label="Volume"
               className="h-1 w-14 cursor-pointer accent-coral"
             />

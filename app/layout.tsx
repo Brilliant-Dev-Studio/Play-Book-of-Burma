@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import { HeaderSwitch } from "@/app/components/header-switch";
 import { FooterSwitch } from "@/app/components/footer-switch";
 import { NavigationProgress } from "@/app/components/navigation-progress";
+import { PodcastPlayerShell } from "@/app/components/podcast-player-shell";
 import "./globals.css";
 
 // Body / UI — Open Sauce Sans (replaces Geist Sans)
@@ -123,10 +124,12 @@ export default function RootLayout({
       className={`${openSauce.variable} ${rumbleBrave.variable} ${romanWoodType.variable} h-full scroll-smooth antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
-        <NavigationProgress />
-        <HeaderSwitch />
-        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
-        <FooterSwitch />
+        <PodcastPlayerShell>
+          <NavigationProgress />
+          <HeaderSwitch />
+          <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+          <FooterSwitch />
+        </PodcastPlayerShell>
       </body>
     </html>
   );
