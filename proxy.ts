@@ -25,8 +25,46 @@ async function verify(token: string): Promise<Payload | null> {
   }
 }
 
+// Native apps (URLSession, Alamofire, etc.) don't send an Origin header and
+// aren't subject to CORS at all — this is only relevant for browser-based
+// callers (a future web dashboard, WKWebView, Swagger's "Try it out").
+// Configure real origins via CORS_ALLOWED_ORIGINS ("https://a.com,https://b.com").
+const CORS_ALLOWED_ORIGINS = (process.env.CORS_ALLOWED_ORIGINS ?? "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+const CORS_HEADERS = {
+  "Access-Control-Allow-Methods": "GET, POST, PATCH, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Credentials": "true",
+  "Access-Control-Max-Age": "86400",
+};
+
+function withCors(req: NextRequest, res: NextResponse): NextResponse {
+  const origin = req.headers.get("origin") ?? "";
+  if (CORS_ALLOWED_ORIGINS.includes(origin)) {
+    res.headers.set("Access-Control-Allow-Origin", origin);
+    res.headers.set("Vary", "Origin");
+  }
+  for (const [key, value] of Object.entries(CORS_HEADERS)) {
+    res.headers.set(key, value);
+  }
+  return res;
+}
+
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // API routes handle their own session checks (getSession() -> 401/403 JSON)
+  // and must never be redirected to /login — only attach CORS here.
+  if (pathname.startsWith("/api/")) {
+    if (req.method === "OPTIONS") {
+      return withCors(req, NextResponse.json({}));
+    }
+    return withCors(req, NextResponse.next());
+  }
+
   const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;
   const session = token ? await verify(token) : null;
 
@@ -57,5 +95,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/user-portal/:path*", "/admin/:path*", "/change-password", "/login"],
+  matcher: ["/user-portal/:path*", "/admin/:path*", "/change-password", "/login", "/api/:path*"],
 };

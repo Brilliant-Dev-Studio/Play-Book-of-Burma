@@ -1,5 +1,5 @@
 import "server-only";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import {
@@ -10,9 +10,15 @@ import {
 
 export async function getSession(): Promise<SessionPayload | null> {
   const store = await cookies();
-  const token = store.get(SESSION_COOKIE_NAME)?.value;
-  if (!token) return null;
-  return verifySession(token);
+  const cookieToken = store.get(SESSION_COOKIE_NAME)?.value;
+  if (cookieToken) return verifySession(cookieToken);
+
+  // Native clients (iOS/Android) send the token from /api/auth/login as a
+  // bearer header instead of relying on the httpOnly cookie.
+  const authHeader = (await headers()).get("authorization");
+  const bearerToken = authHeader?.match(/^Bearer\s+(.+)$/i)?.[1];
+  if (!bearerToken) return null;
+  return verifySession(bearerToken);
 }
 
 export async function requireSession(): Promise<SessionPayload> {

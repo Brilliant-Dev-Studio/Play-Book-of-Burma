@@ -60,6 +60,10 @@ export async function POST(req: NextRequest) {
       ok: true,
       mustChangePassword: user.mustChangePassword,
       role: user.role,
+      // Bearer token for native clients (iOS/Android) that can't rely on the
+      // httpOnly cookie — send it back as `Authorization: Bearer <token>`.
+      token,
+      expiresIn: SESSION_MAX_AGE_SECONDS,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
