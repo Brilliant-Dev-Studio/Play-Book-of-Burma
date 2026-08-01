@@ -55,6 +55,45 @@ No lessons/trailer/video URLs here — this is the browse-card shape only.
 Watching a lesson still requires login + membership (`GET /api/videos/{id}`,
 `GET /api/videos/{id}/lessons/{lessonId}`).
 
+## `GET /api/public/videos/random`
+
+N random published videos — for shuffled browse screens like "Watch All the
+Playbooks". Different order/pick on every call.
+
+**Query params**
+| Param | Type | Default | Notes |
+|---|---|---|---|
+| `limit` | integer | `12` | max `50` |
+
+**Example**
+```
+GET /api/public/videos/random?limit=12
+```
+
+**200** — same item shape as `GET /api/public/videos`:
+```json
+{
+  "videos": [
+    {
+      "id": "clx...",
+      "titleLine1": "Learn Finance in 21 Day, Become",
+      "titleLine2": "Master at it",
+      "description": "...",
+      "thumbnailUrl": "https://<bucket>.s3.../thumbnails/...?X-Amz-...",
+      "durationLabel": "1 hour 15 minutes",
+      "durationSeconds": 4500,
+      "publishedAt": "2026-04-01T00:00:00.000Z",
+      "industry": "Finance",
+      "skillset": "Investing",
+      "instructorName": "Ko Jason Myint",
+      "instructorTitle": "CEO of BYD By Essentials"
+    }
+  ]
+}
+```
+No `total`/`page`/`limit` in the response — it's a single shuffled batch, not
+a paginated list. Call it again for a fresh shuffle.
+
 ## `GET /api/public/podcasts`
 
 All podcasts, grouped by `"Popular"` / `"Season N"` — identical shape to the
