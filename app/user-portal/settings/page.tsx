@@ -12,7 +12,7 @@ function PhotoUploader({
   onChange,
 }: {
   currentUrl: string;
-  onChange: (url: string) => void;
+  onChange: (url: string, key: string | null) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -40,7 +40,11 @@ function PhotoUploader({
         setError(d.error ?? "Failed to prepare upload.");
         return;
       }
-      const { putUrl, getUrl } = (await signRes.json()) as { putUrl: string; getUrl: string };
+      const { putUrl, getUrl, key } = (await signRes.json()) as {
+        putUrl: string;
+        getUrl: string;
+        key: string;
+      };
       const putRes = await fetch(putUrl, {
         method: "PUT",
         headers: { "Content-Type": file.type },
@@ -50,7 +54,7 @@ function PhotoUploader({
         setError("Upload failed. Please try again.");
         return;
       }
-      onChange(getUrl);
+      onChange(getUrl, key);
     } catch {
       setError("Upload failed. Please try again.");
     } finally {
@@ -119,7 +123,7 @@ function PhotoUploader({
           {currentUrl && (
             <button
               type="button"
-              onClick={() => onChange("")}
+              onClick={() => onChange("", null)}
               className="text-sm text-white/50 hover:text-white/80"
             >
               Remove
@@ -226,6 +230,8 @@ export default function SettingsPage() {
   const [me, setMe] = useState<Me | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
+  const [photoKeyChanged, setPhotoKeyChanged] = useState(false);
+  const [photoKey, setPhotoKey] = useState<string | null>(null);
   const [gender, setGender] = useState<"" | Gender>("");
   const [birthYear, setBirthYear] = useState<string>("");
   const [region, setRegion] = useState<"" | Region>("");
@@ -268,7 +274,7 @@ export default function SettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           displayName: displayName.trim() || null,
-          photoUrl: photoUrl.trim() || null,
+          ...(photoKeyChanged ? { photoKey } : {}),
           gender: gender || null,
           birthYear: yrNum,
           region: region || null,
@@ -280,6 +286,7 @@ export default function SettingsPage() {
         return;
       }
       setProfileMsg({ kind: "ok", text: "Profile updated." });
+      setPhotoKeyChanged(false);
       refreshCurrentUser();
       router.refresh();
     } finally {
@@ -352,7 +359,14 @@ export default function SettingsPage() {
         <div>
           <label className="block text-sm font-medium text-white/80">Profile photo</label>
           <div className="mt-2">
-            <PhotoUploader currentUrl={photoUrl} onChange={setPhotoUrl} />
+            <PhotoUploader
+              currentUrl={photoUrl}
+              onChange={(url, key) => {
+                setPhotoUrl(url);
+                setPhotoKey(key);
+                setPhotoKeyChanged(true);
+              }}
+            />
           </div>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

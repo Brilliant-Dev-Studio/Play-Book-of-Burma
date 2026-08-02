@@ -2,6 +2,7 @@ import "server-only";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { presignGetUrl, PRESIGN_TTL } from "@/lib/server/s3";
 import {
   SESSION_COOKIE_NAME,
   verifySession,
@@ -42,7 +43,7 @@ export async function getCurrentUser() {
       id: true,
       email: true,
       displayName: true,
-      photoUrl: true,
+      photoKey: true,
       role: true,
       mustChangePassword: true,
       gender: true,
@@ -51,5 +52,10 @@ export async function getCurrentUser() {
       membership: { select: { plan: true, status: true, expiresAt: true } },
     },
   });
-  return user;
+  if (!user) return null;
+  const { photoKey, ...rest } = user;
+  return {
+    ...rest,
+    photoUrl: photoKey ? await presignGetUrl(photoKey, PRESIGN_TTL.image) : null,
+  };
 }

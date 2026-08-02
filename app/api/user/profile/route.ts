@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/server/auth-helpers";
+import { isAllowedKey } from "@/lib/server/s3";
 
 const GENDERS = ["MALE", "FEMALE", "OTHER"] as const;
 const REGIONS = ["YANGON", "MANDALAY", "THAILAND", "OTHER"] as const;
@@ -18,7 +19,7 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json();
     const data: {
       displayName?: string | null;
-      photoUrl?: string | null;
+      photoKey?: string | null;
       gender?: Gender | null;
       birthYear?: number | null;
       region?: Region | null;
@@ -30,11 +31,11 @@ export async function PATCH(req: NextRequest) {
       else if (typeof v === "string") data.displayName = v;
       else return NextResponse.json({ error: "Invalid displayName." }, { status: 400 });
     }
-    if ("photoUrl" in body) {
-      const v = body.photoUrl;
-      if (v === null || v === "") data.photoUrl = null;
-      else if (typeof v === "string") data.photoUrl = v;
-      else return NextResponse.json({ error: "Invalid photoUrl." }, { status: 400 });
+    if ("photoKey" in body) {
+      const v = body.photoKey;
+      if (v === null || v === "") data.photoKey = null;
+      else if (typeof v === "string" && isAllowedKey(v)) data.photoKey = v;
+      else return NextResponse.json({ error: "Invalid photoKey." }, { status: 400 });
     }
     if ("gender" in body) {
       const v = body.gender;

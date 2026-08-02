@@ -16,7 +16,7 @@ model User {
   email              String      @unique
   displayName        String?
   phone              String?
-  photoUrl           String?
+  photoKey           String?
   passwordHash       String
   tempPasswordPlain  String?
   emailVerified      Boolean     @default(false)

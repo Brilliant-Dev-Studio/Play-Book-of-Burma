@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/server/auth-helpers";
 import { prisma } from "@/lib/prisma";
+import { presignGetUrl, PRESIGN_TTL } from "@/lib/server/s3";
 import { AdminSidebar } from "@/app/admin/components/admin-sidebar";
 import { AdminTopBar } from "@/app/admin/components/admin-top-bar";
 
@@ -7,7 +8,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await requireAdmin();
   const user = await prisma.user.findUnique({
     where: { id: session.uid },
-    select: { email: true, displayName: true, photoUrl: true },
+    select: { email: true, displayName: true, photoKey: true },
   });
 
   return (
@@ -18,7 +19,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           user={{
             email: user?.email ?? session.email,
             displayName: user?.displayName ?? null,
-            photoUrl: user?.photoUrl ?? null,
+            photoUrl: user?.photoKey
+              ? await presignGetUrl(user.photoKey, PRESIGN_TTL.image)
+              : null,
           }}
         />
         <main className="flex-1 px-8 py-8">{children}</main>
