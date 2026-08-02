@@ -1,9 +1,51 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/server/auth-helpers";
 import { prisma } from "@/lib/prisma";
 
 function unauth() {
   return NextResponse.json({ error: "Unauthenticated." }, { status: 401 });
+}
+
+/**
+ * Award the playbook (course) once every lesson in its video is complete.
+ * Idempotent via the unique (userId, videoId) constraint. Never throws — a
+ * failure here must not break progress saving. Mirrors
+ * app/user-portal/watch/actions.ts's maybeAwardPlaybook (kept in sync
+ * manually — the web Server Action and this REST route don't share code).
+ */
+async function maybeAwardPlaybook(userId: string, lessonId: string): Promise<void> {
+  try {
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: lessonId },
+      select: {
+        videoId: true,
+        video: { select: { lessons: { select: { id: true } } } },
+      },
+    });
+    if (!lesson) return;
+
+    const lessonIds = lesson.video.lessons.map((l) => l.id);
+    if (lessonIds.length === 0) return;
+
+    const completedCount = await prisma.watchProgress.count({
+      where: {
+        userId,
+        completedAt: { not: null },
+        lessonId: { in: lessonIds },
+      },
+    });
+    if (completedCount < lessonIds.length) return;
+
+    await prisma.playbookAchievement.upsert({
+      where: { userId_videoId: { userId, videoId: lesson.videoId } },
+      create: { userId, videoId: lesson.videoId },
+      update: {},
+    });
+    revalidatePath("/user-portal/progress");
+  } catch (err) {
+    console.error("maybeAwardPlaybook error:", err);
+  }
 }
 
 export async function GET() {
@@ -66,6 +108,11 @@ export async function PATCH(req: NextRequest) {
 
   const completedAt = completed === true ? new Date() : undefined;
 
+  const existing = await prisma.watchProgress.findUnique({
+    where: { userId_lessonId: { userId: session.uid, lessonId } },
+    select: { completedAt: true },
+  });
+
   await prisma.watchProgress.upsert({
     where: { userId_lessonId: { userId: session.uid, lessonId } },
     create: {
@@ -83,6 +130,11 @@ export async function PATCH(req: NextRequest) {
       lastWatchedAt: new Date(),
     },
   });
+
+  // Only fires on the transition to completed, matching the web flow.
+  if (completedAt && !existing?.completedAt) {
+    await maybeAwardPlaybook(session.uid, lessonId);
+  }
 
   return NextResponse.json({ ok: true });
 }

@@ -51,6 +51,12 @@ while a lesson video plays, and once more on pause/exit.
 `completed` are optional — omit `completed` unless the lesson actually
 finished (sets `completedAt`).
 
+Sending `completed: true` for the first time on a lesson also checks whether
+every lesson in that lesson's video is now complete, and if so awards a
+`PlaybookAchievement` (shows up in "My Progress"). See
+[watch-page.md](watch-page.md#playbook-completion-achievement) for the
+completion rule to apply client-side.
+
 **200** `{ "ok": true }`
 
 **Errors**: `401 { "error": "Unauthenticated." }`, `400 { "error": "Invalid JSON." }`, `400 { "error": "lessonId required." }`, `400 { "error": "currentSeconds must be a non-negative number." }`, `404 { "error": "Lesson not found." }`.
