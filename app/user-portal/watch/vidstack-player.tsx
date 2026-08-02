@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   MediaPlayer,
   MediaProvider,
@@ -29,6 +29,7 @@ export default function VidstackPlayer({
   onTimeUpdate?: (currentSeconds: number, durationSeconds: number) => void;
 }) {
   const playerRef = useRef<MediaPlayerInstance | null>(null);
+  const [aspectRatio, setAspectRatio] = useState<string | null>(null);
 
   useEffect(() => {
     const player = playerRef.current;
@@ -41,9 +42,20 @@ export default function VidstackPlayer({
       }
     };
 
+    // Source videos aren't always 16:9 — once metadata is loaded (so the
+    // real <video> element is guaranteed to exist and have dimensions),
+    // size the box to match so nothing gets cropped/letterboxed away.
+    const applyRatio = () => {
+      const videoEl = player.el?.querySelector("video");
+      if (videoEl && videoEl.videoWidth > 0 && videoEl.videoHeight > 0) {
+        setAspectRatio(`${videoEl.videoWidth} / ${videoEl.videoHeight}`);
+      }
+    };
+
     const unsubLoaded = player.subscribe(({ duration }) => {
       if (duration > 0) {
         trySeek();
+        applyRatio();
       }
     });
 
@@ -69,12 +81,14 @@ export default function VidstackPlayer({
 
   return (
     <MediaPlayer
+      key={src}
       ref={playerRef}
       title={title}
       src={{ src, type: "video/mp4" }}
       playsInline
       crossOrigin
-      className="aspect-video w-full overflow-hidden rounded-2xl bg-black"
+      className={`w-full overflow-hidden rounded-2xl bg-black ${aspectRatio ? "" : "aspect-video"}`}
+      style={aspectRatio ? { aspectRatio } : undefined}
     >
       <MediaProvider />
       <Poster src={poster} alt={title} className="vds-poster" />
