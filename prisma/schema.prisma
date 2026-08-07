@@ -191,6 +191,23 @@ enum MembershipPlan {
   TWELVE_MONTHS
 }
 
+/// Admin-editable price/name/perks for each of the two fixed plan tiers
+/// above. The tier itself (SIX_MONTHS / TWELVE_MONTHS) stays a fixed enum —
+/// only the display/pricing details are editable here.
+model Plan {
+  id         String         @id @default(cuid())
+  key        MembershipPlan @unique
+  name       String
+  months     Int
+  priceMmk   Int
+  perks      String[]
+  featured   Boolean        @default(false)
+  isActive   Boolean        @default(true)
+  sortOrder  Int            @default(0)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+}
+
 enum SubmissionStatus {
   PENDING
   APPROVED

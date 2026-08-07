@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { prisma } from "@/lib/prisma";
 import { MembershipSubmissionForm } from "@/app/components/membership-submission-form";
 import { BreadcrumbJsonLd, FaqJsonLd } from "@/app/components/json-ld";
 
@@ -99,33 +100,21 @@ function HowPayStepCard({
   );
 }
 
-const PLANS = [
-  {
-    id: "standard",
-    label: "Standard",
-    featured: false,
-  },
-  {
-    id: "6m",
-    label: "6 Months",
-    featured: true,
-  },
-  {
-    id: "12m",
-    label: "12 Months",
-    featured: false,
-  },
-] as const;
-
-const ROW_PRIMARY = "Lorem Ipsum is simply";
-const ROW_SECONDARY =
-  "Lorem Ipsum is simply dummy text of the printing and typesetting industry.";
+function formatMmk(amount: number): string {
+  return `${amount.toLocaleString("en-US")} MMK`;
+}
 
 function MembershipPlanCard({
   label,
+  priceMmk,
+  months,
+  perks,
   featured,
 }: {
   label: string;
+  priceMmk: number;
+  months: number;
+  perks: string[];
   featured: boolean;
 }) {
   const shell = [
@@ -169,19 +158,24 @@ function MembershipPlanCard({
           />
         ) : null}
 
-        <div className="relative mt-5 flex flex-1 flex-col divide-y divide-white/[0.08] sm:mt-6">
-          <p className="pb-4 text-xl font-semibold leading-snug tracking-tight text-white md:pb-5">
-            {ROW_PRIMARY}
+        <div className="relative mt-5 flex flex-1 flex-col sm:mt-6">
+          <p className="pb-5 text-3xl font-bold leading-snug tracking-tight text-white sm:pb-6 sm:text-4xl">
+            {formatMmk(priceMmk)}
+            <span className="ml-1.5 text-sm font-medium text-white/55">
+              / {months} {months === 1 ? "month" : "months"}
+            </span>
           </p>
-          <p className="py-3.5 text-sm leading-relaxed text-white/80 sm:py-4 sm:text-base">
-            {ROW_SECONDARY}
-          </p>
-          <p className="py-3.5 text-sm leading-relaxed text-white/80 sm:py-4 sm:text-base">
-            {ROW_SECONDARY}
-          </p>
-          <p className="pt-3.5 text-sm leading-relaxed text-white/80 sm:pt-4 sm:text-base">
-            {ROW_SECONDARY}
-          </p>
+          <ul className="flex flex-col divide-y divide-white/[0.08]">
+            {perks.map((perk) => (
+              <li
+                key={perk}
+                className="flex items-start gap-2.5 py-3.5 text-sm leading-relaxed text-white/80 first:pt-0 last:pb-0 sm:py-4 sm:text-base"
+              >
+                <IconCheck className="mt-0.5 h-4 w-4 shrink-0 text-coral" />
+                {perk}
+              </li>
+            ))}
+          </ul>
         </div>
       </article>
     </div>
@@ -260,7 +254,12 @@ function MembershipFaqPanel({
   );
 }
 
-export default function MembershipPage() {
+export default async function MembershipPage() {
+  const plans = await prisma.plan.findMany({
+    where: { isActive: true },
+    orderBy: { sortOrder: "asc" },
+  });
+
   return (
     <main className="relative flex flex-1 flex-col overflow-hidden bg-black pb-16 pt-14 text-white md:pb-22 md:pt-16 lg:pb-24 lg:pt-20">
       <BreadcrumbJsonLd
@@ -291,7 +290,7 @@ export default function MembershipPage() {
         </header>
 
         <div className="mx-auto mt-10 flex w-full flex-col items-stretch justify-center gap-8 sm:mt-12 sm:gap-10 md:mt-14 md:flex-row md:items-center md:justify-center md:gap-5 lg:mt-16 lg:gap-7 xl:gap-9">
-          {PLANS.map((plan) => (
+          {plans.map((plan) => (
             <div
               key={plan.id}
               className={[
@@ -300,7 +299,10 @@ export default function MembershipPage() {
               ].join(" ")}
             >
               <MembershipPlanCard
-                label={plan.label}
+                label={plan.name}
+                priceMmk={plan.priceMmk}
+                months={plan.months}
+                perks={plan.perks}
                 featured={plan.featured}
               />
             </div>

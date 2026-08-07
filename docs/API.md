@@ -133,6 +133,18 @@ Body `{ key, uploadId }` → `204` no body
 
 ---
 
+## Admin — Membership Plans
+
+Admin. Edit price/name/perks for the two fixed membership tiers
+(`SIX_MONTHS`, `TWELVE_MONTHS`) — full detail in [plans.md](plans.md).
+
+- `GET /api/admin/plans` → `200 { plans: [...] }`
+- `GET /api/admin/plans/{key}` → `200 { plan }`
+- `PATCH /api/admin/plans/{key}` — partial update (`name`, `months`, `priceMmk`, `perks`, `featured`, `isActive`) → `200 { plan }`
+- `POST /api/admin/plans` — upsert-by-key (`409` if the key already exists — expected in normal use)
+
+---
+
 ## Membership (public submission flow)
 
 ### `POST /api/membership/sign-screenshot`

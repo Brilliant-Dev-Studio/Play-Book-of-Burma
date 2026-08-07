@@ -116,10 +116,19 @@ function IconChevron({ className }: { className?: string }) {
     </svg>
   );
 }
+function IconTicket({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1.5a1.5 1.5 0 0 0 0 3V15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1.5a1.5 1.5 0 0 0 0-3z" />
+      <path d="M9 7v10" strokeDasharray="2 2" />
+    </svg>
+  );
+}
 
 const NAV: NavItem[] = [
   { label: "Dashboard", href: "/admin", icon: IconDashboard },
   { label: "Submissions", href: "/admin/submissions", icon: IconInbox },
+  { label: "Plans", href: "/admin/plans", icon: IconTicket },
   { label: "Instructors", href: "/admin/instructors", icon: IconUserCircle },
   { label: "Industries", href: "/admin/industries", icon: IconTag },
   { label: "Skillsets", href: "/admin/skillsets", icon: IconSparkles },

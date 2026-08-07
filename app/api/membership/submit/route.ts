@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { PLAN_PRICE_MMK } from "@/lib/server/pricing";
 
+async function priceForPlan(plan: "SIX_MONTHS" | "TWELVE_MONTHS"): Promise<number> {
+  const row = await prisma.plan.findUnique({ where: { key: plan }, select: { priceMmk: true } });
+  return row?.priceMmk ?? PLAN_PRICE_MMK[plan];
+}
+
 const PLANS = new Set(["SIX_MONTHS", "TWELVE_MONTHS"] as const);
 const METHODS = new Set(["KBZ_PAY", "WAVE_MONEY"] as const);
 
@@ -42,7 +47,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Payment screenshot is required." }, { status: 400 });
   }
 
-  const amountMmk = PLAN_PRICE_MMK[plan as keyof typeof PLAN_PRICE_MMK];
+  const amountMmk = await priceForPlan(plan as "SIX_MONTHS" | "TWELVE_MONTHS");
 
   const submission = await prisma.membershipSubmission.create({
     data: {
