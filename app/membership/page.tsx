@@ -118,25 +118,26 @@ function MembershipPlanCard({
   featured: boolean;
 }) {
   const shell = [
-    "relative z-10 flex w-full flex-col overflow-hidden rounded-2xl border border-white/[0.1] bg-gradient-to-b from-zinc-900/90 via-zinc-950/88 to-zinc-950/95 backdrop-blur-md",
-    "transition-[border-color,box-shadow] duration-300 ease-out hover:border-white/[0.14] motion-reduce:transition-none",
+    "relative z-10 flex h-full w-full flex-col overflow-hidden rounded-2xl border border-white/[0.1] bg-gradient-to-b from-zinc-900/90 via-zinc-950/88 to-zinc-950/95 backdrop-blur-md",
+    "transition-[border-color,box-shadow,transform] duration-300 ease-out hover:border-white/[0.14] motion-reduce:transition-none",
     featured
-      ? "shadow-[0_24px_80px_rgba(0,0,0,0.72),0_0_64px_-24px_rgba(236,113,71,0.16),inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-coral/25 hover:border-white/[0.16] hover:shadow-[0_28px_88px_rgba(0,0,0,0.75),0_0_72px_-20px_rgba(236,113,71,0.22),inset_0_1px_0_rgba(255,255,255,0.07)]"
+      ? "md:-translate-y-2 shadow-[0_24px_80px_rgba(0,0,0,0.72),0_0_64px_-24px_rgba(236,113,71,0.2),inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-coral/30 hover:border-white/[0.16] hover:shadow-[0_28px_88px_rgba(0,0,0,0.75),0_0_72px_-20px_rgba(236,113,71,0.26),inset_0_1px_0_rgba(255,255,255,0.07)]"
       : "shadow-[0_24px_80px_rgba(0,0,0,0.72),inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-white/[0.05] hover:shadow-[0_28px_88px_rgba(0,0,0,0.78),inset_0_1px_0_rgba(255,255,255,0.07)]",
   ].join(" ");
 
-  const padSize = [
-    "px-5 pb-6 pt-6 sm:px-6 sm:pb-7 sm:pt-7 md:px-7 md:pb-8 md:pt-8",
-    featured
-      ? "md:min-h-[33rem] md:max-w-[min(100%,32rem)] md:px-8 md:pb-9 md:pt-9 lg:min-h-[35rem] lg:max-w-[min(100%,36rem)] lg:px-9 lg:pb-10 lg:pt-10 xl:max-w-[min(100%,38rem)]"
-      : "md:min-h-[27rem] md:max-w-[min(100%,26rem)] lg:min-h-[29rem] lg:max-w-[min(100%,28rem)]",
-  ].join(" ");
+  const padSize =
+    "px-5 pb-6 pt-6 sm:px-6 sm:pb-7 sm:pt-7 md:min-h-[29rem] md:max-w-[min(100%,28rem)] md:px-7 md:pb-8 md:pt-8 lg:min-h-[31rem] lg:max-w-[min(100%,30rem)]";
 
   return (
-    <div className="relative w-full max-w-xl md:max-w-none">
+    <div className="relative flex h-full w-full max-w-xl flex-col md:max-w-none">
+      {featured ? (
+        <span className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-coral px-4 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-[0_6px_18px_rgba(236,113,71,0.5)]">
+          Most Popular
+        </span>
+      ) : null}
       <article className={[shell, padSize].join(" ")}>
         <div
-          className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/22 to-transparent opacity-90 sm:inset-x-6 md:inset-x-8"
+          className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/22 to-transparent opacity-90 sm:inset-x-6 md:inset-x-7"
           aria-hidden
         />
 
@@ -289,14 +290,11 @@ export default async function MembershipPage() {
           </h1>
         </header>
 
-        <div className="mx-auto mt-10 flex w-full flex-col items-stretch justify-center gap-8 sm:mt-12 sm:gap-10 md:mt-14 md:flex-row md:items-center md:justify-center md:gap-5 lg:mt-16 lg:gap-7 xl:gap-9">
+        <div className="mx-auto mt-14 flex w-full max-w-4xl flex-col items-stretch justify-center gap-10 sm:mt-14 sm:gap-10 md:mt-16 md:flex-row md:items-stretch md:justify-center md:gap-6 lg:mt-16 lg:gap-8">
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={[
-                "flex w-full justify-center md:flex-1",
-                plan.featured ? "md:z-10 md:px-1" : "",
-              ].join(" ")}
+              className="flex w-full justify-center md:flex-1"
             >
               <MembershipPlanCard
                 label={plan.name}

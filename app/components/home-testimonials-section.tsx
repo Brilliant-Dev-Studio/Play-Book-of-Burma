@@ -8,28 +8,28 @@ const TESTIMONIALS = [
     name: "Ko Leon Oo,",
     role: "Yangon University’s Student",
     quote:
-      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.",
+      "Playbook of Burma changed how I think about business. Listening to real founders talk through their mistakes taught me more than any textbook did.",
     avatarUrl: clientAvatar,
   },
   {
-    name: "Ko Leon Oo,",
-    role: "Yangon University’s Student",
+    name: "Ma Thandar Win,",
+    role: "Startup Founder",
     quote:
-      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.",
+      "Every episode feels like sitting down with a mentor. I picked up frameworks I use in my own company every single week.",
     avatarUrl: clientAvatar,
   },
   {
-    name: "Ko Leon Oo,",
-    role: "Yangon University’s Student",
+    name: "Ko Zayar Htet,",
+    role: "Marketing Manager",
     quote:
-      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.",
+      "The interviews are honest and practical, not the usual polished corporate talk. It's rare to find Myanmar business content this real.",
     avatarUrl: clientAvatar,
   },
   {
-    name: "Ko Leon Oo,",
-    role: "Yangon University’s Student",
+    name: "Ma Su Myat,",
+    role: "MBA Student",
     quote:
-      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.",
+      "I recommend Playbook of Burma to every classmate. The stories from local CEOs connect directly to what we study, but with real context.",
     avatarUrl: clientAvatar,
   },
 ] as const;
