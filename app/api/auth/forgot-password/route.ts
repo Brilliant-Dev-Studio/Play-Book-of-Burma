@@ -17,8 +17,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // TODO: replace with generateOtp() when AWS SES is wired up
-    const code = "123456";
+    const code = String(Math.floor(100000 + Math.random() * 900000));
     const expiry = new Date(Date.now() + 10 * 60 * 1000);
 
     await prisma.user.update({
