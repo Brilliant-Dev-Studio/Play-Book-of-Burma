@@ -57,7 +57,7 @@ function buildUppy(kind: Kind, maxFileSize: number) {
   });
 
   uppy.use(AwsS3, {
-    shouldUseMultipart: () => kind === "video" || kind === "trailer" || kind === "audio",
+    shouldUseMultipart: () => kind === "video" || kind === "trailer" || kind === "audio" || kind === "guidebook",
     getChunkSize: () => 8 * 1024 * 1024,
     limit: 6,
 
@@ -177,7 +177,7 @@ export function S3Uploader({
       kind === "thumbnail" || kind === "instructor"
         ? 25 * 1024 * 1024
         : kind === "guidebook"
-          ? 50 * 1024 * 1024
+          ? 500 * 1024 * 1024
           : 5 * 1024 * 1024 * 1024;
     const uppy = buildUppy(kind, maxFileSize ?? defaultMax);
 
