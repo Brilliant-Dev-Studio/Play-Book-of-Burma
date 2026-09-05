@@ -27,6 +27,7 @@ html {
   --font-sans: var(--font-open-sauce);
   --font-mono: var(--font-rumble-brave);
   --font-roman-wood-slide-title: var(--font-rwst-stack);
+  --font-code: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }
 
 @keyframes hero-marquee-left {

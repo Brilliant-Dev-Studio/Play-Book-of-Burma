@@ -289,7 +289,7 @@ export function ApproveSubmissionModal({
       <div className="relative z-10 flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-zinc-950 shadow-2xl">
         <div className="flex items-start justify-between gap-4 border-b border-white/10 px-6 py-4">
           <div>
-            <p className="font-mono text-xs text-white/55">{submission.id}</p>
+            <p className="font-code text-xs text-white/55">{submission.id}</p>
             <h2 className="font-[family-name:var(--font-rwst-stack)] text-xl font-bold tracking-tight text-white">
               {readOnly ? "Submission detail" : "Review submission"}
             </h2>
@@ -370,11 +370,11 @@ export function ApproveSubmissionModal({
                 <div className="space-y-2 rounded-md border border-white/10 bg-black/40 p-3">
                   <div>
                     <p className={labelClass}>Email (login)</p>
-                    <p className="mt-1 break-all font-mono text-sm text-white">{created.email}</p>
+                    <p className="mt-1 break-all font-code text-sm text-white">{created.email}</p>
                   </div>
                   <div>
                     <p className={labelClass}>Temporary password</p>
-                    <p className="mt-1 font-mono text-sm text-white">{created.tempPassword}</p>
+                    <p className="mt-1 font-code text-sm text-white">{created.tempPassword}</p>
                   </div>
                 </div>
                 <button
@@ -400,11 +400,11 @@ export function ApproveSubmissionModal({
                 <div className="space-y-2 rounded-md border border-white/10 bg-black/40 p-3">
                   <div>
                     <p className={labelClass}>Email (login)</p>
-                    <p className="mt-1 break-all font-mono text-sm text-white">{submission.email}</p>
+                    <p className="mt-1 break-all font-code text-sm text-white">{submission.email}</p>
                   </div>
                   <div>
                     <p className={labelClass}>Temporary password</p>
-                    <p className="mt-1 font-mono text-sm text-white">{stashedTempPassword}</p>
+                    <p className="mt-1 font-code text-sm text-white">{stashedTempPassword}</p>
                   </div>
                 </div>
                 <button

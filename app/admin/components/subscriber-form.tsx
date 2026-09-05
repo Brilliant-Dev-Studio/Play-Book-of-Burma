@@ -89,7 +89,7 @@ export function SubscriberForm() {
         </p>
         <div className="mt-4 rounded-lg border border-white/15 bg-black/40 px-4 py-3">
           <p className="text-xs uppercase tracking-[0.14em] text-white/55">Temporary password</p>
-          <p className="mt-1 font-mono text-lg text-white">{tempPassword}</p>
+          <p className="mt-1 font-code text-lg text-white">{tempPassword}</p>
         </div>
         <div className="mt-5 flex items-center gap-2">
           <button

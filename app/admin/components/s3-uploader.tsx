@@ -243,7 +243,7 @@ export function S3Uploader({
       <div ref={targetRef} />
       {currentKey && !currentUrl && (
         <p className="mt-2 break-all px-2 text-[11px] text-white/55">
-          Uploaded: <span className="font-mono text-white/80">{currentKey}</span>
+          Uploaded: <span className="font-code text-white/80">{currentKey}</span>
         </p>
       )}
     </div>

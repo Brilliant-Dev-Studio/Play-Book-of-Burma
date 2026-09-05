@@ -195,7 +195,7 @@ export function SubmissionsTable() {
             )}
             {uiRows.map((r) => (
               <tr key={r.id} className="border-t border-white/10 text-white/90">
-                <td className="px-4 py-4 whitespace-nowrap font-mono text-xs">{shortId(r.id)}</td>
+                <td className="px-4 py-4 whitespace-nowrap font-code text-xs">{shortId(r.id)}</td>
                 <td className="px-4 py-4 whitespace-nowrap">{r.fullName}</td>
                 <td className="px-4 py-4">{r.email}</td>
                 <td className="px-4 py-4 whitespace-nowrap">{r.phone}</td>

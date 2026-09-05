@@ -4,10 +4,9 @@ import { randomBytes } from "crypto";
 const POOL =
   "abcdefghijkmnopqrstuvwxyz" +
   "ABCDEFGHJKLMNPQRSTUVWXYZ" +
-  "23456789" +
-  "!@#$%^&*";
+  "23456789";
 
-export function generateTempPassword(length = 12): string {
+export function generateTempPassword(length = 8): string {
   const bytes = randomBytes(length);
   let out = "";
   for (let i = 0; i < length; i += 1) {
