@@ -105,3 +105,40 @@ export async function getHomePodcastGroups(): Promise<HomePodcastGroup[]> {
 
   return groups;
 }
+
+export type PodcastChapterItem = { label: string; seconds: number };
+
+export type PodcastDetail = UserPortalPodcastItem & {
+  chapters: PodcastChapterItem[];
+};
+
+export async function getPodcastDetail(id: string): Promise<PodcastDetail | null> {
+  const row = await prisma.podcast.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      thumbnailKey: true,
+      audioKey: true,
+      durationLabel: true,
+      durationSeconds: true,
+      chapters: {
+        orderBy: { order: "asc" },
+        select: { label: true, seconds: true },
+      },
+    },
+  });
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    thumbnailUrl: await presignGetUrl(row.thumbnailKey, PRESIGN_TTL.image),
+    audioUrl: await presignGetUrl(row.audioKey, PRESIGN_TTL.video),
+    durationLabel: row.durationLabel,
+    durationSeconds: row.durationSeconds,
+    chapters: row.chapters,
+  };
+}

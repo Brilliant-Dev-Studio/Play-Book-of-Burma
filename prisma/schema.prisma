@@ -64,6 +64,7 @@ model Podcast {
   popular         Boolean           @default(false)
   industryId      String
   industry        Industry          @relation(fields: [industryId], references: [id])
+  chapters        PodcastChapter[]
   podcastProgress PodcastProgress[]
   publishedAt     DateTime          @default(now())
   createdAt       DateTime          @default(now())
@@ -72,6 +73,17 @@ model Podcast {
   @@index([season, episodeOrder])
   @@index([popular])
   @@index([industryId])
+}
+
+model PodcastChapter {
+  id        String  @id @default(cuid())
+  podcastId String
+  podcast   Podcast @relation(fields: [podcastId], references: [id], onDelete: Cascade)
+  order     Int     @default(0)
+  label     String
+  seconds   Int     @default(0)
+
+  @@index([podcastId])
 }
 
 model PodcastProgress {

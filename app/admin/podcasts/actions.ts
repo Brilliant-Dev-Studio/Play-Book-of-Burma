@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/server/auth-helpers";
 import { isAllowedKey } from "@/lib/server/s3";
 
+export type ChapterInput = { label: string; seconds: number };
+
 export type PodcastFormInput = {
   id?: string;
   title: string;
@@ -18,6 +20,7 @@ export type PodcastFormInput = {
   durationLabel: string;
   popular: boolean;
   industryId: string;
+  chapters: ChapterInput[];
 };
 
 type Result =
@@ -36,6 +39,12 @@ function clean(input: PodcastFormInput): PodcastFormInput {
     season: Math.max(1, Math.floor(Number(input.season) || 1)),
     episodeOrder: Math.max(0, Math.floor(Number(input.episodeOrder) || 0)),
     durationSeconds: Math.max(0, Math.floor(Number(input.durationSeconds) || 0)),
+    chapters: (input.chapters ?? [])
+      .map((c) => ({
+        label: c.label.trim(),
+        seconds: Math.max(0, Math.floor(Number(c.seconds) || 0)),
+      }))
+      .filter((c) => c.label),
   };
 }
 
@@ -75,10 +84,22 @@ export async function savePodcast(input: PodcastFormInput): Promise<Result> {
     const row = cleaned.id
       ? await prisma.podcast.update({
           where: { id: cleaned.id },
-          data,
+          data: {
+            ...data,
+            chapters: {
+              deleteMany: {},
+              create: cleaned.chapters.map((c, i) => ({ ...c, order: i })),
+            },
+          },
           select: { id: true },
         })
-      : await prisma.podcast.create({ data, select: { id: true } });
+      : await prisma.podcast.create({
+          data: {
+            ...data,
+            chapters: { create: cleaned.chapters.map((c, i) => ({ ...c, order: i })) },
+          },
+          select: { id: true },
+        });
 
     revalidatePath("/admin/podcasts");
     return { ok: true, id: row.id };

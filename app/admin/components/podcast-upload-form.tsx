@@ -9,6 +9,7 @@ import {
   type DeferredImageUploadHandle,
 } from "@/app/admin/components/deferred-image-upload";
 import { inputClass, labelClass } from "@/app/admin/components/form-field-styles";
+import { Repeater } from "@/app/admin/components/repeater";
 import { savePodcast, type PodcastFormInput } from "@/app/admin/podcasts/actions";
 
 export type TaxonomyOption = { id: string; name: string };
@@ -18,6 +19,31 @@ export type PodcastFormInitial = Partial<PodcastFormInput> & {
   thumbnailUrl?: string;
   audioUrl?: string;
 };
+
+type ChapterRow = { label: string; time: string };
+
+function emptyChapter(): ChapterRow {
+  return { label: "", time: "" };
+}
+
+function secondsToMmSs(totalSeconds: number): string {
+  const sec = Math.max(0, Math.floor(totalSeconds));
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function mmSsToSeconds(value: string): number {
+  const parts = value.trim().split(":");
+  if (parts.length === 1) {
+    const s = Number(parts[0]);
+    return Number.isFinite(s) ? Math.max(0, Math.floor(s)) : 0;
+  }
+  const m = Number(parts[parts.length - 2]);
+  const s = Number(parts[parts.length - 1]);
+  if (!Number.isFinite(m) || !Number.isFinite(s)) return 0;
+  return Math.max(0, Math.floor(m) * 60 + Math.floor(s));
+}
 
 function formatDuration(totalSeconds: number): string {
   const sec = Math.round(totalSeconds);
@@ -58,6 +84,11 @@ export function PodcastUploadForm({
   const [durationLabel, setDurationLabel] = useState(initial?.durationLabel ?? "");
   const [audioKey, setAudioKey] = useState<string>(initial?.audioKey ?? "");
   const [industryId, setIndustryId] = useState<string>(initial?.industryId ?? "");
+  const [chapters, setChapters] = useState<ChapterRow[]>(
+    initial?.chapters && initial.chapters.length > 0
+      ? initial.chapters.map((c) => ({ label: c.label, time: secondsToMmSs(c.seconds) }))
+      : [emptyChapter()],
+  );
 
   const existingThumbnailKey = initial?.thumbnailKey ?? "";
   const [thumbStaged, setThumbStaged] = useState(false);
@@ -88,6 +119,9 @@ export function PodcastUploadForm({
         durationLabel,
         popular,
         industryId,
+        chapters: chapters
+          .filter((c) => c.label.trim())
+          .map((c) => ({ label: c.label.trim(), seconds: mmSsToSeconds(c.time) })),
       });
       if (!result.ok) {
         setErrors(result.errors);
@@ -263,6 +297,43 @@ export function PodcastUploadForm({
           </div>
         </div>
       </div>
+
+      {/* Timestamps */}
+      <Repeater
+        title="Timestamps (optional)"
+        items={chapters}
+        onAdd={() => setChapters((xs) => [...xs, emptyChapter()])}
+        onRemove={(i) => setChapters((xs) => xs.filter((_, idx) => idx !== i))}
+        render={(c, i) => (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[110px_1fr]">
+            <div>
+              <label className={labelClass}>Time (mm:ss)</label>
+              <input
+                className={inputClass}
+                placeholder="0:00"
+                value={c.time}
+                onChange={(e) =>
+                  setChapters((xs) =>
+                    xs.map((x, idx) => (idx === i ? { ...x, time: e.target.value } : x)),
+                  )
+                }
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Label</label>
+              <input
+                className={inputClass}
+                value={c.label}
+                onChange={(e) =>
+                  setChapters((xs) =>
+                    xs.map((x, idx) => (idx === i ? { ...x, label: e.target.value } : x)),
+                  )
+                }
+              />
+            </div>
+          </div>
+        )}
+      />
 
       {/* Footer */}
       <div className="sticky bottom-0 -mx-8 flex items-center justify-between gap-3 border-t border-white/10 bg-black/80 px-8 py-4 backdrop-blur">

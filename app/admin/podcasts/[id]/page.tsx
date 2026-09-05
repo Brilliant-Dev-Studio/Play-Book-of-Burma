@@ -13,7 +13,10 @@ export default async function EditPodcastPage({
 }) {
   const { id } = await params;
   const [podcast, industries] = await Promise.all([
-    prisma.podcast.findUnique({ where: { id } }),
+    prisma.podcast.findUnique({
+      where: { id },
+      include: { chapters: { orderBy: { order: "asc" } } },
+    }),
     prisma.industry.findMany({
       orderBy: [{ order: "asc" }, { name: "asc" }],
       select: { id: true, name: true },
@@ -40,6 +43,7 @@ export default async function EditPodcastPage({
     durationLabel: podcast.durationLabel,
     popular: podcast.popular,
     industryId: podcast.industryId,
+    chapters: podcast.chapters.map((c) => ({ label: c.label, seconds: c.seconds })),
   };
 
   return (

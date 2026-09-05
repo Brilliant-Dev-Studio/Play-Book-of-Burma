@@ -201,6 +201,15 @@ Member. Grouped listing with presigned media URLs.
 
 `200 { groups: [{ label: "Popular" | "Season N", items: [{ id, title, description, thumbnailUrl, audioUrl, durationLabel, durationSeconds, season, publishedAt }] }] }` (empty `groups: []` if none published)
 
+### `GET /api/podcasts/{id}`
+Member. Episode detail, adds ordered `chapters: [{ label, seconds }]`
+(superadmin-entered timestamp markers — tap one to seek the audio player).
+Full detail + examples: [podcast-detail.md](podcast-detail.md).
+
+`200 { podcast: { id, title, description, thumbnailUrl, audioUrl, durationLabel, durationSeconds, chapters } }`
+
+`401 { error: "Unauthenticated." }`, `403 { error: "Active membership required." }`, `404 { error: "Podcast not found." }`.
+
 ---
 
 ## Public (no auth)
@@ -222,6 +231,9 @@ Public. Same shape as `GET /api/videos/{id}`, **including** `guidebookUrl`/`guid
 
 ### `GET /api/public/podcasts`
 Public. Same as `GET /api/podcasts`, including playable `audioUrl` — full episodes, not previews.
+
+### `GET /api/public/podcasts/{id}`
+Public. Same shape as `GET /api/podcasts/{id}`, including `chapters`. No auth.
 
 ---
 
