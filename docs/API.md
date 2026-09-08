@@ -147,6 +147,13 @@ Admin. Edit price/name/perks for the two fixed membership tiers
 
 ## Membership (public submission flow)
 
+### `GET /api/membership`
+Session. The current user's own membership status — start/close dates,
+plan label, active flag. Powers the "Membership Plan" screen (mobile).
+
+`200 { membership: { status, plan, planLabel, paymentMethod, amountMmk, approvedAt, expiresAt, startAt, closeAt, isActive } | null }`
+(`null` if the user has never submitted). `401 { error: "Unauthenticated." }`.
+
 ### `POST /api/membership/sign-screenshot`
 Public. Presigns the payment-screenshot upload before form submit.
 
@@ -234,6 +241,12 @@ Public. Same as `GET /api/podcasts`, including playable `audioUrl` — full epis
 
 ### `GET /api/public/podcasts/{id}`
 Public. Same shape as `GET /api/podcasts/{id}`, including `chapters`. No auth.
+
+### `GET /api/public/plans`
+Public. Active plan tiers, same data + ordering as the "Choose Monthly
+Membership" pricing page. No auth.
+
+`200 { plans: [{ key: "SIX_MONTHS" | "TWELVE_MONTHS", name, months, priceMmk, perks: string[], featured }] }`
 
 ---
 
