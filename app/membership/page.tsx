@@ -185,31 +185,31 @@ function MembershipPlanCard({
 
 const FAQ_GENERALS: { q: string; a: string }[] = [
   {
-    q: "What is Playbook of Burma?",
-    a: "Playbook of Burma is a learning platform featuring playbooks from Myanmar’s top founders, CEOs, and experts—stories, frameworks, and decisions you can apply to your own path.",
+    q: "What is the Playbook of Burma?",
+    a: "The Playbook of Burma presents the most critical insights that can change business and life, shared by highly experienced CEOs, founders, and industry experts.\n\nIt includes retail, restaurants, finance, leadership, business strategy and more.",
   },
   {
-    q: "What is included in Playbook of Burma?",
-    a: "Your membership includes access to our library of sessions, structured learning materials, and updates as we release new playbooks and episodes.",
+    q: "What is included in the Playbook of Burma?",
+    a: "Access 30+ Video Lessons, 15+ SOB Podcasts, and Guidebooks shared by highly experienced CEOs, founders, and industry experts.\n\nIt is designed to be easier to understand and start implementing immediately in business and life.\n\nVideos are an average of 10–15 minutes long, with 60 minutes per episode. Guidebooks include case studies, practical experience, checklists, step-by-step guidelines, and action items.",
   },
   {
     q: "Where can I watch?",
-    a: "You can watch on the web and through our mobile apps once your account is approved and activated.",
+    a: "After you subscribe, you can watch through the website, Android, and iOS applications anytime, anywhere.",
   },
 ];
 
 const FAQ_PAYMENTS: { q: string; a: string }[] = [
   {
     q: "Which payment method have you accepted?",
-    a: 'We currently accept KBZ Pay and Wave Money. Details are shown in the "How do I pay?" section above.',
+    a: 'We currently accept KBZPay. Details are shown in the "How Do I Pay?" section below.',
   },
   {
     q: "What if I don't get approval in 30 mins?",
-    a: "Approvals are usually within 30 minutes. If it takes longer, check your spam folder or contact support with your payment screenshot and registered email.",
+    a: 'Approvals are usually completed within 30 minutes.\n\nIf it takes longer, check your spam folder or contact the "Playbook of Burma" Page Messenger with your payment screenshot and registered email address.',
   },
   {
     q: "What does 1 Device Plan mean?",
-    a: "It means your membership can be signed in on one device at a time to keep access fair and secure for all members.",
+    a: "You can sign in on one device at a time, either a laptop or mobile device. You can switch devices anytime, but you cannot watch on both at the same time.",
   },
 ];
 
@@ -245,7 +245,7 @@ function MembershipFaqPanel({
                 ▼
               </span>
             </summary>
-            <div className="border-t border-white/[0.06] bg-black/25 px-5 py-4 pl-[3.25rem] text-sm leading-relaxed text-white/80 sm:px-6 sm:pl-14 sm:text-[15px]">
+            <div className="whitespace-pre-line border-t border-white/[0.06] bg-black/25 px-5 py-4 pl-[3.25rem] text-sm leading-relaxed text-white/80 sm:px-6 sm:pl-14 sm:text-[15px]">
               {item.a}
             </div>
           </details>
@@ -279,7 +279,7 @@ export default async function MembershipPage() {
         aria-hidden
       />
 
-      <div className="relative z-10 mx-auto w-full max-w-[80%] px-4 sm:px-6 lg:max-w-[min(80%,1400px)] lg:px-8">
+      <div className="relative z-10 mx-auto w-full max-w-site px-4 sm:px-6 lg:max-w-[min(var(--layout-content-max),1400px)] lg:px-8">
         <header className="flex flex-col items-center text-center">
           <span
             className="mb-4 h-1 w-10 rounded-full bg-coral shadow-[0_0_20px_rgba(236,113,71,0.45)]"

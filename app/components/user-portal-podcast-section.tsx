@@ -92,7 +92,7 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
         </h3>
         <p
           ref={descRef}
-          className={`mt-2 max-w-[80ch] text-base leading-relaxed text-white/85 ${
+          className={`mt-2 max-w-[80ch] font-yati text-base leading-relaxed text-white/85 ${
             expanded ? "" : "line-clamp-5"
           }`}
         >

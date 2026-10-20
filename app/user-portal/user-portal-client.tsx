@@ -1,13 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   UserPortalSidebar,
   type FilterGroup,
 } from "@/app/components/user-portal-sidebar";
 import { UserPortalPodcastSection } from "@/app/components/user-portal-podcast-section";
 import type { HomePodcastGroup } from "@/lib/server/podcasts";
+
+const LOOP_COPIES = 3;
+
+function CarouselEdgeMasks() {
+  return (
+    <>
+      <div
+        className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-[linear-gradient(90deg,#000_0%,rgba(0,0,0,0.92)_35%,rgba(0,0,0,0.45)_70%,transparent_100%)] sm:w-28 md:w-40"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-[linear-gradient(270deg,#000_0%,rgba(0,0,0,0.92)_35%,rgba(0,0,0,0.45)_70%,transparent_100%)] sm:w-28 md:w-40"
+        aria-hidden
+      />
+    </>
+  );
+}
 
 function IconFilter({ className }: { className?: string }) {
   return (
@@ -216,26 +239,106 @@ export function UserPortalClient({
   );
 }
 
-function NewlyAddedSection({ items }: { items: NewlyAddedItem[] }) {
+function useInfiniteScroller(itemCount: number, cardSelector: string) {
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const loopingRef = useRef(false);
 
-  const scrollByDir = useCallback((dir: -1 | 1) => {
+  const measureSetWidth = () => {
+    const el = scrollerRef.current;
+    if (!el) return 0;
+    const sets = el.querySelectorAll<HTMLElement>("[data-loop-set]");
+    if (sets.length < 2) return sets[0]?.offsetWidth ?? 0;
+    return sets[1]!.offsetLeft - sets[0]!.offsetLeft;
+  };
+
+  const setScrollLeftInstant = (left: number) => {
     const el = scrollerRef.current;
     if (!el) return;
-    const firstCard = el.querySelector<HTMLElement>("[data-card]");
-    const gap = Number.parseFloat(getComputedStyle(el).gap || "0");
-    const step = firstCard ? firstCard.offsetWidth + gap : el.clientWidth * 0.85;
-    el.scrollBy({ left: dir * step, behavior: "smooth" });
-  }, []);
+    loopingRef.current = true;
+    const prev = el.style.scrollBehavior;
+    el.style.scrollBehavior = "auto";
+    el.scrollLeft = left;
+    el.style.scrollBehavior = prev;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        loopingRef.current = false;
+      });
+    });
+  };
+
+  const resetToMiddleStart = () => {
+    const setWidth = measureSetWidth();
+    if (setWidth <= 0) return;
+    setScrollLeftInstant(setWidth);
+  };
+
+  useLayoutEffect(() => {
+    if (itemCount === 0) return;
+    resetToMiddleStart();
+    const id = window.requestAnimationFrame(() => resetToMiddleStart());
+    return () => window.cancelAnimationFrame(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemCount]);
+
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el || itemCount === 0) return;
+
+    const onScroll = () => {
+      if (loopingRef.current) return;
+      const setWidth = measureSetWidth();
+      if (setWidth <= 0) return;
+      if (el.scrollLeft >= setWidth * 2 - 2) {
+        setScrollLeftInstant(el.scrollLeft - setWidth);
+        return;
+      }
+      if (el.scrollLeft <= 2) {
+        setScrollLeftInstant(el.scrollLeft + setWidth);
+      }
+    };
+
+    el.addEventListener("scroll", onScroll, { passive: true });
+    const onResize = () => resetToMiddleStart();
+    window.addEventListener("resize", onResize);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemCount]);
+
+  const scrollByDir = useCallback(
+    (dir: -1 | 1) => {
+      const el = scrollerRef.current;
+      if (!el) return;
+      const card = el.querySelector<HTMLElement>(cardSelector);
+      const gapSource = card?.parentElement ?? el;
+      const gap = Number.parseFloat(getComputedStyle(gapSource).gap || "0");
+      const step = card
+        ? card.offsetWidth + gap
+        : Math.min(360, el.clientWidth * 0.85);
+      el.scrollBy({ left: dir * step, behavior: "smooth" });
+    },
+    [cardSelector],
+  );
+
+  return { scrollerRef, scrollByDir };
+}
+
+function NewlyAddedSection({ items }: { items: NewlyAddedItem[] }) {
+  const { scrollerRef, scrollByDir } = useInfiniteScroller(
+    items.length,
+    "[data-card]",
+  );
 
   return (
     <section>
       <div className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
         <div className="min-w-0 flex-1">
-          <h2 className="font-roman-wood-slide-title text-3xl font-bold leading-relaxed tracking-wide text-white sm:text-4xl sm:leading-relaxed md:text-5xl md:leading-[1.4]">
+          <h2 className="font-hero-display text-[clamp(1.55rem,2.8vw,2.4rem)] font-bold uppercase leading-[1.12] tracking-[0.01em] text-white">
             If you Dream Big, Will you give us 15 mins a day to change your life?
           </h2>
-          <p className="mt-2 text-base font-bold text-white sm:text-lg">
+          <p className="mt-2 text-base font-medium text-white sm:text-lg">
             Newly Added to your playbooks
           </p>
         </div>
@@ -264,20 +367,31 @@ function NewlyAddedSection({ items }: { items: NewlyAddedItem[] }) {
           No published videos yet.
         </div>
       ) : (
-        <div
-          ref={scrollerRef}
-          className="overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
-        >
-          <div className="flex w-max snap-x snap-mandatory gap-4 pr-4 sm:gap-5 sm:pr-6 lg:pr-10">
-            {items.map((item) => (
-              <PlaybookVideoCard
-                key={item.id}
-                {...item}
-                showNewBadge
-                layout="carousel"
-              />
-            ))}
+        <div className="relative">
+          <div
+            ref={scrollerRef}
+            className="overflow-x-auto pb-2 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
+          >
+            <div className="flex w-max gap-4 pr-4 sm:gap-5 sm:pr-6 lg:pr-10">
+              {Array.from({ length: LOOP_COPIES }, (_, copy) => (
+                <div
+                  key={copy}
+                  data-loop-set
+                  className="flex snap-x snap-mandatory gap-4 sm:gap-5"
+                >
+                  {items.map((item) => (
+                    <PlaybookVideoCard
+                      key={`${copy}-${item.id}`}
+                      {...item}
+                      showNewBadge
+                      layout="carousel"
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
+          <CarouselEdgeMasks />
         </div>
       )}
     </section>
@@ -285,18 +399,69 @@ function NewlyAddedSection({ items }: { items: NewlyAddedItem[] }) {
 }
 
 function WatchAllPlaybooksSection({ items }: { items: NewlyAddedItem[] }) {
+  const { scrollerRef, scrollByDir } = useInfiniteScroller(
+    items.length,
+    "[data-card]",
+  );
+
   return (
     <section className="mt-12 sm:mt-14 md:mt-16">
-      <h2 className="mb-6 text-xl font-bold tracking-tight text-white sm:mb-8 sm:text-2xl md:text-3xl">
-        Watch All the Playbooks
-      </h2>
+      <div className="mb-5 flex items-end justify-between gap-4 sm:mb-6">
+        <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl md:text-3xl">
+          Watch All the Playbooks
+        </h2>
+        {items.length > 0 ? (
+          <div className="flex shrink-0 gap-2">
+            <button
+              type="button"
+              aria-label="Scroll left"
+              onClick={() => scrollByDir(-1)}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/6 text-lg text-white/90 transition-colors hover:bg-white/12 sm:h-11 sm:w-11"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              aria-label="Scroll right"
+              onClick={() => scrollByDir(1)}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/10 text-lg text-white transition-colors hover:bg-white/16 sm:h-11 sm:w-11"
+            >
+              ›
+            </button>
+          </div>
+        ) : null}
+      </div>
 
       {items.length === 0 ? (
         <div className="rounded-2xl border border-white/10 bg-white/4 py-16 text-center text-white/55">
           No published videos yet.
         </div>
       ) : (
-        <PlaybookVideoGrid items={items} />
+        <div className="relative">
+          <div
+            ref={scrollerRef}
+            className="overflow-x-auto pb-2 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
+          >
+            <div className="flex w-max gap-4 pr-4 sm:gap-5 sm:pr-6 lg:pr-10">
+              {Array.from({ length: LOOP_COPIES }, (_, copy) => (
+                <div
+                  key={copy}
+                  data-loop-set
+                  className="flex snap-x snap-mandatory gap-4 sm:gap-5"
+                >
+                  {items.map((item) => (
+                    <PlaybookVideoCard
+                      key={`${copy}-${item.id}`}
+                      {...item}
+                      layout="carousel"
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+          <CarouselEdgeMasks />
+        </div>
       )}
     </section>
   );
@@ -423,17 +588,10 @@ function ContinuesWatchingSection({
 }: {
   items: ContinueWatchingItem[];
 }) {
-  const scrollerRef = useRef<HTMLDivElement>(null);
-
-  const scrollByDir = useCallback((dir: -1 | 1) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const firstCard = el.querySelector<HTMLElement>("[data-cw-card]");
-    const gapSource = firstCard?.parentElement ?? el;
-    const gap = Number.parseFloat(getComputedStyle(gapSource).gap || "0");
-    const step = firstCard ? firstCard.offsetWidth + gap : el.clientWidth * 0.85;
-    el.scrollBy({ left: dir * step, behavior: "smooth" });
-  }, []);
+  const { scrollerRef, scrollByDir } = useInfiniteScroller(
+    items.length,
+    "[data-cw-card]",
+  );
 
   return (
     <section className="mt-12 sm:mt-14 md:mt-16">
@@ -466,15 +624,29 @@ function ContinuesWatchingSection({
           Nothing in progress yet — start a lesson to see it here.
         </div>
       ) : (
-        <div
-          ref={scrollerRef}
-          className="overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
-        >
-          <div className="flex w-max snap-x snap-mandatory gap-4 pr-4 sm:gap-5 sm:pr-6 lg:pr-10">
-            {items.map((item) => (
-              <ContinuesWatchingCard key={item.lessonId} {...item} />
-            ))}
+        <div className="relative">
+          <div
+            ref={scrollerRef}
+            className="overflow-x-auto pb-2 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
+          >
+            <div className="flex w-max gap-4 pr-4 sm:gap-5 sm:pr-6 lg:pr-10">
+              {Array.from({ length: LOOP_COPIES }, (_, copy) => (
+                <div
+                  key={copy}
+                  data-loop-set
+                  className="flex snap-x snap-mandatory gap-4 sm:gap-5"
+                >
+                  {items.map((item) => (
+                    <ContinuesWatchingCard
+                      key={`${copy}-${item.lessonId}`}
+                      {...item}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
+          <CarouselEdgeMasks />
         </div>
       )}
     </section>

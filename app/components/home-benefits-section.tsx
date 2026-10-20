@@ -34,7 +34,7 @@ const BENEFITS: readonly {
 export function HomeBenefitsSection() {
   return (
     <section className="bg-black py-5 md:py-7 lg:py-6 xl:py-9">
-      <div className="mx-auto w-full max-w-[80%] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-site px-4 sm:px-6 lg:px-8">
         <h2 className="text-left text-lg font-semibold tracking-tight text-white sm:text-xl">
           Benefits
         </h2>

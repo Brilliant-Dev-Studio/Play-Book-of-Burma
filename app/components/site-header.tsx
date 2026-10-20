@@ -172,7 +172,7 @@ export function SiteHeader() {
             onClick={() => setMenuOpen(false)}
           />
         ) : null}
-        <div className="relative z-50 mx-auto w-full max-w-[80%] px-4 py-2.5 sm:px-6 lg:px-8">
+        <div className="relative z-50 mx-auto w-full max-w-site px-4 py-2.5 sm:px-6 lg:px-8">
           <div className="flex min-h-16 w-full items-center justify-between gap-4 sm:min-h-18 sm:gap-6 lg:min-h-20">
             <Link
               href="/"
@@ -200,7 +200,7 @@ export function SiteHeader() {
                     key={item.href}
                     href={item.href}
                     aria-current={active ? "page" : undefined}
-                    className={`relative text-[15px] font-bold tracking-tight transition-colors ${
+                    className={`relative text-[17px] font-bold tracking-tight transition-colors ${
                       active ? "text-coral" : "text-white/95 hover:text-white"
                     }`}
                   >
@@ -313,7 +313,7 @@ export function SiteHeader() {
                   aria-current={
                     isNavActive(pathname, "/login") ? "page" : undefined
                   }
-                  className={`text-[15px] font-bold tracking-tight transition-colors ${
+                  className={`text-[17px] font-bold tracking-tight transition-colors ${
                     isNavActive(pathname, "/login")
                       ? "text-coral"
                       : "text-white/95 hover:text-white"

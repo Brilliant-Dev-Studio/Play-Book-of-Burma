@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+
+const LOOP_COPIES = 3;
 
 export type FeaturedItem = {
   id: string;
@@ -73,7 +75,7 @@ function FeaturedVideoCard({
         {/* Title only — on the card / over the fade */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-4 pb-2 text-center sm:px-5 sm:pb-3">
           <h3 className="overflow-hidden text-ellipsis text-lg font-extrabold leading-snug tracking-tight text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.6)] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] sm:text-xl">
-            {`${item.titleLine1}${item.titleLine2 ? " " + item.titleLine2 : ""}`}
+            {`${item.titleLine1}${item.titleLine2 ?? ""}`}
           </h3>
         </div>
       </div>
@@ -116,22 +118,99 @@ export function HomeFeaturedCarousel({
   newlyAddedViewAllHref?: string;
 }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const loopingRef = useRef(false);
   const [tab, setTab] = useState<Tab>("popular");
 
   const hasTabs = Boolean(newlyAddedItems);
   const visibleItems =
     hasTabs && tab === "newlyAdded" ? newlyAddedItems ?? [] : items;
 
+  const measureSetWidth = () => {
+    const el = scrollerRef.current;
+    if (!el) return 0;
+    const sets = el.querySelectorAll<HTMLElement>("[data-loop-set]");
+    if (sets.length < 2) return sets[0]?.offsetWidth ?? 0;
+    // Includes the gap between copies so the jump lands on the same card
+    return sets[1]!.offsetLeft - sets[0]!.offsetLeft;
+  };
+
+  /** Instant jump — never animate teleports (scroll-smooth would look like a slide to the middle). */
+  const setScrollLeftInstant = (left: number) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    loopingRef.current = true;
+    const prev = el.style.scrollBehavior;
+    el.style.scrollBehavior = "auto";
+    el.scrollLeft = left;
+    el.style.scrollBehavior = prev;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        loopingRef.current = false;
+      });
+    });
+  };
+
+  /** Park on the middle copy so left + right both have room to loop. */
+  const resetToMiddleStart = () => {
+    const setWidth = measureSetWidth();
+    if (setWidth <= 0) return;
+    setScrollLeftInstant(setWidth);
+  };
+
+  useLayoutEffect(() => {
+    resetToMiddleStart();
+    // If layout wasn’t ready yet, retry once after paint
+    const id = window.requestAnimationFrame(() => resetToMiddleStart());
+    return () => window.cancelAnimationFrame(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset when tab / list changes
+  }, [tab, visibleItems.length]);
+
   const scrollByDir = useCallback((dir: -1 | 1) => {
     const el = scrollerRef.current;
     if (!el) return;
-    const firstCard = el.querySelector<HTMLElement>("[data-card]");
-    const gap = Number.parseFloat(getComputedStyle(el).gap || "0");
-    const step = firstCard
-      ? firstCard.offsetWidth + gap
+    const card =
+      el.querySelector<HTMLElement>("[data-card]") ??
+      el.querySelector<HTMLElement>("[data-loop-set] a");
+    const gapSource = card?.parentElement ?? el;
+    const gap = Number.parseFloat(getComputedStyle(gapSource).gap || "0");
+    const step = card
+      ? card.offsetWidth + gap
       : Math.min(360, el.clientWidth * 0.85);
     el.scrollBy({ left: dir * step, behavior: "smooth" });
   }, []);
+
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el || visibleItems.length === 0) return;
+
+    const onScroll = () => {
+      if (loopingRef.current) return;
+      const setWidth = measureSetWidth();
+      if (setWidth <= 0) return;
+
+      // Forward into 3rd copy → snap back one set (same cards, no visible jump)
+      if (el.scrollLeft >= setWidth * 2 - 2) {
+        setScrollLeftInstant(el.scrollLeft - setWidth);
+        return;
+      }
+
+      // Backward into 1st copy → snap forward one set
+      if (el.scrollLeft <= 2) {
+        setScrollLeftInstant(el.scrollLeft + setWidth);
+      }
+    };
+
+    el.addEventListener("scroll", onScroll, { passive: true });
+    const onResize = () => {
+      resetToMiddleStart();
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, visibleItems.length]);
 
   const sectionPad =
     variant === "embedded"
@@ -140,7 +219,7 @@ export function HomeFeaturedCarousel({
 
   return (
     <section className={sectionPad}>
-      <div className="mx-auto w-full max-w-[80%] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-site px-4 sm:px-6 lg:px-8">
         {heading ? (
           <h1
             className={[
@@ -159,14 +238,16 @@ export function HomeFeaturedCarousel({
               <button
                 type="button"
                 onClick={() => setTab("popular")}
-                className={`font-semibold transition-colors ${
-                  tab === "popular" ? "text-white" : "text-mist hover:text-white/90"
+                className={`transition-colors ${
+                  tab === "popular"
+                    ? "font-extrabold text-white"
+                    : "font-medium text-mist hover:text-white/90"
                 }`}
               >
                 Popular
               </button>
             ) : (
-              <span className="font-semibold text-white">Popular</span>
+              <span className="font-extrabold text-white">Popular</span>
             )}
 
             {hasTabs ? (
@@ -174,10 +255,10 @@ export function HomeFeaturedCarousel({
                 <button
                   type="button"
                   onClick={() => setTab("newlyAdded")}
-                  className={`ml-5 font-semibold transition-colors sm:ml-8 ${
+                  className={`ml-5 transition-colors sm:ml-8 ${
                     tab === "newlyAdded"
-                      ? "text-white"
-                      : "text-mist hover:text-white/90"
+                      ? "font-extrabold text-white"
+                      : "font-medium text-mist hover:text-white/90"
                   }`}
                 >
                   Newly added
@@ -203,33 +284,75 @@ export function HomeFeaturedCarousel({
             ) : null}
           </div>
 
+          {visibleItems.length > 0 ? (
+            <div className="flex shrink-0 gap-2">
+              <button
+                type="button"
+                aria-label="Scroll left"
+                onClick={() => scrollByDir(-1)}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-lg text-white/90 transition-colors hover:bg-white/[0.12] sm:h-11 sm:w-11"
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                aria-label="Scroll right"
+                onClick={() => scrollByDir(1)}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.1] text-lg text-white transition-colors hover:bg-white/[0.16] sm:h-11 sm:w-11"
+              >
+                ›
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
 
       {visibleItems.length === 0 ? (
-        <div className="mx-auto mt-8 w-full max-w-[80%] rounded-2xl border border-white/10 bg-white/[0.04] py-12 text-center text-white/55 sm:mt-10">
+        <div className="mx-auto mt-8 w-full max-w-site rounded-2xl border border-white/10 bg-white/[0.04] py-12 text-center text-white/55 sm:mt-10">
           {hasTabs && tab === "newlyAdded"
             ? "No newly added videos yet."
             : "No published videos yet."}
         </div>
       ) : (
         <div
-          ref={scrollerRef}
           className={[
-            "relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+            "relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2",
             variant === "embedded" ? "mt-6 md:mt-7" : "mt-8 md:mt-10",
           ].join(" ")}
         >
-          <div className="flex w-max snap-x snap-mandatory gap-4 pl-[calc(7.5vw+1rem)] pr-[calc(7.5vw+1rem)] sm:gap-5 sm:pl-[calc(7.5vw+1.5rem)] sm:pr-[calc(7.5vw+1.5rem)] lg:pl-[calc(7.5vw+2rem)] lg:pr-[calc(7.5vw+2rem)]">
-            {visibleItems.map((item, i) => (
-              <FeaturedVideoCard
-                key={item.id}
-                item={item}
-                isFirst={i === 0}
-                isNew={hasTabs && tab === "newlyAdded"}
-              />
-            ))}
+          <div
+            ref={scrollerRef}
+            className="overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            <div className="flex w-max gap-3 pl-[calc(10%+25px+1rem)] pr-[calc(10%+25px+1rem)] sm:gap-3 sm:pl-[calc(10%+25px+1.5rem)] sm:pr-[calc(10%+25px+1.5rem)] lg:pl-[calc(10%+25px+2rem)] lg:pr-[calc(10%+25px+2rem)]">
+              {Array.from({ length: LOOP_COPIES }, (_, copy) => (
+                <div
+                  key={copy}
+                  data-loop-set
+                  className="flex snap-x snap-mandatory gap-3"
+                >
+                  {visibleItems.map((item, i) => (
+                    <FeaturedVideoCard
+                      key={`${copy}-${item.id}`}
+                      item={item}
+                      isFirst={copy === 0 && i === 0}
+                      isNew={hasTabs && tab === "newlyAdded"}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
+
+          {/* Soft black edge shadows — cards fade into the frame (L/R) */}
+          <div
+            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-[linear-gradient(90deg,#000_0%,rgba(0,0,0,0.92)_35%,rgba(0,0,0,0.45)_70%,transparent_100%)] sm:w-36 md:w-48 lg:w-56"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-[linear-gradient(270deg,#000_0%,rgba(0,0,0,0.92)_35%,rgba(0,0,0,0.45)_70%,transparent_100%)] sm:w-36 md:w-48 lg:w-56"
+            aria-hidden
+          />
         </div>
       )}
     </section>

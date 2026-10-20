@@ -207,7 +207,6 @@ export function WatchClient({
                   {activeIndex + 1}. {activeLesson.title}
                 </h1>
                 <p className="mt-3 text-sm leading-relaxed text-white/85 sm:text-base">
-                  <span className="font-medium text-white">Description: </span>
                   {[video.description, activeLesson.details]
                     .map((s) => s?.trim())
                     .filter(Boolean)

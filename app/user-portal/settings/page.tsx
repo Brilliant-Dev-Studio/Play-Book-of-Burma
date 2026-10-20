@@ -180,7 +180,7 @@ function PasswordField({
           minLength={minLength}
           value={value}
           onChange={onChange}
-          className="w-full rounded-md border border-white/15 bg-black/40 px-3 py-2 pr-11 text-white outline-none focus:border-coral"
+          className="w-full rounded-md border border-white/15 bg-zinc-900 px-3 py-2 pr-11 text-white outline-none focus:border-coral [color-scheme:dark]"
         />
         <button
           type="button"
@@ -328,15 +328,20 @@ export default function SettingsPage() {
 
   if (!me) {
     return (
-      <div className="mx-auto w-full max-w-3xl px-6 py-12 text-white/60">Loading…</div>
+      <div className="min-h-full flex-1 bg-black">
+        <div className="mx-auto w-full max-w-3xl px-6 py-12 text-white/60">
+          Loading…
+        </div>
+      </div>
     );
   }
 
   const inputClass =
-    "mt-1 w-full rounded-md border border-white/15 bg-black/40 px-3 py-2 text-white outline-none focus:border-coral";
+    "mt-1 w-full rounded-md border border-white/15 bg-zinc-900 px-3 py-2 text-white outline-none focus:border-coral [color-scheme:dark]";
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-10 px-6 py-12 text-white">
+    <div className="min-h-full flex-1 bg-black">
+      <div className="mx-auto w-full max-w-3xl space-y-10 px-6 py-12 text-white">
       <header>
         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
         <p className="mt-1 text-sm text-white/60">{me.email}</p>
@@ -467,6 +472,7 @@ export default function SettingsPage() {
           {pwdPending ? "Saving…" : "Change password"}
         </button>
       </form>
+      </div>
     </div>
   );
 }

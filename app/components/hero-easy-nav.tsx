@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const NAV_ITEMS = [
-  { href: "/library", label: "Playbook You Want to Learn" },
-  { href: "/library", label: "Industry You Want to Expert" },
-  { href: "/library", label: "Skillsets You Want to Level up" },
+  { href: "/library", label: "Choose Playbook you want to learn" },
+  { href: "/library", label: "Pick Industry you want to expert at it" },
+  { href: "/library", label: "Pick Skillsets you want to level up" },
 ] as const;
 
 /** Nav chevron: `duration-[220ms] ease-out`. Preview: fade in/out only (`opacity` + ease-in-out). */
@@ -27,8 +27,8 @@ export function HeroEasyNav() {
   const cancelScheduledClose = useCallback(() => {
     if (closeRaf.current !== null) {
       cancelAnimationFrame(closeRaf.current);
-      closeRaf.current = null;
     }
+    closeRaf.current = null;
   }, []);
 
   const openNow = useCallback(() => {
@@ -55,7 +55,7 @@ export function HeroEasyNav() {
   return (
     <div
       ref={rootRef}
-      className="mt-5 flex w-full flex-col gap-4 md:flex-row md:items-stretch md:gap-5"
+      className="relative mt-5 w-full max-w-lg"
       onMouseEnter={openNow}
       onMouseLeave={scheduleClose}
       onFocusCapture={openNow}
@@ -68,14 +68,14 @@ export function HeroEasyNav() {
       }}
     >
       <nav
-        className="flex min-w-0 flex-1 flex-col gap-2 md:min-w-0"
+        className="flex min-w-0 flex-col gap-2.5"
         aria-label="Browse by focus"
       >
         {NAV_ITEMS.map(({ href, label }) => (
           <Link
             key={label}
             href={href}
-            className="group flex w-full items-center justify-between gap-3 rounded-lg border border-white/[0.06] bg-[#212124] px-3 py-2 text-left text-sm font-normal tracking-tight text-white transition-colors hover:bg-[#2a2a2e] sm:rounded-xl sm:px-3.5 sm:py-2 sm:text-[15px]"
+            className="group flex w-full items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-[#2a2a2e] px-5 py-3.5 text-left text-[15px] font-normal tracking-tight text-white transition-colors hover:bg-[#333338] sm:px-6 sm:py-4 sm:text-base"
           >
             <span className="min-w-0">{label}</span>
             <span
@@ -88,13 +88,14 @@ export function HeroEasyNav() {
         ))}
       </nav>
 
+      {/* Desktop: flyout to the right of the first row; mobile: below stack */}
       <aside
         aria-hidden={isMdUp && !open}
-        className={`flex shrink-0 flex-col justify-center gap-2.5 rounded-xl border border-white/15 bg-[#101010] p-3 md:transform-gpu md:transition-opacity md:duration-[280ms] md:ease-in-out motion-reduce:md:transition-none max-md:pointer-events-auto max-md:w-full max-md:opacity-100 md:min-w-[10.75rem] md:max-w-[17rem] md:w-[min(17rem,36%)] md:shrink-0 md:self-stretch ${
+        className={`z-40 flex w-[min(100%,14rem)] flex-col justify-center gap-2.5 rounded-xl border border-white/15 bg-[#101010] p-3 transform-gpu transition-opacity duration-[280ms] ease-in-out motion-reduce:transition-none max-md:mt-4 max-md:w-full ${
           open
-            ? "md:pointer-events-auto md:opacity-100"
-            : "md:pointer-events-none md:opacity-0"
-        }`}
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0 max-md:pointer-events-auto max-md:opacity-100"
+        } absolute top-0 left-full ml-3 max-md:static max-md:ml-0`}
       >
         <Link
           href="/library"

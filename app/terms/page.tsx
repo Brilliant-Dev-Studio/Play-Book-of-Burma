@@ -145,7 +145,7 @@ export default function TermsPage() {
           <p className="text-sm italic text-white/55">
             The rules of the road, in plain terms.
           </p>
-          <h1 className="font-(family-name:--font-rwst-stack) mt-3 text-[3.2rem] leading-[0.9] text-white sm:text-7xl">
+          <h1 className="font-hero-display mt-3 text-3xl font-bold uppercase leading-[1.05] tracking-[0.01em] text-white sm:text-4xl md:text-[2.75rem]">
             Terms &amp; Conditions
           </h1>
           <p className="mt-4 text-sm text-white/45">
@@ -171,7 +171,7 @@ export default function TermsPage() {
               <p className="font-mono text-[11px] tracking-[0.22em] text-coral">
                 {s.kicker.toUpperCase()}
               </p>
-              <h2 className="font-(family-name:--font-rwst-stack) mt-1 text-3xl text-white sm:text-4xl">
+              <h2 className="font-hero-display mt-1 text-xl font-bold uppercase tracking-[0.01em] text-white sm:text-2xl">
                 {s.title}
               </h2>
               <div className="mt-4 text-[15px] leading-[1.8] text-white/75">
@@ -183,7 +183,7 @@ export default function TermsPage() {
 
         {/* Pull quote */}
         <figure className="border-t border-white/15 py-12">
-          <blockquote className="font-(family-name:--font-rwst-stack) max-w-[26ch] text-3xl leading-[1.15] text-butter sm:text-4xl">
+          <blockquote className="font-hero-display max-w-[32ch] text-xl font-bold uppercase leading-[1.2] tracking-[0.01em] text-butter sm:text-2xl">
             &ldquo;Continued use after we update these Terms means you accept
             them.&rdquo;
           </blockquote>
@@ -197,7 +197,7 @@ export default function TermsPage() {
           <p className="font-mono text-[11px] tracking-[0.22em] text-coral">
             COLOPHON
           </p>
-          <h2 className="font-(family-name:--font-rwst-stack) mt-1 text-3xl text-white sm:text-4xl">
+          <h2 className="font-hero-display mt-1 text-xl font-bold uppercase tracking-[0.01em] text-white sm:text-2xl">
             Contact Us
           </h2>
           <p className="mt-4 text-[15px] leading-[1.8] text-white/75">

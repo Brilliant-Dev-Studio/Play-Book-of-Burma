@@ -80,7 +80,6 @@ export function SkillsetCarousel({
               {s.title}
             </h3>
             <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-white/80 sm:text-[0.95rem]">
-              <span className="font-medium text-white">Description: </span>
               {s.description}
             </p>
           </div>

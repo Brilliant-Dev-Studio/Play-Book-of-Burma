@@ -15,6 +15,9 @@ html {
   --palette-coral: #ec7147;
   --palette-butter: #fecf73;
   --palette-wine: #76220b;
+
+  /* Center content rail — previously 80%, tightened by 50px */
+  --layout-content-max: calc(80% - 50px);
 }
 
 @theme inline {
@@ -27,7 +30,10 @@ html {
   --font-sans: var(--font-open-sauce);
   --font-mono: var(--font-rumble-brave);
   --font-roman-wood-slide-title: var(--font-rwst-stack);
+  --font-hero-display: var(--font-tnr-mt-condensed), "Times New Roman", Times, serif;
+  --font-yati: var(--font-yati-san), "Myanmar Text", "Noto Sans Myanmar", sans-serif;
   --font-code: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --max-width-site: var(--layout-content-max);
 }
 
 @keyframes hero-marquee-left {
@@ -47,6 +53,7 @@ html {
     transform: translate3d(0, 0, 0);
   }
 }
+
 
 @media (prefers-color-scheme: dark) {
   :root {

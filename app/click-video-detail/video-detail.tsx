@@ -17,11 +17,11 @@ export async function VideoDetail({
   basePath: string;
 }) {
   // Container width follows the header for each context: the portal header is
-  // full-width (lg:px-10); the marketing site header is capped at max-w-[80%].
+  // full-width (lg:px-10); the marketing site header is capped at max-w-site.
   const shell =
     variant === "portal"
       ? "w-full px-4 sm:px-6 lg:px-10"
-      : "mx-auto w-full max-w-[80%] px-4 sm:px-6 lg:px-8";
+      : "mx-auto w-full max-w-site px-4 sm:px-6 lg:px-8";
 
   if (!videoId) {
     const fallback = await prisma.video.findFirst({
@@ -83,11 +83,21 @@ export async function VideoDetail({
           <img
             src={heroImageUrl ?? thumbnailUrl}
             alt=""
-            className="h-full w-full object-cover object-center"
+            className="h-full w-full scale-[1.02] object-cover object-[center_20%] md:object-[70%_center]"
             draggable={false}
           />
+          {/* Lighter veil — keep text readable on the left, photo clearer on the right */}
           <div
-            className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(90deg,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.94)_22%,rgba(0,0,0,0.78)_38%,rgba(0,0,0,0.45)_55%,rgba(0,0,0,0.18)_72%,transparent_82%,rgba(0,0,0,0.45)_90%,rgba(0,0,0,0.78)_95%,rgba(0,0,0,0.96)_100%)] max-md:bg-[linear-gradient(180deg,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.75)_35%,rgba(0,0,0,0.45)_60%,rgba(0,0,0,0.2)_80%,transparent_100%)]"
+            className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(90deg,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.72)_28%,rgba(0,0,0,0.35)_48%,rgba(0,0,0,0.08)_68%,transparent_82%)] max-md:bg-[linear-gradient(180deg,rgba(0,0,0,0.78)_0%,rgba(0,0,0,0.55)_40%,rgba(0,0,0,0.22)_70%,transparent_100%)]"
+            aria-hidden
+          />
+          {/* Top / bottom edge shadow masks */}
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 z-[2] h-24 bg-[linear-gradient(180deg,#000_0%,rgba(0,0,0,0.75)_40%,transparent_100%)] sm:h-32 md:h-40"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-28 bg-[linear-gradient(0deg,#000_0%,rgba(0,0,0,0.8)_35%,rgba(0,0,0,0.35)_70%,transparent_100%)] sm:h-36 md:h-48"
             aria-hidden
           />
         </div>
@@ -110,7 +120,6 @@ export async function VideoDetail({
               </p>
 
               <p className="mt-5 text-left text-sm leading-relaxed text-white/90 sm:mt-6 sm:text-base">
-                <span className="font-medium text-white">Description: </span>
                 {video.description}
               </p>
 
@@ -135,8 +144,9 @@ export async function VideoDetail({
           <div className="hidden min-h-[min(68dvh,620px)] md:block md:min-w-0 md:flex-1" aria-hidden />
         </div>
 
+        {/* Soft edge fade only — no blur so the hero photo stays sharp */}
         <div
-          className="pointer-events-none absolute inset-y-0 left-[30vw] z-[2] hidden w-40 -translate-x-1/2 backdrop-blur-md [mask-image:linear-gradient(90deg,transparent_0%,black_45%,black_55%,transparent_100%)] [-webkit-mask-image:linear-gradient(90deg,transparent_0%,black_45%,black_55%,transparent_100%)] sm:w-56 md:block"
+          className="pointer-events-none absolute inset-y-0 left-[30vw] z-[2] hidden w-28 -translate-x-1/2 bg-[linear-gradient(90deg,transparent_0%,rgba(0,0,0,0.22)_50%,transparent_100%)] sm:w-36 md:block"
           aria-hidden
         />
       </div>
@@ -223,7 +233,6 @@ export async function VideoDetail({
                   Download Learning Resources
                 </h3>
                 <p className="mt-3 text-sm leading-relaxed text-white/85 sm:text-[0.95rem]">
-                  <span className="font-medium text-white">Description: </span>
                   The course guidebook for {title} by {video.instructor.name}.
                 </p>
                 {(() => {

@@ -4,6 +4,7 @@ import { HeaderSwitch } from "@/app/components/header-switch";
 import { FooterSwitch } from "@/app/components/footer-switch";
 import { NavigationProgress } from "@/app/components/navigation-progress";
 import { PodcastPlayerShell } from "@/app/components/podcast-player-shell";
+import { timesNewRomanMtCondensed, yatiSan } from "@/app/fonts";
 import "./globals.css";
 
 // Body / UI — Open Sauce Sans (replaces Geist Sans)
@@ -121,7 +122,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${openSauce.variable} ${rumbleBrave.variable} ${romanWoodType.variable} h-full scroll-smooth antialiased`}
+      className={`${openSauce.variable} ${rumbleBrave.variable} ${romanWoodType.variable} ${timesNewRomanMtCondensed.variable} ${yatiSan.variable} h-full scroll-smooth antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
         <PodcastPlayerShell>

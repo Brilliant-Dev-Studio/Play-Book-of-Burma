@@ -59,7 +59,7 @@ function PodcastRow({ item }: { item: HomePodcastItem }) {
         </h3>
         <p
           ref={descRef}
-          className={`mt-2 text-base leading-relaxed text-white/75 ${
+          className={`mt-2 font-yati text-base leading-relaxed text-white/75 ${
             expanded ? "" : "line-clamp-3"
           }`}
         >
@@ -115,7 +115,7 @@ export function HomePodcastSection({
 
   return (
     <section className={sectionPad}>
-      <div className="mx-auto w-full max-w-[80%] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-site px-4 sm:px-6 lg:px-8">
         <h2 className="text-left text-2xl font-semibold tracking-tight text-white sm:text-3xl">
           Listen to Story of Burma Podcast with No Ads
         </h2>
