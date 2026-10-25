@@ -158,6 +158,9 @@ export function InstructorForm({
                   setBios((xs) => xs.map((x, idx) => (idx === i ? e.target.value : x)))
                 }
               />
+              <p className="mt-1.5 text-xs text-white/45">
+                Enter creates new lines. Use “+ Add” for separate paragraphs.
+              </p>
             </div>
           ))}
         </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { displayDurationLabel } from "@/lib/format-duration";
 import { presignGetUrl, PRESIGN_TTL } from "@/lib/server/s3";
 
 function notFound() {
@@ -26,11 +27,14 @@ export async function GET(
       titleLine1: true,
       titleLine2: true,
       description: true,
+      sidebarTitle: true,
+      sidebarDescription: true,
       thumbnailKey: true,
       trailerKey: true,
       trailerThumbnailKey: true,
       guidebookKey: true,
       guidebookCoverKey: true,
+      guidebookDescription: true,
       durationLabel: true,
       durationSeconds: true,
       publishedAt: true,
@@ -97,12 +101,18 @@ export async function GET(
       titleLine1: video.titleLine1,
       titleLine2: video.titleLine2 ?? "",
       description: video.description,
+      sidebarTitle: video.sidebarTitle ?? "",
+      sidebarDescription: video.sidebarDescription ?? "",
       thumbnailUrl,
       trailerUrl,
       trailerThumbnailUrl,
       guidebookUrl,
       guidebookCoverUrl,
-      durationLabel: video.durationLabel,
+      guidebookDescription: video.guidebookDescription ?? "",
+      durationLabel: displayDurationLabel(
+        video.durationLabel,
+        video.durationSeconds,
+      ),
       durationSeconds: video.durationSeconds,
       publishedAt: video.publishedAt?.toISOString() ?? null,
       industry: video.industry.name,
@@ -114,7 +124,10 @@ export async function GET(
         photoUrl: instructorPhotoUrl,
         biographyParagraphs: video.instructor.biographyParagraphs,
       },
-      lessons: video.lessons,
+      lessons: video.lessons.map((l) => ({
+        ...l,
+        durationLabel: displayDurationLabel(l.durationLabel, l.durationSeconds),
+      })),
       skillsetItems: skillsetItemsWithUrls,
     },
   });

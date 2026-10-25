@@ -1,8 +1,24 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
+/**
+ * pg v8 treats sslmode=require as verify-full and warns that v9 will change.
+ * Opt into explicit libpq-compat so the warning goes away and behavior stays clear.
+ * @see https://www.postgresql.org/docs/current/libpq-ssl.html
+ */
+function withPgSslCompat(connectionString: string): string {
+  if (/[?&]uselibpqcompat=/i.test(connectionString)) return connectionString;
+  if (!/[?&]sslmode=(prefer|require|verify-ca)\b/i.test(connectionString)) {
+    return connectionString;
+  }
+  const sep = connectionString.includes("?") ? "&" : "?";
+  return `${connectionString}${sep}uselibpqcompat=true`;
+}
+
 function createPrismaClient() {
-  const adapter = new PrismaPg(process.env.DATABASE_URL_UNPOOLED!);
+  const adapter = new PrismaPg(
+    withPgSslCompat(process.env.DATABASE_URL_UNPOOLED!),
+  );
   return new PrismaClient({ adapter }).$extends({
     query: {
       $allModels: {

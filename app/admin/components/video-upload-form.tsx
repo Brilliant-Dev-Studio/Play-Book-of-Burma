@@ -11,6 +11,7 @@ import {
 import { inputClass, labelClass } from "@/app/admin/components/form-field-styles";
 import { Repeater } from "@/app/admin/components/repeater";
 import { saveVideo, type VideoFormInput } from "@/app/admin/videos/actions";
+import { formatDurationHrsMins as formatDuration } from "@/lib/format-duration";
 
 type LessonRow = {
   title: string;
@@ -40,20 +41,6 @@ function emptyLesson(): LessonRow {
   return { title: "", videoKey: "", durationSeconds: 0, durationLabel: "", details: "" };
 }
 
-function formatDuration(totalSeconds: number): string {
-  const sec = Math.round(totalSeconds);
-  if (sec <= 0) return "";
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = sec % 60;
-  const parts: string[] = [];
-  if (h > 0) parts.push(`${h} ${h === 1 ? "hour" : "hours"}`);
-  if (m > 0) parts.push(`${m} ${m === 1 ? "minute" : "minutes"}`);
-  if (h === 0 && (m === 0 || s >= 5) && s > 0) {
-    parts.push(`${s} ${s === 1 ? "second" : "seconds"}`);
-  }
-  return parts.join(" ") || `${sec} seconds`;
-}
 function emptySkillset(): SkillsetRow {
   return { title: "", description: "", imageKey: "" };
 }
@@ -79,6 +66,10 @@ export function VideoUploadForm({
   const [titleLine2, setTitleLine2] = useState(initial?.titleLine2 ?? "");
   const [instructorId, setInstructorId] = useState(initial?.instructorId ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
+  const [sidebarTitle, setSidebarTitle] = useState(initial?.sidebarTitle ?? "");
+  const [sidebarDescription, setSidebarDescription] = useState(
+    initial?.sidebarDescription ?? "",
+  );
   // All videos are type=VIDEO now — podcasts have their own admin section.
   const [industryId, setIndustryId] = useState<string>(
     initial?.industryId ?? industries[0]?.id ?? "",
@@ -88,6 +79,9 @@ export function VideoUploadForm({
   );
   const [guidebookKey, setGuidebookKey] = useState<string>(initial?.guidebookKey ?? "");
   const [guidebookCoverKey, setGuidebookCoverKey] = useState<string>(initial?.guidebookCoverKey ?? "");
+  const [guidebookDescription, setGuidebookDescription] = useState(
+    initial?.guidebookDescription ?? "",
+  );
   const guidebookCoverRef = useRef<DeferredImageUploadHandle>(null);
   const [guidebookCoverStaged, setGuidebookCoverStaged] = useState(false);
 
@@ -136,6 +130,8 @@ export function VideoUploadForm({
       titleLine1,
       titleLine2: titleLine2 || undefined,
       description,
+      sidebarTitle: sidebarTitle || undefined,
+      sidebarDescription: sidebarDescription || undefined,
       instructorId,
       thumbnailKey,
       heroImageKey: (resolvedHeroImageKey ?? initial?.heroImageKey) || undefined,
@@ -143,6 +139,7 @@ export function VideoUploadForm({
       trailerThumbnailKey: (resolvedTrailerThumbnailKey ?? trailerThumbnailKey) || undefined,
       guidebookKey: guidebookKey || undefined,
       guidebookCoverKey: (resolvedGuidebookCoverKey ?? guidebookCoverKey) || undefined,
+      guidebookDescription: guidebookDescription || undefined,
       durationSeconds: totalDurationSeconds,
       durationLabel: totalDurationLabel,
       status: "PUBLISHED",
@@ -342,6 +339,20 @@ export function VideoUploadForm({
               />
             </div>
           </div>
+
+          <div>
+            <label className={labelClass}>Guidebook description (optional)</label>
+            <textarea
+              rows={3}
+              className={`${inputClass} mt-2`}
+              value={guidebookDescription}
+              onChange={(e) => setGuidebookDescription(e.target.value)}
+              placeholder="Shown under “Download Learning Resources”. Leave blank for the default sentence."
+            />
+            <p className="mt-1.5 text-xs text-white/45">
+              Enter key creates new lines on the site.
+            </p>
+          </div>
         </div>
 
         {/* RIGHT — metadata */}
@@ -388,7 +399,45 @@ export function VideoUploadForm({
               className={inputClass}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              placeholder="Hero / thumbnail description on the video detail page"
             />
+            <p className="mt-1.5 text-xs text-white/45">
+              Enter key creates new lines on the site.
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-black/25 p-4">
+            <p className="text-sm font-semibold text-white">
+              Biography detail (watch sidebar)
+            </p>
+            <p className="mt-1 text-xs text-white/45">
+              Title + body next to the photo on the watch page. Leave blank to
+              reuse the video title and description above.
+            </p>
+            <div className="mt-3 space-y-3">
+              <div>
+                <label className={labelClass}>Sidebar title</label>
+                <input
+                  className={inputClass}
+                  value={sidebarTitle}
+                  onChange={(e) => setSidebarTitle(e.target.value)}
+                  placeholder="e.g. Retail Playbook of Opening 1 to 100 Multiple Stores"
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Sidebar description</label>
+                <textarea
+                  rows={4}
+                  className={inputClass}
+                  value={sidebarDescription}
+                  onChange={(e) => setSidebarDescription(e.target.value)}
+                  placeholder="Burmese / English body under the sidebar title"
+                />
+                <p className="mt-1.5 text-xs text-white/45">
+                  Enter key creates new lines on the site.
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

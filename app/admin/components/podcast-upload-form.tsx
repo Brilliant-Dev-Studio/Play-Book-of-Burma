@@ -11,6 +11,7 @@ import {
 import { inputClass, labelClass } from "@/app/admin/components/form-field-styles";
 import { Repeater } from "@/app/admin/components/repeater";
 import { savePodcast, type PodcastFormInput } from "@/app/admin/podcasts/actions";
+import { formatDurationHrsMins as formatDuration } from "@/lib/format-duration";
 
 export type TaxonomyOption = { id: string; name: string };
 
@@ -43,21 +44,6 @@ function mmSsToSeconds(value: string): number {
   const s = Number(parts[parts.length - 1]);
   if (!Number.isFinite(m) || !Number.isFinite(s)) return 0;
   return Math.max(0, Math.floor(m) * 60 + Math.floor(s));
-}
-
-function formatDuration(totalSeconds: number): string {
-  const sec = Math.round(totalSeconds);
-  if (sec <= 0) return "";
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = sec % 60;
-  const parts: string[] = [];
-  if (h > 0) parts.push(`${h} ${h === 1 ? "hour" : "hours"}`);
-  if (m > 0) parts.push(`${m} ${m === 1 ? "minute" : "minutes"}`);
-  if (h === 0 && (m === 0 || s >= 5) && s > 0) {
-    parts.push(`${s} ${s === 1 ? "second" : "seconds"}`);
-  }
-  return parts.join(" ") || `${sec} seconds`;
 }
 
 export function PodcastUploadForm({

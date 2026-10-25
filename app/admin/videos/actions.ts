@@ -24,6 +24,8 @@ export type VideoFormInput = {
   titleLine1: string;
   titleLine2?: string;
   description: string;
+  sidebarTitle?: string;
+  sidebarDescription?: string;
   instructorId: string;
   thumbnailKey: string;
   heroImageKey?: string;
@@ -31,6 +33,7 @@ export type VideoFormInput = {
   trailerThumbnailKey?: string;
   guidebookKey?: string;
   guidebookCoverKey?: string;
+  guidebookDescription?: string;
   durationSeconds: number;
   durationLabel: string;
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
@@ -44,6 +47,9 @@ function clean(input: VideoFormInput): VideoFormInput {
     titleLine1: input.titleLine1.trim(),
     titleLine2: input.titleLine2?.trim() || undefined,
     description: input.description.trim(),
+    sidebarTitle: input.sidebarTitle?.trim() || undefined,
+    sidebarDescription: input.sidebarDescription?.trim() || undefined,
+    guidebookDescription: input.guidebookDescription?.trim() || undefined,
     instructorId: input.instructorId.trim(),
     industryId: input.industryId.trim(),
     skillsetId: input.skillsetId.trim(),
@@ -149,6 +155,8 @@ export async function saveVideo(
     titleLine1: cleaned.titleLine1,
     titleLine2: cleaned.titleLine2 ?? null,
     description: cleaned.description,
+    sidebarTitle: cleaned.sidebarTitle?.trim() || null,
+    sidebarDescription: cleaned.sidebarDescription?.trim() || null,
     instructorId: cleaned.instructorId,
     thumbnailKey: cleaned.thumbnailKey,
     heroImageKey: cleaned.heroImageKey?.trim() || null,
@@ -156,6 +164,7 @@ export async function saveVideo(
     trailerThumbnailKey: cleaned.trailerThumbnailKey?.trim() || null,
     guidebookKey: cleaned.guidebookKey?.trim() || null,
     guidebookCoverKey: cleaned.guidebookCoverKey?.trim() || null,
+    guidebookDescription: cleaned.guidebookDescription?.trim() || null,
     durationSeconds: Number.isFinite(cleaned.durationSeconds) ? cleaned.durationSeconds : 0,
     durationLabel: cleaned.durationLabel,
     status,

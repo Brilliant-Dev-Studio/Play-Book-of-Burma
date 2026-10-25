@@ -287,6 +287,10 @@ model Video {
   titleLine1          String
   titleLine2          String?
   description         String
+  /** Watch sidebar card heading (Biography detail). Empty → titleLine1+2. */
+  sidebarTitle        String?
+  /** Watch sidebar card body under the heading. Empty → description. */
+  sidebarDescription  String?
   instructorId        String
   instructor          Instructor     @relation(fields: [instructorId], references: [id])
   thumbnailKey        String
@@ -295,6 +299,8 @@ model Video {
   trailerThumbnailKey     String?
   guidebookKey            String?
   guidebookCoverKey       String?
+  /** Admin-written blurb under “Download Learning Resources”. Empty → fallback template. */
+  guidebookDescription    String?
   durationSeconds     Int            @default(0)
   durationLabel       String
   status              PublishStatus  @default(DRAFT)

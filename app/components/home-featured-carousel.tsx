@@ -1,7 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  IconChevronLeft,
+  IconChevronRight,
+} from "@/app/components/carousel-chevrons";
 
 const LOOP_COPIES = 3;
 
@@ -17,18 +21,17 @@ export type FeaturedItem = {
 
 function FeaturedVideoCard({
   item,
-  isFirst,
   isNew,
 }: {
   item: FeaturedItem;
-  isFirst?: boolean;
   isNew?: boolean;
 }) {
   return (
     <Link
       href={`/click-video-detail?video=${item.id}`}
-      data-card={isFirst ? true : undefined}
-      className="group flex w-[314px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border-2 border-white/30 bg-black outline-none transition-colors hover:border-white/45 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[354px] md:w-[362px]"
+      data-card
+      draggable={false}
+      className="group flex w-[314px] shrink-0 flex-col overflow-hidden rounded-2xl border-2 border-white/30 bg-black outline-none transition-colors hover:border-white/45 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[354px] md:w-[362px]"
       aria-label={`${item.titleLine1} ${item.titleLine2}`}
     >
       <div className="relative aspect-[3/4] w-full overflow-hidden bg-zinc-900">
@@ -44,7 +47,8 @@ function FeaturedVideoCard({
         <img
           src={item.thumbnailUrl}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06] group-focus-within:scale-[1.06] motion-reduce:transition-none motion-reduce:group-hover:scale-100 motion-reduce:group-focus-within:scale-100"
+          draggable={false}
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06] group-focus-within:scale-[1.06] motion-reduce:transition-none motion-reduce:group-hover:scale-100 motion-reduce:group-focus-within:scale-100"
         />
 
         <div
@@ -72,7 +76,6 @@ function FeaturedVideoCard({
           </span>
         </span>
 
-        {/* Title only — on the card / over the fade */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-4 pb-2 text-center sm:px-5 sm:pb-3">
           <h3 className="overflow-hidden text-ellipsis text-lg font-extrabold leading-snug tracking-tight text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.6)] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] sm:text-xl">
             {`${item.titleLine1}${item.titleLine2 ?? ""}`}
@@ -80,7 +83,6 @@ function FeaturedVideoCard({
         </div>
       </div>
 
-      {/* Below the card — not over the image */}
       <div className="relative z-10 flex flex-col items-center px-4 pb-4 pt-4 text-center">
         <span className="h-[3px] w-12 shrink-0 bg-coral" aria-hidden />
         <p className="mt-2 text-sm font-semibold leading-snug text-white/90 sm:text-[15px]">
@@ -97,6 +99,12 @@ function FeaturedVideoCard({
 
 type Tab = "popular" | "newlyAdded";
 
+/**
+ * Landing featured carousel.
+ * - Left/Right buttons → scroll one card
+ * - Cursor drag / trackpad / touch → native horizontal scroll
+ * - Tripled track for seamless infinite loop
+ */
 export function HomeFeaturedCarousel({
   items,
   newlyAddedItems,
@@ -106,116 +114,169 @@ export function HomeFeaturedCarousel({
   newlyAddedViewAllHref,
 }: {
   items: FeaturedItem[];
-  /** When provided, a "Newly added" tab appears next to "Popular". */
   newlyAddedItems?: FeaturedItem[];
-  /** Page title shown above the tab row (e.g. Library page). */
   heading?: string;
-  /** `embedded` = less top padding when not directly under the home hero. */
   variant?: "default" | "embedded";
-  /** Hide "See All" when already on the full library view. */
   showSeeAll?: boolean;
-  /** When provided, shows a "View All" link next to the "Newly added" tab. */
   newlyAddedViewAllHref?: string;
 }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
-  const loopingRef = useRef(false);
+  const ignoreScrollRef = useRef(false);
+  const dragRef = useRef<{
+    active: boolean;
+    startX: number;
+    startScroll: number;
+    moved: boolean;
+  } | null>(null);
+  const suppressClickRef = useRef(false);
+
   const [tab, setTab] = useState<Tab>("popular");
 
   const hasTabs = Boolean(newlyAddedItems);
   const visibleItems =
     hasTabs && tab === "newlyAdded" ? newlyAddedItems ?? [] : items;
 
-  const measureSetWidth = () => {
-    const el = scrollerRef.current;
-    if (!el) return 0;
-    const sets = el.querySelectorAll<HTMLElement>("[data-loop-set]");
+  const getSetWidth = () => {
+    const root = scrollerRef.current;
+    if (!root) return 0;
+    const sets = root.querySelectorAll<HTMLElement>("[data-loop-set]");
     if (sets.length < 2) return sets[0]?.offsetWidth ?? 0;
-    // Includes the gap between copies so the jump lands on the same card
     return sets[1]!.offsetLeft - sets[0]!.offsetLeft;
   };
 
-  /** Instant jump — never animate teleports (scroll-smooth would look like a slide to the middle). */
-  const setScrollLeftInstant = (left: number) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    loopingRef.current = true;
-    const prev = el.style.scrollBehavior;
-    el.style.scrollBehavior = "auto";
-    el.scrollLeft = left;
-    el.style.scrollBehavior = prev;
+  const getStep = () => {
+    const root = scrollerRef.current;
+    if (!root) return 360;
+    const card = root.querySelector<HTMLElement>("[data-card]");
+    if (!card) return 360;
+    const parent = card.parentElement;
+    const gap = parent
+      ? Number.parseFloat(getComputedStyle(parent).gap || "12") || 12
+      : 12;
+    return card.offsetWidth + gap;
+  };
+
+  const jump = (left: number) => {
+    const root = scrollerRef.current;
+    if (!root) return;
+    ignoreScrollRef.current = true;
+    root.scrollLeft = left;
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        loopingRef.current = false;
-      });
+      ignoreScrollRef.current = false;
     });
   };
 
-  /** Park on the middle copy so left + right both have room to loop. */
-  const resetToMiddleStart = () => {
-    const setWidth = measureSetWidth();
-    if (setWidth <= 0) return;
-    setScrollLeftInstant(setWidth);
+  const parkMiddle = () => {
+    const w = getSetWidth();
+    if (w > 0) jump(w);
   };
 
   useLayoutEffect(() => {
-    resetToMiddleStart();
-    // If layout wasn’t ready yet, retry once after paint
-    const id = window.requestAnimationFrame(() => resetToMiddleStart());
-    return () => window.cancelAnimationFrame(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset when tab / list changes
-  }, [tab, visibleItems.length]);
-
-  const scrollByDir = useCallback((dir: -1 | 1) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const card =
-      el.querySelector<HTMLElement>("[data-card]") ??
-      el.querySelector<HTMLElement>("[data-loop-set] a");
-    const gapSource = card?.parentElement ?? el;
-    const gap = Number.parseFloat(getComputedStyle(gapSource).gap || "0");
-    const step = card
-      ? card.offsetWidth + gap
-      : Math.min(360, el.clientWidth * 0.85);
-    el.scrollBy({ left: dir * step, behavior: "smooth" });
-  }, []);
-
-  useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el || visibleItems.length === 0) return;
-
-    const onScroll = () => {
-      if (loopingRef.current) return;
-      const setWidth = measureSetWidth();
-      if (setWidth <= 0) return;
-
-      // Forward into 3rd copy → snap back one set (same cards, no visible jump)
-      if (el.scrollLeft >= setWidth * 2 - 2) {
-        setScrollLeftInstant(el.scrollLeft - setWidth);
-        return;
-      }
-
-      // Backward into 1st copy → snap forward one set
-      if (el.scrollLeft <= 2) {
-        setScrollLeftInstant(el.scrollLeft + setWidth);
-      }
-    };
-
-    el.addEventListener("scroll", onScroll, { passive: true });
-    const onResize = () => {
-      resetToMiddleStart();
-    };
-    window.addEventListener("resize", onResize);
+    parkMiddle();
+    const a = window.setTimeout(parkMiddle, 80);
+    const b = window.setTimeout(parkMiddle, 250);
     return () => {
-      el.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
+      window.clearTimeout(a);
+      window.clearTimeout(b);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, visibleItems.length]);
+
+  // Infinite loop wrap (only when not dragging / jumping)
+  useEffect(() => {
+    const root = scrollerRef.current;
+    if (!root || visibleItems.length === 0) return;
+
+    const onScroll = () => {
+      if (ignoreScrollRef.current || dragRef.current?.active) return;
+      const w = getSetWidth();
+      if (w <= 0) return;
+      if (root.scrollLeft >= w * 2 - 2) jump(root.scrollLeft - w);
+      else if (root.scrollLeft <= 2) jump(root.scrollLeft + w);
+    };
+
+    root.addEventListener("scroll", onScroll, { passive: true });
+    return () => root.removeEventListener("scroll", onScroll);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, visibleItems.length]);
+
+  /** Button: move one card left/right */
+  const scrollByDir = (dir: -1 | 1) => {
+    const root = scrollerRef.current;
+    if (!root) return;
+    const w = getSetWidth();
+    if (w > 0 && root.scrollLeft < 4) jump(w);
+    const step = getStep();
+    root.scrollBy({ left: dir * step, behavior: "smooth" });
+  };
+
+  /** Cursor drag swipe */
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    const root = scrollerRef.current;
+    if (!root) return;
+    suppressClickRef.current = false;
+    dragRef.current = {
+      active: true,
+      startX: e.clientX,
+      startScroll: root.scrollLeft,
+      moved: false,
+    };
+    root.setPointerCapture(e.pointerId);
+    root.style.scrollBehavior = "auto";
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    const root = scrollerRef.current;
+    if (!drag?.active || !root) return;
+    const dx = e.clientX - drag.startX;
+    if (Math.abs(dx) > 6) {
+      drag.moved = true;
+      suppressClickRef.current = true;
+    }
+    root.scrollLeft = drag.startScroll - dx;
+  };
+
+  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    const root = scrollerRef.current;
+    if (!drag?.active || !root) return;
+    const didMove = drag.moved;
+    dragRef.current = null;
+    try {
+      root.releasePointerCapture(e.pointerId);
+    } catch {
+      /* ok */
+    }
+    root.style.scrollBehavior = "";
+    const w = getSetWidth();
+    if (w > 0) {
+      if (root.scrollLeft >= w * 2 - 2) jump(root.scrollLeft - w);
+      else if (root.scrollLeft <= 2) jump(root.scrollLeft + w);
+    }
+    if (didMove) {
+      // Keep suppress until after the click that follows pointerup
+      window.setTimeout(() => {
+        suppressClickRef.current = false;
+      }, 0);
+    }
+  };
+
+  const onClickCapture = (e: React.MouseEvent) => {
+    if (suppressClickRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
 
   const sectionPad =
     variant === "embedded"
       ? "bg-black pb-12 pt-4 sm:pb-14 sm:pt-5 md:pb-16 md:pt-6 lg:pb-20 lg:pt-8"
       : "bg-black pb-10 pt-20 md:pb-12 md:pt-24 lg:pb-14 lg:pt-28 xl:pb-16 xl:pt-32";
+
+  const edgePad =
+    "pl-[calc(10%+25px+1rem)] pr-[calc(10%+25px+1rem)] sm:pl-[calc(10%+25px+1.5rem)] sm:pr-[calc(10%+25px+1.5rem)] lg:pl-[calc(10%+25px+2rem)] lg:pr-[calc(10%+25px+2rem)]";
 
   return (
     <section className={sectionPad}>
@@ -224,30 +285,28 @@ export function HomeFeaturedCarousel({
           <h1
             className={[
               "text-2xl font-bold tracking-tight text-white sm:text-3xl md:text-4xl",
-              variant === "embedded"
-                ? "mb-4 sm:mb-5"
-                : "mb-6 sm:mb-8",
+              variant === "embedded" ? "mb-4 sm:mb-5" : "mb-6 sm:mb-8",
             ].join(" ")}
           >
             {heading}
           </h1>
         ) : null}
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-0 text-sm sm:text-[15px]">
+          <div className="flex flex-wrap items-center gap-0 text-[15px] sm:text-base">
             {hasTabs ? (
               <button
                 type="button"
                 onClick={() => setTab("popular")}
-                className={`transition-colors ${
+                className={`transition-[color,font-weight] ${
                   tab === "popular"
-                    ? "font-extrabold text-white"
-                    : "font-medium text-mist hover:text-white/90"
+                    ? "font-black text-white"
+                    : "font-normal text-mist hover:text-white/90"
                 }`}
               >
                 Popular
               </button>
             ) : (
-              <span className="font-extrabold text-white">Popular</span>
+              <span className="font-black text-white">Popular</span>
             )}
 
             {hasTabs ? (
@@ -255,10 +314,10 @@ export function HomeFeaturedCarousel({
                 <button
                   type="button"
                   onClick={() => setTab("newlyAdded")}
-                  className={`ml-5 transition-colors sm:ml-8 ${
+                  className={`ml-5 transition-[color,font-weight] sm:ml-8 ${
                     tab === "newlyAdded"
-                      ? "font-extrabold text-white"
-                      : "font-medium text-mist hover:text-white/90"
+                      ? "font-black text-white"
+                      : "font-normal text-mist hover:text-white/90"
                   }`}
                 >
                   Newly added
@@ -277,7 +336,7 @@ export function HomeFeaturedCarousel({
             {showSeeAll ? (
               <Link
                 href="/watch-all"
-                className="ml-5 font-medium text-mist transition-colors hover:text-white/90 sm:ml-8"
+                className="ml-5 font-normal text-mist transition-colors hover:text-white/90 sm:ml-8"
               >
                 See All
               </Link>
@@ -285,22 +344,22 @@ export function HomeFeaturedCarousel({
           </div>
 
           {visibleItems.length > 0 ? (
-            <div className="flex shrink-0 gap-2">
+            <div className="relative z-30 flex shrink-0 gap-2">
               <button
                 type="button"
-                aria-label="Scroll left"
+                aria-label="Previous"
                 onClick={() => scrollByDir(-1)}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-lg text-white/90 transition-colors hover:bg-white/[0.12] sm:h-11 sm:w-11"
+                className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white/90 transition-colors hover:bg-white/[0.12] active:scale-95 sm:h-11 sm:w-11"
               >
-                ‹
+                <IconChevronLeft className="h-5 w-5" />
               </button>
               <button
                 type="button"
-                aria-label="Scroll right"
+                aria-label="Next"
                 onClick={() => scrollByDir(1)}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.1] text-lg text-white transition-colors hover:bg-white/[0.16] sm:h-11 sm:w-11"
+                className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-white/[0.1] text-white transition-colors hover:bg-white/[0.16] active:scale-95 sm:h-11 sm:w-11"
               >
-                ›
+                <IconChevronRight className="h-5 w-5" />
               </button>
             </div>
           ) : null}
@@ -316,26 +375,27 @@ export function HomeFeaturedCarousel({
       ) : (
         <div
           className={[
-            "relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2",
+            "relative left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2",
             variant === "embedded" ? "mt-6 md:mt-7" : "mt-8 md:mt-10",
           ].join(" ")}
         >
           <div
             ref={scrollerRef}
-            className="overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="w-full min-w-0 cursor-grab overflow-x-auto overscroll-x-contain active:cursor-grabbing [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            style={{ WebkitOverflowScrolling: "touch" }}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+            onClickCapture={onClickCapture}
           >
-            <div className="flex w-max gap-3 pl-[calc(10%+25px+1rem)] pr-[calc(10%+25px+1rem)] sm:gap-3 sm:pl-[calc(10%+25px+1.5rem)] sm:pr-[calc(10%+25px+1.5rem)] lg:pl-[calc(10%+25px+2rem)] lg:pr-[calc(10%+25px+2rem)]">
+            <div className={`flex w-max gap-3 pb-2 ${edgePad}`}>
               {Array.from({ length: LOOP_COPIES }, (_, copy) => (
-                <div
-                  key={copy}
-                  data-loop-set
-                  className="flex snap-x snap-mandatory gap-3"
-                >
-                  {visibleItems.map((item, i) => (
+                <div key={copy} data-loop-set className="flex gap-3">
+                  {visibleItems.map((item) => (
                     <FeaturedVideoCard
                       key={`${copy}-${item.id}`}
                       item={item}
-                      isFirst={copy === 0 && i === 0}
                       isNew={hasTabs && tab === "newlyAdded"}
                     />
                   ))}
@@ -344,7 +404,6 @@ export function HomeFeaturedCarousel({
             </div>
           </div>
 
-          {/* Soft black edge shadows — cards fade into the frame (L/R) */}
           <div
             className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-[linear-gradient(90deg,#000_0%,rgba(0,0,0,0.92)_35%,rgba(0,0,0,0.45)_70%,transparent_100%)] sm:w-36 md:w-48 lg:w-56"
             aria-hidden

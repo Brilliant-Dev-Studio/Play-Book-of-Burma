@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { displayDurationLabel } from "@/lib/format-duration";
 import { presignGetUrl, PRESIGN_TTL } from "@/lib/server/s3";
 import { requireSession } from "@/lib/server/auth-helpers";
 import {
@@ -22,6 +23,7 @@ export default async function ProgressPage() {
           select: {
             order: true,
             durationLabel: true,
+            durationSeconds: true,
             video: {
               select: {
                 id: true,
@@ -72,6 +74,7 @@ export default async function ProgressPage() {
           select: {
             order: true,
             durationLabel: true,
+            durationSeconds: true,
             video: {
               select: {
                 id: true,
@@ -96,6 +99,7 @@ export default async function ProgressPage() {
             titleLine2: true,
             thumbnailKey: true,
             durationLabel: true,
+            durationSeconds: true,
             instructor: { select: { name: true, title: true } },
           },
         },
@@ -111,7 +115,10 @@ export default async function ProgressPage() {
         r.lesson.video.thumbnailKey,
         PRESIGN_TTL.image,
       ),
-      durationLabel: r.lesson.durationLabel,
+      durationLabel: displayDurationLabel(
+        r.lesson.durationLabel,
+        r.lesson.durationSeconds,
+      ),
       instructorName: r.lesson.video.instructor.name,
       videoTitle: r.lesson.video.titleLine1,
       lessonOrder: r.lesson.order + 1,
@@ -148,7 +155,10 @@ export default async function ProgressPage() {
           r.lesson.video.thumbnailKey,
           PRESIGN_TTL.image,
         ),
-        durationLabel: r.lesson.durationLabel,
+        durationLabel: displayDurationLabel(
+          r.lesson.durationLabel,
+          r.lesson.durationSeconds,
+        ),
         progressPct: pct,
         author: r.lesson.video.instructor.name,
         subtitle: `${r.lesson.video.titleLine1} | Lesson ${r.lesson.order + 1} of ${r.lesson.video.lessons.length}`,
@@ -164,7 +174,10 @@ export default async function ProgressPage() {
       titleLine2: r.video.titleLine2 ?? "",
       metaLine1: r.video.instructor.name,
       metaLine2: r.video.instructor.title,
-      duration: r.video.durationLabel,
+      duration: displayDurationLabel(
+        r.video.durationLabel,
+        r.video.durationSeconds,
+      ),
     })),
   );
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { displayDurationLabel } from "@/lib/format-duration";
 import { presignGetUrl, PRESIGN_TTL } from "@/lib/server/s3";
 
 // Public, unauthenticated equivalent of GET /api/podcasts — no session or
@@ -35,7 +36,7 @@ export async function GET() {
         description: r.description,
         thumbnailUrl: await presignGetUrl(r.thumbnailKey, PRESIGN_TTL.image),
         audioUrl: await presignGetUrl(r.audioKey, PRESIGN_TTL.video),
-        durationLabel: r.durationLabel,
+        durationLabel: displayDurationLabel(r.durationLabel, r.durationSeconds),
         durationSeconds: r.durationSeconds,
         season: r.season,
         publishedAt: r.publishedAt.toISOString(),

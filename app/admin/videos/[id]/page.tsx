@@ -45,6 +45,8 @@ export default async function EditVideoPage({
     titleLine1: video.titleLine1,
     titleLine2: video.titleLine2 ?? undefined,
     description: video.description,
+    sidebarTitle: video.sidebarTitle ?? undefined,
+    sidebarDescription: video.sidebarDescription ?? undefined,
     instructorId: video.instructorId,
     thumbnailKey: video.thumbnailKey,
     thumbnailUrl: await presignGetUrl(video.thumbnailKey, PRESIGN_TTL.image),
@@ -62,6 +64,7 @@ export default async function EditVideoPage({
       : undefined,
     guidebookKey: video.guidebookKey ?? undefined,
     guidebookCoverKey: video.guidebookCoverKey ?? undefined,
+    guidebookDescription: video.guidebookDescription ?? undefined,
     guidebookCoverUrl: video.guidebookCoverKey
       ? await presignGetUrl(video.guidebookCoverKey, PRESIGN_TTL.image)
       : undefined,

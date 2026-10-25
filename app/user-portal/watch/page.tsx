@@ -1,5 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import {
+  displayDurationLabel,
+  formatDurationHrsMins,
+} from "@/lib/format-duration";
 import { presignGetUrl, PRESIGN_TTL } from "@/lib/server/s3";
 import { requireSession } from "@/lib/server/auth-helpers";
 import { WatchClient, type WatchVideo, type Tab } from "./watch-client";
@@ -61,14 +65,22 @@ export default async function WatchPage({
   const progressByLesson = new Map(progress.map((p) => [p.lessonId, p.currentSeconds]));
   const noteByLesson = new Map(notes.map((n) => [n.lessonId, n.content]));
 
+  const totalSeconds = video.lessons.reduce(
+    (sum, l) => sum + Math.max(0, l.durationSeconds || 0),
+    0,
+  );
+
   const watchVideo: WatchVideo = {
     id: video.id,
     title: [video.titleLine1, video.titleLine2].filter(Boolean).join(" "),
     description: video.description,
+    sidebarTitle: video.sidebarTitle?.trim() || "",
+    sidebarDescription: video.sidebarDescription?.trim() || "",
     guidebookUrl: video.guidebookKey
       ? await presignGetUrl(video.guidebookKey, PRESIGN_TTL.image)
       : null,
     thumbnailUrl,
+    totalDurationLabel: formatDurationHrsMins(totalSeconds),
     instructor: {
       id: video.instructor.id,
       name: video.instructor.name,
@@ -80,7 +92,8 @@ export default async function WatchPage({
       id: l.id,
       order: l.order,
       title: l.title,
-      durationLabel: l.durationLabel,
+      durationLabel: displayDurationLabel(l.durationLabel, l.durationSeconds),
+      durationSeconds: l.durationSeconds,
       details: l.details,
       videoUrl: lessonUrls[i],
       bookmarked: bookmarkedSet.has(l.id),

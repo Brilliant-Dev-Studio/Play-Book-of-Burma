@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { displayDurationLabel } from "@/lib/format-duration";
 import { presignGetUrl, PRESIGN_TTL } from "@/lib/server/s3";
 import { getSession } from "@/lib/server/auth-helpers";
 import { HomeMembershipCta } from "@/app/components/home-membership-cta";
@@ -119,7 +120,7 @@ export async function VideoDetail({
                 {video.instructor.name}, {video.instructor.title}
               </p>
 
-              <p className="mt-5 text-left text-sm leading-relaxed text-white/90 sm:mt-6 sm:text-base">
+              <p className="mt-5 whitespace-pre-line text-left text-sm leading-relaxed text-white/90 sm:mt-6 sm:text-base">
                 {video.description}
               </p>
 
@@ -201,7 +202,10 @@ export async function VideoDetail({
                       {lesson.title}
                     </span>
                     <span className="shrink-0 text-sm text-white/80 sm:text-base">
-                      {lesson.durationLabel}
+                      {displayDurationLabel(
+                        lesson.durationLabel,
+                        lesson.durationSeconds,
+                      )}
                     </span>
                     <span
                       className="shrink-0 text-xs text-white/50 transition-transform duration-200 ease-out group-open:rotate-180"
@@ -232,8 +236,9 @@ export async function VideoDetail({
                 <h3 className="text-xl font-bold leading-snug tracking-tight text-white sm:text-2xl">
                   Download Learning Resources
                 </h3>
-                <p className="mt-3 text-sm leading-relaxed text-white/85 sm:text-[0.95rem]">
-                  The course guidebook for {title} by {video.instructor.name}.
+                <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-white/85 sm:text-[0.95rem]">
+                  {video.guidebookDescription?.trim() ||
+                    `The course guidebook for ${title} by ${video.instructor.name}.`}
                 </p>
                 {(() => {
                   const btnClass =

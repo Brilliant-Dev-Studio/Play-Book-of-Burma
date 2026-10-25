@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { displayDurationLabel } from "@/lib/format-duration";
 import { presignGetUrl, PRESIGN_TTL } from "@/lib/server/s3";
 import { PodcastsTable } from "@/app/admin/components/podcasts-table";
 
@@ -12,6 +13,7 @@ export default async function AdminPodcastsPage() {
       season: true,
       episodeOrder: true,
       durationLabel: true,
+      durationSeconds: true,
       popular: true,
       thumbnailKey: true,
       updatedAt: true,
@@ -24,7 +26,7 @@ export default async function AdminPodcastsPage() {
       title: p.title,
       season: p.season,
       episodeOrder: p.episodeOrder,
-      durationLabel: p.durationLabel,
+      durationLabel: displayDurationLabel(p.durationLabel, p.durationSeconds),
       popular: p.popular,
       thumbnailUrl: await presignGetUrl(p.thumbnailKey, PRESIGN_TTL.image),
       updatedAt: p.updatedAt.toISOString(),

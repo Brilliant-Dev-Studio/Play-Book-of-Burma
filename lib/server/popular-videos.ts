@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { displayDurationLabel } from "@/lib/format-duration";
 import { presignGetUrl, PRESIGN_TTL } from "@/lib/server/s3";
 
 export type PopularVideoItem = {
@@ -50,7 +51,7 @@ async function toItems(rows: VideoRow[]): Promise<PopularVideoItem[]> {
       instructorName: v.instructor.name,
       instructorTitle: v.instructor.title,
       description: v.description,
-      duration: v.durationLabel,
+      duration: displayDurationLabel(v.durationLabel, v.durationSeconds),
       durationSeconds: v.durationSeconds,
       publishedAt: v.publishedAt ? v.publishedAt.toISOString() : null,
       thumbnailUrl: await presignGetUrl(v.thumbnailKey, PRESIGN_TTL.image),

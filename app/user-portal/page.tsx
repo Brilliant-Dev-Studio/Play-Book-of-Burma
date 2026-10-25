@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { displayDurationLabel } from "@/lib/format-duration";
 import { presignGetUrl, PRESIGN_TTL } from "@/lib/server/s3";
 import { requireSession } from "@/lib/server/auth-helpers";
 import { getHomePodcastGroups } from "@/lib/server/podcasts";
@@ -20,6 +21,7 @@ export default async function UserPortalPage() {
         titleLine2: true,
         thumbnailKey: true,
         durationLabel: true,
+        durationSeconds: true,
         playbook: true,
         instructor: { select: { name: true, title: true } },
         industry: { select: { name: true } },
@@ -51,6 +53,7 @@ export default async function UserPortalPage() {
             order: true,
             title: true,
             durationLabel: true,
+            durationSeconds: true,
             video: {
               select: {
                 id: true,
@@ -81,7 +84,7 @@ export default async function UserPortalPage() {
     titleLine2: v.titleLine2 ?? "",
     instructorName: v.instructor.name,
     instructorTitle: v.instructor.title,
-    duration: v.durationLabel,
+    duration: displayDurationLabel(v.durationLabel, v.durationSeconds),
     thumbnailUrl: await presignGetUrl(v.thumbnailKey, PRESIGN_TTL.image),
     playbook: playbookLabels[v.playbook] ?? v.playbook,
     industry: v.industry.name,
@@ -104,7 +107,10 @@ export default async function UserPortalPage() {
           r.lesson.video.thumbnailKey,
           PRESIGN_TTL.image,
         ),
-        durationLabel: r.lesson.durationLabel,
+        durationLabel: displayDurationLabel(
+          r.lesson.durationLabel,
+          r.lesson.durationSeconds,
+        ),
         progressPct: pct,
         author: r.lesson.video.instructor.name,
         subtitle: `${r.lesson.video.titleLine1} | Lesson ${r.lesson.order + 1} of ${r.lesson.video.lessons.length}`,

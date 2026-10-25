@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { displayDurationLabel } from "@/lib/format-duration";
 import { presignGetUrl, PRESIGN_TTL } from "@/lib/server/s3";
 
 export type HomePodcastItem = {
@@ -40,7 +41,7 @@ export async function getUserPortalPodcasts(): Promise<UserPortalPodcastItem[]> 
       description: r.description,
       thumbnailUrl: await presignGetUrl(r.thumbnailKey, PRESIGN_TTL.image),
       audioUrl: await presignGetUrl(r.audioKey, PRESIGN_TTL.video),
-      durationLabel: r.durationLabel,
+      durationLabel: displayDurationLabel(r.durationLabel, r.durationSeconds),
       durationSeconds: r.durationSeconds,
     })),
   );
@@ -82,7 +83,7 @@ export async function getHomePodcastGroups(): Promise<HomePodcastGroup[]> {
         description: r.description,
         thumbnailUrl: await presignGetUrl(r.thumbnailKey, PRESIGN_TTL.image),
         audioUrl: await presignGetUrl(r.audioKey, PRESIGN_TTL.video),
-        durationLabel: r.durationLabel,
+        durationLabel: displayDurationLabel(r.durationLabel, r.durationSeconds),
         durationSeconds: r.durationSeconds,
       } satisfies UserPortalPodcastItem,
     })),
@@ -137,7 +138,7 @@ export async function getPodcastDetail(id: string): Promise<PodcastDetail | null
     description: row.description,
     thumbnailUrl: await presignGetUrl(row.thumbnailKey, PRESIGN_TTL.image),
     audioUrl: await presignGetUrl(row.audioKey, PRESIGN_TTL.video),
-    durationLabel: row.durationLabel,
+    durationLabel: displayDurationLabel(row.durationLabel, row.durationSeconds),
     durationSeconds: row.durationSeconds,
     chapters: row.chapters,
   };

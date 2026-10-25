@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { displayDurationLabel } from "@/lib/format-duration";
 import { presignGetUrl, PRESIGN_TTL } from "@/lib/server/s3";
 import { VideosTable } from "@/app/admin/components/videos-table";
 
@@ -15,6 +16,7 @@ export default async function AdminVideosPage() {
       titleLine2: true,
       thumbnailKey: true,
       durationLabel: true,
+      durationSeconds: true,
       status: true,
       updatedAt: true,
     },
@@ -48,7 +50,7 @@ export default async function AdminVideosPage() {
             skillset: v.skillset.name,
             titleLine1: v.titleLine1,
             titleLine2: v.titleLine2,
-            durationLabel: v.durationLabel,
+            durationLabel: displayDurationLabel(v.durationLabel, v.durationSeconds),
             status: v.status,
             updatedAt: v.updatedAt.toISOString(),
             thumbnailUrl: await presignGetUrl(v.thumbnailKey, PRESIGN_TTL.image),

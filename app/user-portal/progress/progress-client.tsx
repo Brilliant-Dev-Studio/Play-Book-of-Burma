@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useRef } from "react";
+import {
+  IconChevronLeft,
+  IconChevronRight,
+} from "@/app/components/carousel-chevrons";
 
 export type BookmarkItem = {
   videoId: string;
@@ -91,17 +95,17 @@ function ContinuesWatchingSection({ items }: { items: ContinueWatchingItem[] }) 
             type="button"
             aria-label="Scroll left"
             onClick={() => scrollByDir(-1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-lg text-white/90 transition-colors hover:bg-white/[0.12] sm:h-11 sm:w-11"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white/90 transition-colors hover:bg-white/[0.12] sm:h-11 sm:w-11"
           >
-            ‹
+            <IconChevronLeft className="h-5 w-5" />
           </button>
           <button
             type="button"
             aria-label="Scroll right"
             onClick={() => scrollByDir(1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.1] text-lg text-white transition-colors hover:bg-white/[0.16] sm:h-11 sm:w-11"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.1] text-white transition-colors hover:bg-white/[0.16] sm:h-11 sm:w-11"
           >
-            ›
+            <IconChevronRight className="h-5 w-5" />
           </button>
         </div>
       </div>
@@ -189,17 +193,17 @@ function YourBookmarksSection({ items }: { items: BookmarkItem[] }) {
             type="button"
             aria-label="Scroll left"
             onClick={() => scrollByDir(-1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-lg text-white/90 transition-colors hover:bg-white/[0.12] sm:h-11 sm:w-11"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white/90 transition-colors hover:bg-white/[0.12] sm:h-11 sm:w-11"
           >
-            ‹
+            <IconChevronLeft className="h-5 w-5" />
           </button>
           <button
             type="button"
             aria-label="Scroll right"
             onClick={() => scrollByDir(1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.1] text-lg text-white transition-colors hover:bg-white/[0.16] sm:h-11 sm:w-11"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.1] text-white transition-colors hover:bg-white/[0.16] sm:h-11 sm:w-11"
           >
-            ›
+            <IconChevronRight className="h-5 w-5" />
           </button>
         </div>
       </div>
@@ -364,17 +368,17 @@ function PlaybookAchievedSection({ items }: { items: PlaybookAchievedItem[] }) {
             type="button"
             aria-label="Scroll left"
             onClick={() => scrollByDir(-1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-lg text-white/90 transition-colors hover:bg-white/[0.12] sm:h-11 sm:w-11"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white/90 transition-colors hover:bg-white/[0.12] sm:h-11 sm:w-11"
           >
-            ‹
+            <IconChevronLeft className="h-5 w-5" />
           </button>
           <button
             type="button"
             aria-label="Scroll right"
             onClick={() => scrollByDir(1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.1] text-lg text-white transition-colors hover:bg-white/[0.16] sm:h-11 sm:w-11"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.1] text-white transition-colors hover:bg-white/[0.16] sm:h-11 sm:w-11"
           >
-            ›
+            <IconChevronRight className="h-5 w-5" />
           </button>
         </div>
       </div>

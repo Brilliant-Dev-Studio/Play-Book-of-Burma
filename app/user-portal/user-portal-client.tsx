@@ -13,6 +13,10 @@ import {
   type FilterGroup,
 } from "@/app/components/user-portal-sidebar";
 import { UserPortalPodcastSection } from "@/app/components/user-portal-podcast-section";
+import {
+  IconChevronLeft,
+  IconChevronRight,
+} from "@/app/components/carousel-chevrons";
 import type { HomePodcastGroup } from "@/lib/server/podcasts";
 
 const LOOP_COPIES = 3;
@@ -242,6 +246,7 @@ export function UserPortalClient({
 function useInfiniteScroller(itemCount: number, cardSelector: string) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const loopingRef = useRef(false);
+  const buttonScrollRef = useRef(false);
 
   const measureSetWidth = () => {
     const el = scrollerRef.current;
@@ -249,6 +254,16 @@ function useInfiniteScroller(itemCount: number, cardSelector: string) {
     const sets = el.querySelectorAll<HTMLElement>("[data-loop-set]");
     if (sets.length < 2) return sets[0]?.offsetWidth ?? 0;
     return sets[1]!.offsetLeft - sets[0]!.offsetLeft;
+  };
+
+  const measureCardStep = () => {
+    const el = scrollerRef.current;
+    if (!el) return 360;
+    const card = el.querySelector<HTMLElement>(cardSelector);
+    if (!card) return Math.min(360, el.clientWidth * 0.85);
+    const gapSource = card.parentElement ?? el;
+    const gap = Number.parseFloat(getComputedStyle(gapSource).gap || "0") || 16;
+    return card.offsetWidth + gap;
   };
 
   const setScrollLeftInstant = (left: number) => {
@@ -264,6 +279,20 @@ function useInfiniteScroller(itemCount: number, cardSelector: string) {
         loopingRef.current = false;
       });
     });
+  };
+
+  const normalizeLoopPosition = () => {
+    const el = scrollerRef.current;
+    if (!el || loopingRef.current || buttonScrollRef.current) return;
+    const setWidth = measureSetWidth();
+    if (setWidth <= 0) return;
+    if (el.scrollLeft >= setWidth * 2 - 2) {
+      setScrollLeftInstant(el.scrollLeft - setWidth);
+      return;
+    }
+    if (el.scrollLeft <= 2) {
+      setScrollLeftInstant(el.scrollLeft + setWidth);
+    }
   };
 
   const resetToMiddleStart = () => {
@@ -284,19 +313,7 @@ function useInfiniteScroller(itemCount: number, cardSelector: string) {
     const el = scrollerRef.current;
     if (!el || itemCount === 0) return;
 
-    const onScroll = () => {
-      if (loopingRef.current) return;
-      const setWidth = measureSetWidth();
-      if (setWidth <= 0) return;
-      if (el.scrollLeft >= setWidth * 2 - 2) {
-        setScrollLeftInstant(el.scrollLeft - setWidth);
-        return;
-      }
-      if (el.scrollLeft <= 2) {
-        setScrollLeftInstant(el.scrollLeft + setWidth);
-      }
-    };
-
+    const onScroll = () => normalizeLoopPosition();
     el.addEventListener("scroll", onScroll, { passive: true });
     const onResize = () => resetToMiddleStart();
     window.addEventListener("resize", onResize);
@@ -311,13 +328,39 @@ function useInfiniteScroller(itemCount: number, cardSelector: string) {
     (dir: -1 | 1) => {
       const el = scrollerRef.current;
       if (!el) return;
-      const card = el.querySelector<HTMLElement>(cardSelector);
-      const gapSource = card?.parentElement ?? el;
-      const gap = Number.parseFloat(getComputedStyle(gapSource).gap || "0");
-      const step = card
-        ? card.offsetWidth + gap
-        : Math.min(360, el.clientWidth * 0.85);
-      el.scrollBy({ left: dir * step, behavior: "smooth" });
+
+      const setWidth = measureSetWidth();
+      if (setWidth > 0 && el.scrollLeft < 4) {
+        setScrollLeftInstant(setWidth);
+      }
+
+      const step = measureCardStep();
+      const from = el.scrollLeft < 4 && setWidth > 0 ? setWidth : el.scrollLeft;
+      const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+      const target = Math.max(0, Math.min(maxScroll, from + dir * step));
+
+      if (Math.abs(target - el.scrollLeft) < 1) {
+        if (setWidth > 0) {
+          const wrapped = dir === 1 ? from - setWidth : from + setWidth;
+          setScrollLeftInstant(Math.max(0, Math.min(maxScroll, wrapped)));
+          window.requestAnimationFrame(() => scrollByDir(dir));
+        }
+        return;
+      }
+
+      buttonScrollRef.current = true;
+      el.scrollTo({ left: target, behavior: "smooth" });
+
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        buttonScrollRef.current = false;
+        normalizeLoopPosition();
+        el.removeEventListener("scrollend", finish);
+      };
+      el.addEventListener("scrollend", finish, { once: true });
+      window.setTimeout(finish, 500);
     },
     [cardSelector],
   );
@@ -347,17 +390,17 @@ function NewlyAddedSection({ items }: { items: NewlyAddedItem[] }) {
             type="button"
             aria-label="Scroll left"
             onClick={() => scrollByDir(-1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/6 text-lg text-white/90 transition-colors hover:bg-white/12 sm:h-11 sm:w-11"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/6 text-white/90 transition-colors hover:bg-white/12 sm:h-11 sm:w-11"
           >
-            ‹
+            <IconChevronLeft className="h-5 w-5" />
           </button>
           <button
             type="button"
             aria-label="Scroll right"
             onClick={() => scrollByDir(1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/10 text-lg text-white transition-colors hover:bg-white/16 sm:h-11 sm:w-11"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/10 text-white transition-colors hover:bg-white/16 sm:h-11 sm:w-11"
           >
-            ›
+            <IconChevronRight className="h-5 w-5" />
           </button>
         </div>
       </div>
@@ -370,7 +413,7 @@ function NewlyAddedSection({ items }: { items: NewlyAddedItem[] }) {
         <div className="relative">
           <div
             ref={scrollerRef}
-            className="overflow-x-auto pb-2 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
+            className="overflow-x-auto overscroll-x-contain touch-pan-x pb-2 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
           >
             <div className="flex w-max gap-4 pr-4 sm:gap-5 sm:pr-6 lg:pr-10">
               {Array.from({ length: LOOP_COPIES }, (_, copy) => (
@@ -416,17 +459,17 @@ function WatchAllPlaybooksSection({ items }: { items: NewlyAddedItem[] }) {
               type="button"
               aria-label="Scroll left"
               onClick={() => scrollByDir(-1)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/6 text-lg text-white/90 transition-colors hover:bg-white/12 sm:h-11 sm:w-11"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/6 text-white/90 transition-colors hover:bg-white/12 sm:h-11 sm:w-11"
             >
-              ‹
+              <IconChevronLeft className="h-5 w-5" />
             </button>
             <button
               type="button"
               aria-label="Scroll right"
               onClick={() => scrollByDir(1)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/10 text-lg text-white transition-colors hover:bg-white/16 sm:h-11 sm:w-11"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/10 text-white transition-colors hover:bg-white/16 sm:h-11 sm:w-11"
             >
-              ›
+              <IconChevronRight className="h-5 w-5" />
             </button>
           </div>
         ) : null}
@@ -440,7 +483,7 @@ function WatchAllPlaybooksSection({ items }: { items: NewlyAddedItem[] }) {
         <div className="relative">
           <div
             ref={scrollerRef}
-            className="overflow-x-auto pb-2 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
+            className="overflow-x-auto overscroll-x-contain touch-pan-x pb-2 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
           >
             <div className="flex w-max gap-4 pr-4 sm:gap-5 sm:pr-6 lg:pr-10">
               {Array.from({ length: LOOP_COPIES }, (_, copy) => (
@@ -604,17 +647,17 @@ function ContinuesWatchingSection({
             type="button"
             aria-label="Scroll left"
             onClick={() => scrollByDir(-1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/6 text-lg text-white/90 transition-colors hover:bg-white/12 sm:h-11 sm:w-11"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/6 text-white/90 transition-colors hover:bg-white/12 sm:h-11 sm:w-11"
           >
-            ‹
+            <IconChevronLeft className="h-5 w-5" />
           </button>
           <button
             type="button"
             aria-label="Scroll right"
             onClick={() => scrollByDir(1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/10 text-lg text-white transition-colors hover:bg-white/16 sm:h-11 sm:w-11"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/10 text-white transition-colors hover:bg-white/16 sm:h-11 sm:w-11"
           >
-            ›
+            <IconChevronRight className="h-5 w-5" />
           </button>
         </div>
       </div>
@@ -627,7 +670,7 @@ function ContinuesWatchingSection({
         <div className="relative">
           <div
             ref={scrollerRef}
-            className="overflow-x-auto pb-2 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
+            className="overflow-x-auto overscroll-x-contain touch-pan-x pb-2 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
           >
             <div className="flex w-max gap-4 pr-4 sm:gap-5 sm:pr-6 lg:pr-10">
               {Array.from({ length: LOOP_COPIES }, (_, copy) => (
