@@ -14,7 +14,7 @@ function SkipIcon({ direction }: { direction: "back" | "forward" }) {
       strokeWidth={1.7}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="h-5 w-5"
+      className="h-4 w-4"
       aria-hidden
     >
       {direction === "back" ? (
@@ -50,7 +50,6 @@ export function FloatingPodcastPlayer() {
 
   const totalSec = durationSec > 0 ? durationSec : current.durationSeconds || 0;
   const pct = totalSec > 0 ? Math.min(100, (currentSec / totalSec) * 100) : 0;
-  const timeLine = `${formatPlayerClock(currentSec)} / ${formatPlayerClock(totalSec)}`;
 
   function seekFromBar(e: React.MouseEvent<HTMLDivElement>) {
     if (!totalSec) return;
@@ -61,38 +60,38 @@ export function FloatingPodcastPlayer() {
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-zinc-950/95 shadow-[0_-12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md"
+      className="pointer-events-none fixed bottom-5 left-4 right-4 z-50 flex justify-center sm:left-auto sm:right-6 sm:justify-end"
       role="region"
       aria-label="Now playing"
     >
-      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-6 sm:py-3.5 lg:px-8">
-        <div className="flex min-w-0 flex-1 items-center gap-3 sm:max-w-[min(100%,320px)] lg:max-w-[380px]">
+      <div className="pointer-events-auto w-full max-w-[380px] overflow-hidden rounded-2xl border border-white/15 bg-zinc-950/95 shadow-[0_20px_56px_rgba(0,0,0,0.55)] backdrop-blur-md sm:max-w-[400px]">
+        <div className="flex items-center gap-2.5 px-3 py-2.5 sm:gap-3 sm:px-3.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={current.thumbnailUrl}
             alt=""
-            className="h-14 w-14 shrink-0 rounded-xl object-cover ring-1 ring-white/10 sm:h-16 sm:w-16"
+            className="h-11 w-11 shrink-0 rounded-lg object-cover ring-1 ring-white/10"
           />
           <div className="min-w-0 flex-1">
             <Link
               href={`/user-portal/audio/${current.id}`}
-              className="line-clamp-2 text-sm font-semibold leading-snug text-white transition-colors hover:text-coral sm:text-[15px]"
+              className="block truncate text-[13px] font-semibold text-white hover:text-coral sm:text-sm"
             >
               {current.title}
             </Link>
-            <p className="mt-0.5 truncate text-xs tabular-nums text-white/55">{timeLine}</p>
+            <p className="truncate text-[10px] tabular-nums text-white/55 sm:text-[11px]">
+              {formatPlayerClock(currentSec)} / {formatPlayerClock(totalSec)}
+            </p>
           </div>
-        </div>
 
-        <div className="flex flex-1 items-center justify-center gap-3 sm:gap-4">
           <button
             type="button"
             onClick={() => skip(-15)}
             aria-label="Rewind 15 seconds"
-            className="relative shrink-0 text-white/75 transition-colors hover:text-white"
+            className="relative hidden shrink-0 text-white/70 hover:text-white sm:block"
           >
             <SkipIcon direction="back" />
-            <span className="absolute inset-0 flex items-center justify-center pt-0.5 text-[7px] font-bold">
+            <span className="absolute inset-0 flex items-center justify-center pt-0.5 text-[6px] font-bold">
               15
             </span>
           </button>
@@ -101,9 +100,9 @@ export function FloatingPodcastPlayer() {
             type="button"
             onClick={toggle}
             aria-label={isPlaying ? "Pause" : "Play"}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-coral text-black shadow-lg transition-transform hover:scale-105 sm:h-11 sm:w-11"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-coral text-black shadow-md"
           >
-            <span className="text-lg leading-none">
+            <span className="text-sm leading-none">
               {isPlaying ? "❚❚" : <span className="ml-0.5">▶</span>}
             </span>
           </button>
@@ -112,55 +111,42 @@ export function FloatingPodcastPlayer() {
             type="button"
             onClick={() => skip(30)}
             aria-label="Forward 30 seconds"
-            className="relative shrink-0 text-white/75 transition-colors hover:text-white"
+            className="relative hidden shrink-0 text-white/70 hover:text-white sm:block"
           >
             <SkipIcon direction="forward" />
-            <span className="absolute inset-0 flex items-center justify-center pt-0.5 text-[7px] font-bold">
+            <span className="absolute inset-0 flex items-center justify-center pt-0.5 text-[6px] font-bold">
               30
             </span>
           </button>
-        </div>
-
-        <div className="flex min-w-0 flex-1 items-center gap-3 sm:max-w-md">
-          <span className="hidden shrink-0 text-[11px] tabular-nums text-white/50 sm:inline">
-            {formatPlayerClock(currentSec)}
-          </span>
-          <div
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(pct)}
-            onClick={seekFromBar}
-            className="h-1.5 min-w-0 flex-1 cursor-pointer overflow-hidden rounded-full bg-white/15"
-          >
-            <div
-              className="h-full rounded-full bg-coral transition-[width]"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-          <span className="hidden shrink-0 text-[11px] tabular-nums text-white/50 sm:inline">
-            {formatPlayerClock(totalSec)}
-          </span>
 
           <button
             type="button"
             onClick={close}
             aria-label="Close player"
-            className="ml-auto shrink-0 rounded-md p-1.5 text-white/45 transition-colors hover:bg-white/10 hover:text-white sm:ml-0"
+            className="shrink-0 p-1 text-white/45 hover:text-white"
           >
             <svg
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
               className="h-4 w-4"
               aria-hidden
             >
-              <path d="M18 6 6 18M6 6l12 12" />
+              <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" />
             </svg>
           </button>
+        </div>
+
+        <div
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(pct)}
+          onClick={seekFromBar}
+          className="h-1 cursor-pointer bg-white/10"
+        >
+          <div className="h-full bg-coral transition-[width]" style={{ width: `${pct}%` }} />
         </div>
       </div>
     </div>

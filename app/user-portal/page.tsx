@@ -3,6 +3,7 @@ import { displayDurationLabel } from "@/lib/format-duration";
 import { presignGetUrl, PRESIGN_TTL } from "@/lib/server/s3";
 import { requireSession } from "@/lib/server/auth-helpers";
 import { getHomePodcastGroups } from "@/lib/server/podcasts";
+import { getUserPortalFilterGroups } from "@/lib/server/user-portal-filters";
 import {
   UserPortalClient,
   type ContinueWatchingItem,
@@ -11,7 +12,7 @@ import {
 
 export default async function UserPortalPage() {
   const session = await requireSession();
-  const [videos, industries, skillsets, progressRows, podcasts] = await Promise.all([
+  const [videos, filterGroups, progressRows, podcasts] = await Promise.all([
     prisma.video.findMany({
       where: { status: "PUBLISHED" },
       orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
@@ -28,14 +29,7 @@ export default async function UserPortalPage() {
         skillset: { select: { name: true } },
       },
     }),
-    prisma.industry.findMany({
-      orderBy: [{ order: "asc" }, { name: "asc" }],
-      select: { name: true },
-    }),
-    prisma.skillset.findMany({
-      orderBy: [{ order: "asc" }, { name: "asc" }],
-      select: { name: true },
-    }),
+    getUserPortalFilterGroups(),
     prisma.watchProgress.findMany({
       where: {
         userId: session.uid,
@@ -69,12 +63,6 @@ export default async function UserPortalPage() {
     }),
     getHomePodcastGroups(),
   ]);
-
-  const filterGroups = [
-    { heading: "Playbook", options: ["CEO Playbook"] },
-    { heading: "Industry", options: industries.map((i) => i.name) },
-    { heading: "Skillsets", options: skillsets.map((s) => s.name) },
-  ];
 
   const playbookLabels: Record<string, string> = { CEO_PLAYBOOK: "CEO Playbook" };
 
