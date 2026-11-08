@@ -16,6 +16,19 @@ export function formatDurationHrsMins(totalSeconds: number): string {
 }
 
 /** Prefer seconds; otherwise strip any trailing seconds from a stored label. */
+/** Compact clock for players (1:05:04 or 24:30) — avoids wordy labels wrapping in tight UI. */
+export function formatPlayerClock(totalSeconds: number): string {
+  if (!Number.isFinite(totalSeconds) || totalSeconds < 0) return "0:00";
+  const sec = Math.floor(totalSeconds);
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  if (h > 0) {
+    return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  }
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
 export function displayDurationLabel(
   label: string,
   durationSeconds?: number | null,

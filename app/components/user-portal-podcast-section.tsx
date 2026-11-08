@@ -2,17 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { formatPlayerClock } from "@/lib/format-duration";
 import type { HomePodcastGroup, UserPortalPodcastItem } from "@/lib/server/podcasts";
 import { usePodcastPlayer } from "@/app/user-portal/podcast-player-context";
-
-function formatTime(sec: number): string {
-  if (!Number.isFinite(sec) || sec <= 0) return "0:00";
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = Math.floor(sec % 60);
-  if (h > 0) return `${h} Hr ${m} min`;
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
 
 export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
   const player = usePodcastPlayer();
@@ -55,9 +47,11 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
   }
 
   const pct = durationSec > 0 ? Math.min(100, (currentSec / durationSec) * 100) : 0;
-  const timeLabel = isCurrent && (isPlaying || currentSec > 0)
-    ? `${formatTime(currentSec)} / ${item.durationLabel || formatTime(durationSec)}`
-    : item.durationLabel || formatTime(durationSec);
+  const totalSecForLabel = durationSec > 0 ? durationSec : item.durationSeconds || 0;
+  const timeLabel =
+    isCurrent && (isPlaying || currentSec > 0)
+      ? `${formatPlayerClock(currentSec)} / ${formatPlayerClock(totalSecForLabel)}`
+      : formatPlayerClock(totalSecForLabel);
 
   return (
     <article className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-7">

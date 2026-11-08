@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { formatPlayerClock } from "@/lib/format-duration";
 import type { PodcastDetail } from "@/lib/server/podcasts";
 import { splitMyanmarParagraphs } from "@/lib/myanmar-text";
 import { usePodcastPlayer } from "@/app/user-portal/podcast-player-context";
@@ -109,17 +110,11 @@ export function AudioDetailClient({
     player.seekTo(ratio * durationSec);
   }
 
-  function formatListeningTime(sec: number) {
-    if (!Number.isFinite(sec) || sec < 0) return "0:00";
-    const m = Math.floor(sec / 60);
-    const s = Math.floor(sec % 60);
-    return `${m}:${s.toString().padStart(2, "0")}`;
-  }
-
+  const totalForDisplay = durationSec > 0 ? durationSec : podcast.durationSeconds;
   const timeLabel =
     isCurrent && (isPlaying || player.currentSec > 0)
-      ? `${formatListeningTime(player.currentSec)} / ${podcast.durationLabel}`
-      : podcast.durationLabel;
+      ? `${formatPlayerClock(player.currentSec)} / ${formatPlayerClock(totalForDisplay)}`
+      : formatPlayerClock(totalForDisplay);
 
   const tabBody =
     activeTab === "Biography" ? (
