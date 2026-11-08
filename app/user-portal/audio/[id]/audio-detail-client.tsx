@@ -88,10 +88,8 @@ export function AudioDetailClient({
   const biographyLines = podcast.biographyParagraphs ?? [];
 
   useEffect(() => {
-    if (player.current?.id !== podcast.id) {
-      resumeAppliedRef.current = false;
-      player.playItem(podcast);
-    }
+    resumeAppliedRef.current = false;
+    player.loadEpisode(podcast);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only when podcast id changes
   }, [podcast.id]);
 
@@ -101,7 +99,7 @@ export function AudioDetailClient({
     if (durationSec <= 0) return;
     player.seekTo(resumeSeconds);
     resumeAppliedRef.current = true;
-  }, [resumeSeconds, player, podcast.id, durationSec, player.current?.id]);
+  }, [resumeSeconds, player, podcast.id, durationSec, player.current?.id, player.durationSec]);
 
   function seekFromBar(e: React.MouseEvent<HTMLDivElement>) {
     if (!isCurrent || !durationSec) return;

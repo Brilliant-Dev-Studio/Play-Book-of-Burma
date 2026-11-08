@@ -26,6 +26,7 @@ export default async function UserPortalLibraryPage() {
           heading="Play book of Burma"
           variant="embedded"
           showSeeAll={false}
+          detailBasePath="/user-portal/click-video-detail"
         />
         <HomePodcastSection groups={podcastGroups} variant="embedded" withPlayer />
       </main>

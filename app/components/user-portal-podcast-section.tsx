@@ -5,7 +5,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { formatPlayerClock } from "@/lib/format-duration";
 import type { HomePodcastGroup, UserPortalPodcastItem } from "@/lib/server/podcasts";
 import { usePodcastPlayer } from "@/app/user-portal/podcast-player-context";
-
 export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
   const player = usePodcastPlayer();
   const isCurrent = player.current?.id === item.id;

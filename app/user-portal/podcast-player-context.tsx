@@ -13,6 +13,29 @@ import { savePodcastProgress } from "@/app/user-portal/podcast-actions";
 
 const SAVE_INTERVAL_SEC = 10;
 
+function sameAudioSrc(currentSrc: string, nextSrc: string) {
+  if (!currentSrc) return false;
+  try {
+    return (
+      new URL(currentSrc, window.location.href).href ===
+      new URL(nextSrc, window.location.href).href
+    );
+  } catch {
+    return currentSrc === nextSrc;
+  }
+}
+
+function safePlay(el: HTMLAudioElement) {
+  const result = el.play();
+  if (result === undefined) return;
+  void result.catch((err: unknown) => {
+    if (err instanceof DOMException) {
+      // Autoplay blocked, or src changed mid-load (React strict mode / navigation).
+      if (err.name === "NotAllowedError" || err.name === "AbortError") return;
+    }
+  });
+}
+
 type PodcastPlayerState = {
   current: UserPortalPodcastItem | null;
   isPlaying: boolean;
@@ -21,6 +44,8 @@ type PodcastPlayerState = {
   rate: number;
   volume: number;
   muted: boolean;
+  /** Load episode into the player without starting playback (detail page). */
+  loadEpisode: (item: UserPortalPodcastItem) => void;
   playItem: (item: UserPortalPodcastItem) => void;
   toggle: () => void;
   seekTo: (sec: number) => void;
@@ -76,38 +101,67 @@ export function PodcastPlayerProvider({ children }: { children: React.ReactNode 
     el.addEventListener("ended", onPause);
     el.addEventListener("timeupdate", onTime);
     el.addEventListener("loadedmetadata", onMeta);
+    const onAbort = () => {};
+    el.addEventListener("abort", onAbort);
     return () => {
       el.removeEventListener("play", onPlay);
       el.removeEventListener("pause", onPause);
       el.removeEventListener("ended", onPause);
       el.removeEventListener("timeupdate", onTime);
       el.removeEventListener("loadedmetadata", onMeta);
+      el.removeEventListener("abort", onAbort);
     };
   }, [durationSec, saveProgress]);
 
-  const playItem = useCallback((item: UserPortalPodcastItem) => {
-    const el = audioRef.current;
-    if (!el) return;
-    if (currentIdRef.current === item.id) {
-      if (el.paused) void el.play();
-      else el.pause();
-      return;
-    }
-    currentIdRef.current = item.id;
-    lastSavedSecRef.current = -SAVE_INTERVAL_SEC;
-    setCurrent(item);
-    setCurrentSec(0);
-    setDurationSec(item.durationSeconds || 0);
-    el.src = item.audioUrl;
-    el.playbackRate = rate;
-    el.volume = muted ? 0 : volume;
-    void el.play();
-  }, [rate, volume, muted]);
+  const loadEpisode = useCallback(
+    (item: UserPortalPodcastItem) => {
+      const el = audioRef.current;
+      if (!el) return;
+
+      setCurrent(item);
+      setDurationSec(item.durationSeconds || 0);
+      el.playbackRate = rate;
+      el.volume = muted ? 0 : volume;
+      el.muted = muted;
+
+      if (currentIdRef.current !== item.id) {
+        currentIdRef.current = item.id;
+        lastSavedSecRef.current = -SAVE_INTERVAL_SEC;
+        setCurrentSec(0);
+        el.pause();
+        el.src = item.audioUrl;
+        el.load();
+        return;
+      }
+
+      if (!sameAudioSrc(el.src, item.audioUrl)) {
+        el.pause();
+        el.src = item.audioUrl;
+        el.load();
+      }
+    },
+    [rate, volume, muted],
+  );
+
+  const playItem = useCallback(
+    (item: UserPortalPodcastItem) => {
+      const el = audioRef.current;
+      if (!el) return;
+      if (currentIdRef.current === item.id) {
+        if (el.paused) safePlay(el);
+        else el.pause();
+        return;
+      }
+      loadEpisode(item);
+      safePlay(el);
+    },
+    [loadEpisode],
+  );
 
   const toggle = useCallback(() => {
     const el = audioRef.current;
     if (!el || !current) return;
-    if (el.paused) void el.play();
+    if (el.paused) safePlay(el);
     else el.pause();
   }, [current]);
 
@@ -176,6 +230,7 @@ export function PodcastPlayerProvider({ children }: { children: React.ReactNode 
         rate,
         volume,
         muted,
+        loadEpisode,
         playItem,
         toggle,
         seekTo,

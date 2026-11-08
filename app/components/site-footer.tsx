@@ -15,6 +15,11 @@ import {
 import appStoreBadge from "@/app/assets/download-on-the-app-store-apple-logo-svgrepo-com.png";
 import googlePlayBadge from "@/app/assets/google-play-badge-logo-svgrepo-com.png";
 
+const APP_STORE_URL =
+  "https://apps.apple.com/sg/app/playbookofburma/id6802000866";
+const GOOGLE_PLAY_URL =
+  "https://play.google.com/store/apps/details?id=com.playbookofburma.app&hl=en";
+
 function FooterIconBadge({
   icon: Icon,
   srLabel,
@@ -67,12 +72,22 @@ export function SiteFooter() {
               Download
             </h3>
             <div className="mt-4 grid gap-3 sm:mt-6 sm:gap-4">
-              <Link href="#" className="inline-flex w-fit">
+              <a
+                href={APP_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex w-fit transition-opacity hover:opacity-90"
+              >
                 <StoreBadge src={appStoreBadge} alt="Download on the App Store" />
-              </Link>
-              <Link href="#" className="inline-flex w-fit">
+              </a>
+              <a
+                href={GOOGLE_PLAY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex w-fit transition-opacity hover:opacity-90"
+              >
                 <StoreBadge src={googlePlayBadge} alt="Get it on Google Play" />
-              </Link>
+              </a>
             </div>
           </section>
 

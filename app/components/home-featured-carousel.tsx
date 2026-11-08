@@ -6,7 +6,6 @@ import {
   IconChevronLeft,
   IconChevronRight,
 } from "@/app/components/carousel-chevrons";
-
 const LOOP_COPIES = 3;
 
 export type FeaturedItem = {
@@ -19,16 +18,22 @@ export type FeaturedItem = {
   thumbnailUrl: string;
 };
 
+function videoDetailHref(videoId: string, detailBasePath: string) {
+  return `${detailBasePath}?video=${videoId}`;
+}
+
 function FeaturedVideoCard({
   item,
   isNew,
+  detailBasePath,
 }: {
   item: FeaturedItem;
   isNew?: boolean;
+  detailBasePath: string;
 }) {
   return (
     <Link
-      href={`/click-video-detail?video=${item.id}`}
+      href={videoDetailHref(item.id, detailBasePath)}
       data-card
       draggable={false}
       className="group flex w-[314px] shrink-0 flex-col overflow-hidden rounded-2xl border-2 border-white/30 bg-black outline-none transition-colors hover:border-white/45 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[354px] md:w-[362px]"
@@ -112,6 +117,7 @@ export function HomeFeaturedCarousel({
   variant = "default",
   showSeeAll = true,
   newlyAddedViewAllHref,
+  detailBasePath = "/click-video-detail",
 }: {
   items: FeaturedItem[];
   newlyAddedItems?: FeaturedItem[];
@@ -119,6 +125,8 @@ export function HomeFeaturedCarousel({
   variant?: "default" | "embedded";
   showSeeAll?: boolean;
   newlyAddedViewAllHref?: string;
+  /** Base path for card links — e.g. `/user-portal/click-video-detail`. */
+  detailBasePath?: string;
 }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const ignoreScrollRef = useRef(false);
@@ -213,6 +221,8 @@ export function HomeFeaturedCarousel({
   /** Cursor drag swipe */
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+    if (target.closest("a[data-card]")) return;
     const root = scrollerRef.current;
     if (!root) return;
     suppressClickRef.current = false;
@@ -397,6 +407,7 @@ export function HomeFeaturedCarousel({
                       key={`${copy}-${item.id}`}
                       item={item}
                       isNew={hasTabs && tab === "newlyAdded"}
+                      detailBasePath={detailBasePath}
                     />
                   ))}
                 </div>
