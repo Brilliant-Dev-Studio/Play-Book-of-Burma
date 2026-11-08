@@ -43,4 +43,6 @@ There are no tests.
 
 **Remote images:** Only `i.pinimg.com` is allow-listed in `next.config.ts`. Add other domains there before using `next/image` with external URLs.
 
+**Blur placeholders:** `next/image` uses `placeholder="blur"`. Static imports get blur at build time; `/public` paths need `blurDataURL` via [`imageBlurPlaceholder`](lib/image-placeholder.ts) and per-hero data in [`lib/image-blur-data.ts`](lib/image-blur-data.ts). Regenerate after hero JPG changes: `npm run generate:image-blur`.
+
 **`SiteHeader`** is a client component with scroll-aware fixed positioning (hides on scroll-down, shows on scroll-up) and a mobile hamburger menu. Nav items are defined as a `const` array at the top of [app/components/site-header.tsx](app/components/site-header.tsx).

@@ -19,6 +19,7 @@ export function FullScreenLoader() {
           alt="Playbook of Burma"
           className="h-12 w-auto opacity-90"
           priority
+          placeholder="blur"
         />
 
         {/* Spinner */}

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { HomePodcastGroup, UserPortalPodcastItem } from "@/lib/server/podcasts";
 import { usePodcastPlayer } from "@/app/user-portal/podcast-player-context";
@@ -62,15 +63,25 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
     <article className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-7">
       <div className="group w-full max-w-87.5 shrink-0 rounded-2xl border border-white/25 p-1.25 shadow-[0_14px_44px_rgba(0,0,0,0.45)] transition-colors hover:border-white/40 sm:w-87.5">
         <div className="relative aspect-360/230 w-full overflow-hidden rounded-xl bg-white/5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={item.thumbnailUrl}
-            alt=""
-            className="absolute inset-0 h-full w-full rounded-xl object-cover object-center opacity-90 transition-transform duration-500 ease-out origin-center scale-[1.18] group-hover:scale-[1.26] group-hover:opacity-100 motion-reduce:scale-[1.18] motion-reduce:transition-none motion-reduce:group-hover:scale-[1.18]"
-          />
+          <Link
+            href={`/user-portal/audio/${item.id}`}
+            className="absolute inset-0 z-0 block"
+            aria-label={`Open ${item.title}`}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={item.thumbnailUrl}
+              alt=""
+              className="absolute inset-0 h-full w-full rounded-xl object-cover object-center opacity-90 transition-transform duration-500 ease-out origin-center scale-[1.18] group-hover:scale-[1.26] group-hover:opacity-100 motion-reduce:scale-[1.18] motion-reduce:transition-none motion-reduce:group-hover:scale-[1.18]"
+            />
+          </Link>
           <button
             type="button"
-            onClick={toggle}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggle();
+            }}
             aria-label={isPlaying ? "Pause" : "Play"}
             className={`absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center scale-50 opacity-0 outline-none transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-100 group-hover:opacity-50 focus-visible:scale-100 focus-visible:opacity-50 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-transparent motion-reduce:scale-100 motion-reduce:opacity-50 motion-reduce:transition-none ${isPlaying ? "scale-100! opacity-50!" : ""}`}
           >
@@ -87,9 +98,12 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col pt-0 sm:pt-2">
-        <h3 className="text-xl font-semibold tracking-tight text-white">
+        <Link
+          href={`/user-portal/audio/${item.id}`}
+          className="text-xl font-semibold tracking-tight text-white transition-colors hover:text-coral focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
+        >
           {item.title}
-        </h3>
+        </Link>
         <p
           ref={descRef}
           className={`mt-2 max-w-[80ch] font-yati text-base leading-relaxed text-white/85 ${

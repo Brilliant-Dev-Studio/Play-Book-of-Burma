@@ -136,6 +136,7 @@ export function PortalHeader() {
               priority
               className="h-12 w-auto sm:h-13 md:h-14 lg:h-15"
               sizes="(max-width: 768px) 240px, 320px"
+              placeholder="blur"
             />
           </Link>
 

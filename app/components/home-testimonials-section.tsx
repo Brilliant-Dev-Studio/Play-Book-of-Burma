@@ -53,6 +53,7 @@ function TestimonialCard({
           width={100}
           height={100}
           className="h-full w-full rounded-[100%] object-cover shadow-[0_16px_32px_rgba(0,0,0,0.65)]"
+          placeholder="blur"
         />
       </div>
 

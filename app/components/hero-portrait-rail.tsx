@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { imageBlurPlaceholder } from "@/lib/image-placeholder";
 
 /** Pre-cropped so shoulders share one horizontal band (~40% from top). */
 export const HERO_PORTRAITS = [
@@ -26,6 +27,7 @@ function PortraitCard({ src, priority }: { src: string; priority?: boolean }) {
         sizes="(max-width: 768px) 140px, 240px"
         draggable={false}
         priority={priority}
+        {...imageBlurPlaceholder(src)}
       />
       <div
         className="pointer-events-none absolute inset-0 bg-black/40"

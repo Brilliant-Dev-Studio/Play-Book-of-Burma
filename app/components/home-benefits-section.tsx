@@ -49,6 +49,7 @@ export function HomeBenefitsSection() {
                   fill
                   className="rounded-2xl object-contain object-center opacity-95"
                   sizes="(max-width: 768px) 95vw, 33vw"
+                  placeholder="blur"
                 />
                 <div
                   className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.15)_0%,rgba(0,0,0,0.65)_100%)]"

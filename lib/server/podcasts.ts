@@ -114,6 +114,19 @@ export type PodcastDetail = UserPortalPodcastItem & {
   biographyParagraphs: string[];
 };
 
+export async function getPodcastResumeSeconds(
+  userId: string,
+  podcastId: string,
+): Promise<number | null> {
+  const row = await prisma.podcastProgress.findUnique({
+    where: { userId_podcastId: { userId, podcastId } },
+    select: { currentSeconds: true, completedAt: true },
+  });
+  if (!row || row.completedAt) return null;
+  if (row.currentSeconds <= 0) return null;
+  return row.currentSeconds;
+}
+
 export async function getPodcastDetail(id: string): Promise<PodcastDetail | null> {
   const row = await prisma.podcast.findUnique({
     where: { id },

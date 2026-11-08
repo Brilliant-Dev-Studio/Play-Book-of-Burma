@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePodcastPlayer } from "./podcast-player-context";
 
 function formatTime(sec: number): string {
@@ -31,7 +32,12 @@ export function FloatingPodcastPlayer() {
           className="h-12 w-12 shrink-0 rounded-lg object-cover"
         />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-white">{current.title}</p>
+          <Link
+            href={`/user-portal/audio/${current.id}`}
+            className="truncate text-sm font-semibold text-white hover:text-coral"
+          >
+            {current.title}
+          </Link>
           <p className="text-[11px] tabular-nums text-white/55">
             {formatTime(currentSec)} / {current.durationLabel || formatTime(durationSec)}
           </p>
