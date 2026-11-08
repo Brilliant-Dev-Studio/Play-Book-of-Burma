@@ -111,6 +111,7 @@ export type PodcastChapterItem = { label: string; seconds: number };
 
 export type PodcastDetail = UserPortalPodcastItem & {
   chapters: PodcastChapterItem[];
+  biographyParagraphs: string[];
 };
 
 export async function getPodcastDetail(id: string): Promise<PodcastDetail | null> {
@@ -124,6 +125,7 @@ export async function getPodcastDetail(id: string): Promise<PodcastDetail | null
       audioKey: true,
       durationLabel: true,
       durationSeconds: true,
+      biographyParagraphs: true,
       chapters: {
         orderBy: { order: "asc" },
         select: { label: true, seconds: true },
@@ -141,5 +143,6 @@ export async function getPodcastDetail(id: string): Promise<PodcastDetail | null
     durationLabel: displayDurationLabel(row.durationLabel, row.durationSeconds),
     durationSeconds: row.durationSeconds,
     chapters: row.chapters,
+    biographyParagraphs: row.biographyParagraphs ?? [],
   };
 }

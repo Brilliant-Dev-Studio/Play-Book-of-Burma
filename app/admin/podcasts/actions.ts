@@ -12,6 +12,7 @@ export type PodcastFormInput = {
   id?: string;
   title: string;
   description: string;
+  biographyParagraphs: string[];
   audioKey: string;
   thumbnailKey: string;
   season: number;
@@ -32,6 +33,9 @@ function clean(input: PodcastFormInput): PodcastFormInput {
     ...input,
     title: input.title.trim(),
     description: input.description.trim(),
+    biographyParagraphs: (input.biographyParagraphs ?? [])
+      .map((p) => p.trim())
+      .filter(Boolean),
     audioKey: input.audioKey.trim(),
     thumbnailKey: input.thumbnailKey.trim(),
     durationLabel: input.durationLabel.trim(),
@@ -70,6 +74,7 @@ export async function savePodcast(input: PodcastFormInput): Promise<Result> {
   const data = {
     title: cleaned.title,
     description: cleaned.description,
+    biographyParagraphs: cleaned.biographyParagraphs,
     audioKey: cleaned.audioKey,
     thumbnailKey: cleaned.thumbnailKey,
     season: cleaned.season,

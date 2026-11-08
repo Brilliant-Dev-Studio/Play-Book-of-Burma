@@ -213,7 +213,9 @@ Member. Episode detail, adds ordered `chapters: [{ label, seconds }]`
 (superadmin-entered timestamp markers — tap one to seek the audio player).
 Full detail + examples: [podcast-detail.md](podcast-detail.md).
 
-`200 { podcast: { id, title, description, thumbnailUrl, audioUrl, durationLabel, durationSeconds, chapters } }`
+`200 { podcast: { id, title, description, biographyParagraphs, thumbnailUrl, audioUrl, durationLabel, durationSeconds, chapters } }`
+
+(`biographyParagraphs` may be omitted on older deployments — clients should treat as `[]`. `chapters` should always be an array.)
 
 `401 { error: "Unauthenticated." }`, `403 { error: "Active membership required." }`, `404 { error: "Podcast not found." }`.
 
@@ -286,6 +288,9 @@ Session.
 
 - GET → `200 { content: string | null, updatedAt: string | null }`
 - PUT body `{ content: string }` → `200 { ok: true }`. Empty/whitespace `content` deletes the note instead of storing it.
+
+### `GET /api/notes/podcast/{podcastId}` · `PUT /api/notes/podcast/{podcastId}`
+Session. Same shape as lesson notes (`content`, `updatedAt` / `{ ok: true }`).
 
 ---
 

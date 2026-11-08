@@ -33,6 +33,7 @@ export default async function EditPodcastPage({
     id: podcast.id,
     title: podcast.title,
     description: podcast.description,
+    biographyParagraphs: podcast.biographyParagraphs ?? [],
     audioKey: podcast.audioKey,
     audioUrl,
     thumbnailKey: podcast.thumbnailKey,

@@ -19,6 +19,7 @@ export type PodcastFormInitial = Partial<PodcastFormInput> & {
   id?: string;
   thumbnailUrl?: string;
   audioUrl?: string;
+  biographyParagraphs?: string[];
 };
 
 type ChapterRow = { label: string; time: string };
@@ -61,6 +62,11 @@ export function PodcastUploadForm({
 
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
+  const [biographyParagraphs, setBiographyParagraphs] = useState<string[]>(
+    initial?.biographyParagraphs && initial.biographyParagraphs.length > 0
+      ? initial.biographyParagraphs
+      : [""],
+  );
   const [season, setSeason] = useState<number>(initial?.season ?? 1);
   const [episodeOrder, setEpisodeOrder] = useState<number>(initial?.episodeOrder ?? 0);
   const [popular, setPopular] = useState<boolean>(initial?.popular ?? false);
@@ -97,6 +103,7 @@ export function PodcastUploadForm({
         id: initial?.id,
         title,
         description,
+        biographyParagraphs,
         audioKey,
         thumbnailKey,
         season,
@@ -199,7 +206,7 @@ export function PodcastUploadForm({
           </div>
 
           <div>
-            <label className={labelClass}>Description</label>
+            <label className={labelClass}>Description (About tab)</label>
             <textarea
               rows={6}
               className={inputClass}
@@ -207,6 +214,26 @@ export function PodcastUploadForm({
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
+
+          <Repeater
+            title="Biography (Biography tab)"
+            items={biographyParagraphs}
+            onAdd={() => setBiographyParagraphs((xs) => [...xs, ""])}
+            onRemove={(i) => setBiographyParagraphs((xs) => xs.filter((_, idx) => idx !== i))}
+            render={(value, i) => (
+              <textarea
+                rows={3}
+                className={inputClass}
+                value={value}
+                onChange={(e) =>
+                  setBiographyParagraphs((xs) =>
+                    xs.map((x, idx) => (idx === i ? e.target.value : x)),
+                  )
+                }
+                placeholder="Biography paragraph..."
+              />
+            )}
+          />
 
           <div>
             <label className={labelClass}>Industry</label>
