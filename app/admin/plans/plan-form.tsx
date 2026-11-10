@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { inputClass, labelClass } from "@/app/admin/components/form-field-styles";
+import { formatDailyPriceMmk } from "@/lib/plan-pricing";
 import { savePlan, type PlanFormInput } from "./actions";
 
 export function PlanForm({ plan }: { plan: PlanFormInput }) {
@@ -95,6 +96,11 @@ export function PlanForm({ plan }: { plan: PlanFormInput }) {
             value={priceMmk}
             onChange={(e) => setPriceMmk(e.target.value)}
           />
+          {Number(priceMmk) > 0 && Number(months) > 0 && (
+            <p className="mt-1 text-xs text-white/50">
+              {formatDailyPriceMmk(Number(priceMmk), Number(months))} — shown on /membership
+            </p>
+          )}
         </div>
       </div>
 

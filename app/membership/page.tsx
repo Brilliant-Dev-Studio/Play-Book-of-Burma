@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { MembershipSubmissionForm } from "@/app/components/membership-submission-form";
 import { BreadcrumbJsonLd, FaqJsonLd } from "@/app/components/json-ld";
+import { formatDailyPriceMmk } from "@/lib/plan-pricing";
 
 export const metadata: Metadata = {
   title: "Get Membership",
@@ -160,11 +161,14 @@ function MembershipPlanCard({
         ) : null}
 
         <div className="relative mt-5 flex flex-1 flex-col sm:mt-6">
-          <p className="pb-5 text-3xl font-bold leading-snug tracking-tight text-white sm:pb-6 sm:text-4xl">
+          <p className="text-3xl font-bold leading-snug tracking-tight text-white sm:text-4xl">
             {formatMmk(priceMmk)}
             <span className="ml-1.5 text-sm font-medium text-white/55">
               / {months} {months === 1 ? "month" : "months"}
             </span>
+          </p>
+          <p className="pb-5 pt-1 text-sm font-medium text-coral sm:pb-6">
+            {formatDailyPriceMmk(priceMmk, months)}
           </p>
           <ul className="flex flex-col divide-y divide-white/[0.08]">
             {perks.map((perk) => (
