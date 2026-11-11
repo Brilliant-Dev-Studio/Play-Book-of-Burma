@@ -354,6 +354,49 @@ model Lesson {
   bookmarks       Bookmark[]
   notes           Note[]
   watchProgress   WatchProgress[]
+
+  /// Quality-rendition transcoding (MediaConvert). videoKey above stays the
+  /// untouched source/top rendition regardless of transcode state.
+  transcodeStatus TranscodeStatus   @default(PENDING)
+  transcodeJobId  String?
+  transcodeError  String?
+  /// Source video's vertical resolution, when known — lets job submission
+  /// skip rungs taller than the source and labels the "Original" rendition
+  /// honestly. Legacy rows are null; treated as "unknown, don't skip".
+  sourceHeightPx  Int?
+  renditions      LessonRendition[]
+}
+
+enum TranscodeStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum RenditionQuality {
+  Q_360P
+  Q_480P
+  Q_720P
+  Q_1080P
+  Q_2160P
+}
+
+/// One MediaConvert output per rung for a Lesson's video. The source file
+/// itself (Lesson.videoKey) is the implicit top/"Original" rendition and is
+/// never duplicated here.
+model LessonRendition {
+  id        String           @id @default(cuid())
+  lessonId  String
+  lesson    Lesson           @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  quality   RenditionQuality
+  videoKey  String
+  status    TranscodeStatus  @default(PROCESSING)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@unique([lessonId, quality])
+  @@index([status])
 }
 
 model SkillsetItem {

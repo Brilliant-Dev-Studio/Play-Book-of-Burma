@@ -10,12 +10,19 @@ import "@uppy/dashboard/css/style.min.css";
 
 type Kind = "video" | "thumbnail" | "trailer" | "instructor" | "audio" | "guidebook";
 
-type CompletePayload = { key: string; location: string; durationSeconds?: number };
+type CompletePayload = {
+  key: string;
+  location: string;
+  durationSeconds?: number;
+  /** Vertical resolution for video files, read from the same probe as duration — lets the
+   * transcode pipeline skip upscaling and label the untranscoded "Original" rendition honestly. */
+  heightPx?: number;
+};
 
-async function readMediaDuration(file: File): Promise<number | null> {
+async function readMediaMetadata(file: File): Promise<{ durationSeconds: number | null; heightPx: number | null }> {
   const isVideo = file.type.startsWith("video/");
   const isAudio = file.type.startsWith("audio/");
-  if (!isVideo && !isAudio) return null;
+  if (!isVideo && !isAudio) return { durationSeconds: null, heightPx: null };
   return new Promise((resolve) => {
     const url = URL.createObjectURL(file);
     const el = document.createElement(isAudio ? "audio" : "video");
@@ -27,12 +34,13 @@ async function readMediaDuration(file: File): Promise<number | null> {
     };
     el.onloadedmetadata = () => {
       const sec = Number.isFinite(el.duration) ? el.duration : null;
+      const height = isVideo && (el as HTMLVideoElement).videoHeight > 0 ? (el as HTMLVideoElement).videoHeight : null;
       cleanup();
-      resolve(sec);
+      resolve({ durationSeconds: sec, heightPx: height });
     };
     el.onerror = () => {
       cleanup();
-      resolve(null);
+      resolve({ durationSeconds: null, heightPx: null });
     };
     el.src = url;
   });
@@ -192,8 +200,11 @@ export function S3Uploader({
 
     const onFileAdded = (file: { id: string; data: File }) => {
       if (!isMediaKind) return;
-      readMediaDuration(file.data).then((sec) => {
-        if (sec != null) uppy.setFileMeta(file.id, { durationSeconds: sec });
+      readMediaMetadata(file.data).then(({ durationSeconds, heightPx }) => {
+        const meta: Record<string, number> = {};
+        if (durationSeconds != null) meta.durationSeconds = durationSeconds;
+        if (heightPx != null) meta.heightPx = heightPx;
+        if (Object.keys(meta).length > 0) uppy.setFileMeta(file.id, meta);
       });
     };
     uppy.on("file-added", onFileAdded as never);
@@ -212,7 +223,8 @@ export function S3Uploader({
       const key = fromBody ?? fromMeta;
       if (!key) return;
       const durationSeconds = file?.meta?.durationSeconds as number | undefined;
-      onCompleteRef.current({ key, location: fromLocation, durationSeconds });
+      const heightPx = file?.meta?.heightPx as number | undefined;
+      onCompleteRef.current({ key, location: fromLocation, durationSeconds, heightPx });
     };
 
     uppy.on("upload-success", handler as never);

@@ -73,12 +73,15 @@ export default async function EditVideoPage({
     status: video.status,
     lessons: await Promise.all(
       video.lessons.map(async (l) => ({
+        id: l.id,
         title: l.title,
         videoKey: l.videoKey,
         videoUrl: await presignGetUrl(l.videoKey, PRESIGN_TTL.video),
         durationSeconds: l.durationSeconds,
         durationLabel: l.durationLabel,
         details: l.details,
+        transcodeStatus: l.transcodeStatus,
+        transcodeError: l.transcodeError,
       })),
     ),
     skillsetItems: video.skillsetItems.map((s) => ({

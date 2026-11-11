@@ -10,16 +10,22 @@ import {
 } from "@/app/admin/components/deferred-image-upload";
 import { inputClass, labelClass } from "@/app/admin/components/form-field-styles";
 import { Repeater } from "@/app/admin/components/repeater";
-import { saveVideo, type VideoFormInput } from "@/app/admin/videos/actions";
+import { retryTranscode, saveVideo, syncTranscodeStatus, type VideoFormInput } from "@/app/admin/videos/actions";
 import { formatDurationHrsMins as formatDuration } from "@/lib/format-duration";
 
 type LessonRow = {
+  /** Client-generated for a new row, the real DB id when editing — see LessonInput in actions.ts. */
+  id: string;
   title: string;
   videoKey: string;
   videoUrl?: string;
   durationSeconds: number;
   durationLabel: string;
   details: string;
+  /** Probed from the browser's <video> element at upload time — see s3-uploader.tsx. */
+  sourceHeightPx?: number | null;
+  transcodeStatus?: "PENDING" | "PROCESSING" | "READY" | "FAILED";
+  transcodeError?: string | null;
 };
 type SkillsetRow = { title: string; description: string; imageKey: string };
 
@@ -38,7 +44,91 @@ export type InstructorOption = { id: string; name: string; title: string };
 export type TaxonomyOption = { id: string; name: string };
 
 function emptyLesson(): LessonRow {
-  return { title: "", videoKey: "", durationSeconds: 0, durationLabel: "", details: "" };
+  return {
+    id: crypto.randomUUID(),
+    title: "",
+    videoKey: "",
+    durationSeconds: 0,
+    durationLabel: "",
+    details: "",
+  };
+}
+
+const TRANSCODE_STYLES: Record<string, string> = {
+  PENDING: "bg-white/10 text-white/60",
+  PROCESSING: "bg-amber-500/20 text-amber-300",
+  READY: "bg-emerald-500/20 text-emerald-300",
+  FAILED: "bg-red-500/20 text-red-300",
+};
+const TRANSCODE_LABELS: Record<string, string> = {
+  PENDING: "Qualities: pending",
+  PROCESSING: "Qualities: processing…",
+  READY: "Qualities: ready",
+  FAILED: "Qualities: failed",
+};
+
+function TranscodeRow({
+  lessonId,
+  status,
+  error,
+  onUpdate,
+}: {
+  lessonId: string;
+  status?: LessonRow["transcodeStatus"];
+  error?: string | null;
+  onUpdate: (patch: Partial<Pick<LessonRow, "transcodeStatus" | "transcodeError">>) => void;
+}) {
+  const [pending, startTransition] = useTransition();
+  if (!status) return null; // brand-new row, not saved yet — nothing to show
+
+  function checkStatus() {
+    startTransition(async () => {
+      const result = await syncTranscodeStatus(lessonId);
+      if (result.ok) onUpdate({ transcodeStatus: result.status as LessonRow["transcodeStatus"] });
+    });
+  }
+
+  function retry() {
+    startTransition(async () => {
+      const result = await retryTranscode(lessonId);
+      onUpdate(
+        result.ok
+          ? { transcodeStatus: "PROCESSING", transcodeError: null }
+          : { transcodeStatus: "FAILED", transcodeError: result.error },
+      );
+    });
+  }
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2">
+      <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${TRANSCODE_STYLES[status]}`}>
+        {TRANSCODE_LABELS[status]}
+      </span>
+      {status === "PROCESSING" && (
+        <button
+          type="button"
+          disabled={pending}
+          onClick={checkStatus}
+          className="rounded-md border border-white/15 px-2 py-1 text-xs font-semibold text-white/75 transition-colors hover:bg-white/6 disabled:opacity-50"
+        >
+          {pending ? "Checking…" : "Check status"}
+        </button>
+      )}
+      {status === "FAILED" && (
+        <>
+          {error && <span className="text-xs text-red-300/80">{error}</span>}
+          <button
+            type="button"
+            disabled={pending}
+            onClick={retry}
+            className="rounded-md border border-white/15 px-2 py-1 text-xs font-semibold text-white/75 transition-colors hover:bg-white/6 disabled:opacity-50"
+          >
+            {pending ? "Retrying…" : "Retry transcode"}
+          </button>
+        </>
+      )}
+    </div>
+  );
 }
 
 function emptySkillset(): SkillsetRow {
@@ -503,21 +593,16 @@ export function VideoUploadForm({
                   height={180}
                   currentKey={l.videoKey}
                   currentUrl={l.videoUrl}
-                  onComplete={({ key, durationSeconds }) =>
+                  onComplete={({ key, durationSeconds, heightPx }) =>
                     setLessons((xs) =>
                       xs.map((x, idx) => {
                         if (idx !== i) return x;
+                        const base = { ...x, videoKey: key, videoUrl: undefined, sourceHeightPx: heightPx ?? null };
                         if (durationSeconds && durationSeconds > 0) {
                           const sec = Math.round(durationSeconds);
-                          return {
-                            ...x,
-                            videoKey: key,
-                            videoUrl: undefined,
-                            durationSeconds: sec,
-                            durationLabel: formatDuration(sec),
-                          };
+                          return { ...base, durationSeconds: sec, durationLabel: formatDuration(sec) };
                         }
-                        return { ...x, videoKey: key, videoUrl: undefined };
+                        return base;
                       }),
                     )
                   }
@@ -526,6 +611,14 @@ export function VideoUploadForm({
               {!l.videoKey && (
                 <p className="mt-1 text-xs text-red-300/80">Video upload required.</p>
               )}
+              <TranscodeRow
+                lessonId={l.id}
+                status={l.transcodeStatus}
+                error={l.transcodeError}
+                onUpdate={(patch) =>
+                  setLessons((xs) => xs.map((x, idx) => (idx === i ? { ...x, ...patch } : x)))
+                }
+              />
             </div>
             <div>
               <label className={labelClass}>Title</label>

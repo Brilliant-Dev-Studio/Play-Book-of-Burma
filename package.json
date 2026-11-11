@@ -9,9 +9,11 @@
     "lint": "eslint",
     "generate:image-blur": "node scripts/generate-image-blur-data.mjs",
     "seed": "tsx prisma/seed.ts",
+    "backfill:renditions": "tsx scripts/backfill-lesson-renditions.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@aws-sdk/client-mediaconvert": "^3.1165.0",
     "@aws-sdk/client-s3": "^3.1052.0",
     "@aws-sdk/client-sesv2": "^3.1068.0",
     "@aws-sdk/s3-request-presigner": "^3.1052.0",
@@ -37,6 +39,7 @@
     "react-dom": "19.2.4",
     "recharts": "^3.8.1",
     "resend": "^6.22.0",
+    "server-only": "^0.0.1",
     "swagger-ui-react": "^5.32.11"
   },
   "devDependencies": {

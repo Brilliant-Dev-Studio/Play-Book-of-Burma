@@ -5,12 +5,19 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { toggleBookmark, saveNote, saveWatchProgress } from "./actions";
 
+// No `loading` fallback here on purpose — the player itself (vidstack-player.tsx)
+// renders its own buffering spinner once mounted, so a separate app-level
+// placeholder would just be a second, redundant loading indicator.
 const VidstackPlayer = dynamic(() => import("./vidstack-player"), {
   ssr: false,
-  loading: () => (
-    <div className="aspect-video w-full animate-pulse rounded-lg bg-zinc-900" />
-  ),
 });
+
+export type QualityOption = {
+  label: string;
+  height: number | null;
+  url: string;
+  isSource: boolean;
+};
 
 export type WatchLesson = {
   id: string;
@@ -20,6 +27,8 @@ export type WatchLesson = {
   durationSeconds: number;
   details: string;
   videoUrl: string;
+  /** [] until every rung is confirmed ready — see app/api.../lessons/[lessonId]/route.ts. */
+  qualities: QualityOption[];
   bookmarked: boolean;
   note: string;
   progressSeconds: number;
@@ -209,6 +218,7 @@ export function WatchClient({
                   key={activeLesson.id}
                   title={activeLesson.title}
                   src={activeLesson.videoUrl}
+                  qualities={activeLesson.qualities}
                   initialSeconds={progressState[activeLesson.id] ?? 0}
                   onTimeUpdate={handleTimeUpdate}
                 />

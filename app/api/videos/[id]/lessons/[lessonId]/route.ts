@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/server/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { presignGetUrl, PRESIGN_TTL } from "@/lib/server/s3";
+import { RENDITION_HEIGHT } from "@/lib/server/mediaconvert";
 
 function unauth() {
   return NextResponse.json({ error: "Unauthenticated." }, { status: 401 });
@@ -42,12 +43,38 @@ export async function GET(
       durationLabel: true,
       durationSeconds: true,
       details: true,
+      transcodeStatus: true,
+      sourceHeightPx: true,
+      renditions: { select: { quality: true, videoKey: true, status: true } },
     },
   });
 
   if (!lesson || lesson.videoId !== videoId) return notFound();
 
   const videoUrl = await presignGetUrl(lesson.videoKey, PRESIGN_TTL.video);
+
+  // Only surface a picker once every rung is confirmed ready — a half-finished
+  // transcode must never show a broken or single-option menu. `videoUrl`
+  // above always comes from the untouched source key regardless of transcode
+  // state, so playback itself is never affected by this.
+  type QualityOption = { label: string; height: number | null; url: string; isSource: boolean };
+  const qualities: QualityOption[] =
+    lesson.transcodeStatus === "READY"
+      ? await Promise.all(
+          lesson.renditions
+            .filter((r) => r.status === "READY")
+            .map(async (r) => ({
+              label: `${RENDITION_HEIGHT[r.quality]}p`,
+              height: RENDITION_HEIGHT[r.quality] as number | null,
+              url: await presignGetUrl(r.videoKey, PRESIGN_TTL.video),
+              isSource: false,
+            })),
+        )
+      : [];
+  // Deliberately NOT offering the raw source ("Original") here — camera/export
+  // uploads are often not faststart-optimized (metadata at the end of the file
+  // instead of the front), so seeking into a large one can hang indefinitely.
+  // MediaConvert's own outputs (the renditions above) are faststart by default.
 
   return NextResponse.json({
     lesson: {
@@ -59,6 +86,7 @@ export async function GET(
       durationLabel: lesson.durationLabel,
       durationSeconds: lesson.durationSeconds,
       details: lesson.details,
+      qualities,
     },
   });
 }

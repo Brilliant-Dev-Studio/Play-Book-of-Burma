@@ -18,13 +18,22 @@ import "@vidstack/react/player/styles/default/layouts/video.css";
 
 const MenuIcons = defaultLayoutIcons.Menu;
 
-/** Distinct fragment per rung so Vidstack registers multiple qualities (same MP4 until multi-rendition). */
-function buildQualitySources(src: string) {
-  return [
-    { src: `${src}#pob=1080`, type: "video/mp4" as const, width: 1920, height: 1080 },
-    { src: `${src}#pob=720`, type: "video/mp4" as const, width: 1280, height: 720 },
-    { src: `${src}#pob=480`, type: "video/mp4" as const, width: 854, height: 480 },
-  ];
+export type QualitySource = { label: string; height: number | null; url: string; isSource: boolean };
+
+/** One real MP4 source per transcoded rung + the untouched source as "Original". Falls back to
+ * a single source when renditions aren't ready yet — Vidstack then disables the Resolution menu
+ * entry on its own (useVideoQualityOptions reports `disabled` for a single-candidate list). */
+function buildQualitySources(qualities: QualitySource[] | undefined, fallbackSrc: string) {
+  if (!qualities?.length) return [{ src: fallbackSrc, type: "video/mp4" as const }];
+  return qualities
+    .slice()
+    .sort((a, b) => (b.height ?? Infinity) - (a.height ?? Infinity))
+    .map((q) => ({
+      src: q.url,
+      type: "video/mp4" as const,
+      height: q.height ?? undefined,
+      width: q.height ? Math.round((q.height * 16) / 9) : undefined,
+    }));
 }
 
 function ResolutionMenu() {
@@ -42,15 +51,16 @@ function ResolutionMenu() {
   return (
     <Menu.Root className="vds-menu">
       <Menu.Button
-        className="vds-menu-button"
+        className="vds-menu-item"
         disabled={options.disabled}
         aria-label="Resolution"
       >
-        <span className="vds-menu-button-label">Resolution</span>
-        <span className="vds-menu-button-hint" data-part="hint">
+        <MenuIcons.ArrowLeft className="vds-menu-close-icon vds-icon" />
+        <span className="vds-menu-item-label">Resolution</span>
+        <span className="vds-menu-item-hint" data-part="hint">
           {hint}
         </span>
-        <MenuIcons.ArrowRight className="vds-menu-button-icon" />
+        <MenuIcons.ArrowRight className="vds-menu-open-icon vds-icon" />
       </Menu.Button>
       <Menu.Content className="vds-menu-items">
         <Menu.RadioGroup className="vds-radio-group" value={options.selectedValue}>
@@ -73,6 +83,7 @@ function ResolutionMenu() {
 
 export default function VidstackPlayer({
   src,
+  qualities,
   poster: _poster,
   title,
   initialSeconds,
@@ -80,6 +91,8 @@ export default function VidstackPlayer({
   autoPlay = true,
 }: {
   src: string;
+  /** Real per-rendition sources; omit/empty while transcoding is still in progress. */
+  qualities?: QualitySource[];
   /** Kept for call-site compat — preview poster is intentionally unused. */
   poster?: string;
   title: string;
@@ -98,7 +111,7 @@ export default function VidstackPlayer({
   onTimeUpdateRef.current = onTimeUpdate;
   initialSecondsRef.current = initialSeconds ?? 0;
 
-  const sources = useMemo(() => buildQualitySources(src), [src]);
+  const sources = useMemo(() => buildQualitySources(qualities, src), [qualities, src]);
 
   useEffect(() => {
     setBuffering(true);
@@ -187,11 +200,16 @@ export default function VidstackPlayer({
       </MediaPlayer>
 
       {buffering && !needsGesture ? (
+        // No background fill here on purpose — covering the whole player in solid
+        // black during buffering hides the controls bar underneath (play/pause,
+        // settings, timeline), leaving the viewer with nothing to interact with
+        // if buffering takes a while or gets stuck. The frame and controls stay
+        // visible; only a small spinner floats on top.
         <div
-          className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black"
+          className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
           aria-hidden
         >
-          <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/25 border-t-coral" />
+          <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/25 border-t-coral drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]" />
         </div>
       ) : null}
 

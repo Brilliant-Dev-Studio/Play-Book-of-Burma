@@ -1,0 +1,3 @@
+-- AlterEnum
+ALTER TYPE "RenditionQuality" ADD VALUE IF NOT EXISTS 'Q_1080P';
+ALTER TYPE "RenditionQuality" ADD VALUE IF NOT EXISTS 'Q_2160P';

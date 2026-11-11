@@ -5,6 +5,7 @@ import {
   formatDurationHrsMins,
 } from "@/lib/format-duration";
 import { presignGetUrl, PRESIGN_TTL } from "@/lib/server/s3";
+import { RENDITION_HEIGHT } from "@/lib/server/mediaconvert";
 import { requireSession } from "@/lib/server/auth-helpers";
 import { WatchClient, type WatchVideo, type Tab } from "./watch-client";
 
@@ -30,18 +31,36 @@ export default async function WatchPage({
     where: { id: videoId, status: "PUBLISHED" },
     include: {
       instructor: true,
-      lessons: { orderBy: { order: "asc" } },
+      lessons: {
+        orderBy: { order: "asc" },
+        include: { renditions: true },
+      },
     },
   });
   if (!video) notFound();
 
   const lessonIds = video.lessons.map((l) => l.id);
-  const [thumbnailUrl, instructorPhotoUrl, lessonUrls, bookmarks, notes, progress] = await Promise.all([
-    presignGetUrl(video.thumbnailKey, PRESIGN_TTL.image),
-    presignGetUrl(video.instructor.photoKey, PRESIGN_TTL.image),
-    Promise.all(
-      video.lessons.map((l) => presignGetUrl(l.videoKey, PRESIGN_TTL.video)),
-    ),
+  const [thumbnailUrl, instructorPhotoUrl, lessonUrls, lessonQualities, bookmarks, notes, progress] =
+    await Promise.all([
+      presignGetUrl(video.thumbnailKey, PRESIGN_TTL.image),
+      presignGetUrl(video.instructor.photoKey, PRESIGN_TTL.image),
+      Promise.all(video.lessons.map((l) => presignGetUrl(l.videoKey, PRESIGN_TTL.video))),
+      Promise.all(
+        video.lessons.map(async (l) => {
+          if (l.transcodeStatus !== "READY") return [];
+          const ready = await Promise.all(
+            l.renditions
+              .filter((r) => r.status === "READY")
+              .map(async (r) => ({
+                label: `${RENDITION_HEIGHT[r.quality]}p`,
+                height: RENDITION_HEIGHT[r.quality],
+                url: await presignGetUrl(r.videoKey, PRESIGN_TTL.video),
+                isSource: false,
+              })),
+          );
+          return ready;
+        }),
+      ),
     lessonIds.length
       ? prisma.bookmark.findMany({
           where: { userId: session.uid, lessonId: { in: lessonIds } },
@@ -57,12 +76,18 @@ export default async function WatchPage({
     lessonIds.length
       ? prisma.watchProgress.findMany({
           where: { userId: session.uid, lessonId: { in: lessonIds } },
-          select: { lessonId: true, currentSeconds: true },
+          select: { lessonId: true, currentSeconds: true, completedAt: true },
         })
       : Promise.resolve([]),
   ]);
   const bookmarkedSet = new Set(bookmarks.map((b) => b.lessonId));
-  const progressByLesson = new Map(progress.map((p) => [p.lessonId, p.currentSeconds]));
+  // A completed lesson's saved position sits at (or past) the very end of the
+  // file — resuming there while autoplaying can hang indefinitely in some
+  // browsers (seeking right at EOF). Treat "completed" as "start over" instead,
+  // same as the mobile app already does for this exact case.
+  const progressByLesson = new Map(
+    progress.map((p) => [p.lessonId, p.completedAt ? 0 : p.currentSeconds]),
+  );
   const noteByLesson = new Map(notes.map((n) => [n.lessonId, n.content]));
 
   const totalSeconds = video.lessons.reduce(
@@ -88,18 +113,27 @@ export default async function WatchPage({
       photoUrl: instructorPhotoUrl,
       biographyParagraphs: video.instructor.biographyParagraphs,
     },
-    lessons: video.lessons.map((l, i) => ({
-      id: l.id,
-      order: l.order,
-      title: l.title,
-      durationLabel: displayDurationLabel(l.durationLabel, l.durationSeconds),
-      durationSeconds: l.durationSeconds,
-      details: l.details,
-      videoUrl: lessonUrls[i],
-      bookmarked: bookmarkedSet.has(l.id),
-      note: noteByLesson.get(l.id) ?? "",
-      progressSeconds: progressByLesson.get(l.id) ?? 0,
-    })),
+    lessons: video.lessons.map((l, i) => {
+      const qualities = lessonQualities[i];
+      return {
+        id: l.id,
+        order: l.order,
+        title: l.title,
+        durationLabel: displayDurationLabel(l.durationLabel, l.durationSeconds),
+        durationSeconds: l.durationSeconds,
+        details: l.details,
+        videoUrl: lessonUrls[i],
+        // Deliberately NOT offering the raw source ("Original") here — camera/export
+        // uploads are often not faststart-optimized (metadata at the end of the file
+        // instead of the front), so seeking into a large one can hang the browser
+        // indefinitely. MediaConvert's own outputs (the renditions below) are
+        // faststart by default and don't have this problem.
+        qualities,
+        bookmarked: bookmarkedSet.has(l.id),
+        note: noteByLesson.get(l.id) ?? "",
+        progressSeconds: progressByLesson.get(l.id) ?? 0,
+      };
+    }),
   };
 
   const initialLessonIndex = lessonId
