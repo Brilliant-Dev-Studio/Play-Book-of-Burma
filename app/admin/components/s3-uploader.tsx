@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import Uppy from "@uppy/core";
 import AwsS3 from "@uppy/aws-s3";
 import Dashboard from "@uppy/dashboard";
+import { imageToWebp } from "@/lib/image-to-webp";
 
 import "@uppy/core/css/style.min.css";
 import "@uppy/dashboard/css/style.min.css";
@@ -63,6 +64,28 @@ function buildUppy(kind: Kind, maxFileSize: number) {
     },
     autoProceed: false,
   });
+
+  // Image kinds: downscale + re-encode to WebP before upload (see lib/image-to-webp.ts).
+  if (kind === "thumbnail" || kind === "instructor") {
+    uppy.addPreProcessor(async (fileIDs) => {
+      await Promise.all(
+        fileIDs.map(async (id) => {
+          const f = uppy.getFile(id);
+          if (!(f?.data instanceof File)) return;
+          const out = await imageToWebp(f.data, { maxDim: kind === "instructor" ? 1200 : 1600 });
+          if (out === f.data) return;
+          uppy.setFileState(id, {
+            data: out,
+            name: out.name,
+            type: out.type,
+            size: out.size,
+            extension: out.name.split(".").pop() ?? "",
+            meta: { ...f.meta, name: out.name, type: out.type },
+          });
+        }),
+      );
+    });
+  }
 
   uppy.use(AwsS3, {
     shouldUseMultipart: () => kind === "video" || kind === "trailer" || kind === "audio" || kind === "guidebook",

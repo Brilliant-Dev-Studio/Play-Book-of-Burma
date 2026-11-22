@@ -1,5 +1,6 @@
 "use client";
 
+import { PlayCircle } from "@/app/components/play-circle";
 import { useState } from "react";
 import dynamic from "next/dynamic";
 
@@ -52,14 +53,8 @@ export function TrailerSection({
       <p className="absolute left-4 top-4 z-10 text-lg font-bold tracking-tight text-white sm:left-6 sm:top-5 sm:text-xl">
         Watch Trailer
       </p>
-      <span
-        className="absolute left-1/2 top-1/2 z-10 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center opacity-0 scale-50 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-100 group-hover:opacity-50 group-focus-visible:scale-100 group-focus-visible:opacity-50 motion-reduce:opacity-50 motion-reduce:scale-100 motion-reduce:transition-none sm:h-18 sm:w-18 md:h-20 md:w-20"
-        aria-hidden
-      >
-        <span className="absolute inset-0 rounded-full bg-coral/60 opacity-0 transition-opacity duration-500 group-hover:animate-ping group-hover:opacity-100 group-focus-visible:animate-ping group-focus-visible:opacity-100 motion-reduce:hidden" />
-        <span className="relative flex h-full w-full items-center justify-center rounded-full bg-coral text-black shadow-lg transition-transform duration-300 ease-out group-hover:scale-110">
-          <span className="ml-1 text-2xl leading-none sm:text-3xl">▶</span>
-        </span>
+      <span className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
+        <PlayCircle size="lg" />
       </span>
     </button>
   );

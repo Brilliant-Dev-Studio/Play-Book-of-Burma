@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   UserPortalSidebar,
   type FilterGroup,
@@ -60,6 +60,27 @@ export function UserPortalShell({
 }) {
   const [internalSelected, setInternalSelected] = useState<Set<string>>(new Set());
   const [isOpen, setIsOpen] = useState(defaultSidebarOpen);
+  /** Phone/tablet: filters open as a slide-over drawer (the desktop column is lg+ only). */
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDrawerOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [drawerOpen]);
+
+  function onFilterButton() {
+    if (window.matchMedia("(min-width: 1024px)").matches) setIsOpen((o) => !o);
+    else setDrawerOpen(true);
+  }
 
   const selected = controlledSelected ?? internalSelected;
   const setSelected = onSelectedChange ?? setInternalSelected;
@@ -93,13 +114,34 @@ export function UserPortalShell({
         />
       )}
 
+      {drawerOpen && (
+        <div className="fixed inset-0 z-[60] flex lg:hidden" role="dialog" aria-modal="true" aria-label="Filters">
+          <button
+            type="button"
+            aria-label="Close filters"
+            onClick={() => setDrawerOpen(false)}
+            className="absolute inset-0 bg-black/70 backdrop-blur-[2px]"
+          />
+          <div className="relative">
+            <UserPortalSidebar
+              variant="drawer"
+              selected={selected}
+              onToggle={toggle}
+              onClearAll={clearAll}
+              onClose={() => setDrawerOpen(false)}
+              filterGroups={filterGroups}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="flex min-w-0 flex-1 flex-col">
         {showFilterToolbar ? (
           <div className="sticky top-0 z-30 border-b border-white/10 bg-zinc-950/85 backdrop-blur-md">
             <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-2 px-4 py-3 sm:gap-3 sm:px-6 sm:py-4 lg:px-10">
               <button
                 type="button"
-                onClick={() => setIsOpen((o) => !o)}
+                onClick={onFilterButton}
                 aria-expanded={isOpen}
                 className="inline-flex items-center gap-2 rounded-md border border-white/15 bg-white/6 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/12 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
               >

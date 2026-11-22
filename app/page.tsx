@@ -11,6 +11,7 @@ import {
   getNewlyAddedVideos,
 } from "@/lib/server/popular-videos";
 import { getHomePodcastGroups } from "@/lib/server/podcasts";
+import { prisma } from "@/lib/prisma";
 import {
   OrganizationJsonLd,
   WebSiteJsonLd,
@@ -35,7 +36,7 @@ export const metadata: Metadata = {
       "Watch exclusive video interviews and listen to podcasts with Myanmar's top founders, CEOs, and business experts.",
     images: [
       {
-        url: "/social.png",
+        url: "/social.jpg",
         width: 1200,
         height: 630,
         alt: "Playbook of Burma",
@@ -45,10 +46,12 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const [popularVideos, newlyAddedVideos, podcastGroups] = await Promise.all([
+  const [popularVideos, newlyAddedVideos, podcastGroups, industries] = await Promise.all([
     getPopularVideos(),
     getNewlyAddedVideos(),
     getHomePodcastGroups(),
+    // Shown (display-only) in the hero's "Pick Industry" flyout, in admin order.
+    prisma.industry.findMany({ orderBy: [{ order: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
   ]);
 
   const allPodcastItems = podcastGroups.flatMap((g) => g.items);
@@ -59,7 +62,7 @@ export default async function Home() {
       <WebSiteJsonLd />
       <VideoListJsonLd items={popularVideos} />
       <PodcastListJsonLd items={allPodcastItems} />
-      <HeroMarqueeBackdrop />
+      <HeroMarqueeBackdrop industries={industries} />
       <HomeFeaturedCarousel
         items={popularVideos}
         newlyAddedItems={newlyAddedVideos}

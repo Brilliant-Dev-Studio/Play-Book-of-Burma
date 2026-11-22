@@ -16,6 +16,7 @@ import {
   IconChevronRight,
 } from "@/app/components/carousel-chevrons";
 import type { HomePodcastGroup } from "@/lib/server/podcasts";
+import { PlayCircle } from "@/app/components/play-circle";
 
 const LOOP_COPIES = 3;
 
@@ -23,11 +24,11 @@ function CarouselEdgeMasks() {
   return (
     <>
       <div
-        className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-[linear-gradient(90deg,#000_0%,rgba(0,0,0,0.92)_35%,rgba(0,0,0,0.45)_70%,transparent_100%)] sm:w-28 md:w-40"
+        className="pointer-events-none absolute inset-y-0 left-0 z-10 w-4 bg-[linear-gradient(90deg,#000_0%,rgba(0,0,0,0.92)_35%,rgba(0,0,0,0.45)_70%,transparent_100%)] sm:w-10 md:w-16 lg:w-40"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-[linear-gradient(270deg,#000_0%,rgba(0,0,0,0.92)_35%,rgba(0,0,0,0.45)_70%,transparent_100%)] sm:w-28 md:w-40"
+        className="pointer-events-none absolute inset-y-0 right-0 z-10 w-4 bg-[linear-gradient(270deg,#000_0%,rgba(0,0,0,0.92)_35%,rgba(0,0,0,0.45)_70%,transparent_100%)] sm:w-10 md:w-16 lg:w-40"
         aria-hidden
       />
     </>
@@ -259,12 +260,12 @@ function NewlyAddedSection({ items }: { items: NewlyAddedItem[] }) {
 
   return (
     <section>
-      <div className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
+      <div className="mb-5 flex items-end justify-between gap-3 sm:mb-8 sm:gap-4">
         <div className="min-w-0 flex-1">
-          <h2 className="font-hero-display text-[clamp(1.55rem,2.8vw,2.4rem)] font-bold uppercase leading-[1.12] tracking-[0.01em] text-white">
+          <h2 className="font-hero-display text-[1.3rem] font-bold uppercase leading-[1.15] sm:text-[clamp(1.55rem,2.8vw,2.4rem)] sm:leading-[1.12] tracking-[0.01em] text-white">
             If you Dream Big, Will you give us 15 mins a day to change your life?
           </h2>
-          <p className="mt-2 text-base font-medium text-white sm:text-lg">
+          <p className="mt-1.5 text-sm font-medium text-white/85 sm:mt-2 sm:text-lg sm:text-white">
             Newly Added to your playbooks
           </p>
         </div>
@@ -333,7 +334,7 @@ function WatchAllPlaybooksSection({ items }: { items: NewlyAddedItem[] }) {
   return (
     <section className="mt-12 sm:mt-14 md:mt-16">
       <div className="mb-5 flex items-end justify-between gap-4 sm:mb-6">
-        <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl md:text-3xl">
+        <h2 className="text-lg font-bold tracking-tight text-white sm:text-2xl md:text-3xl">
           Watch All the Playbooks
         </h2>
         {items.length > 0 ? (
@@ -396,7 +397,7 @@ function WatchAllPlaybooksSection({ items }: { items: NewlyAddedItem[] }) {
 function FilteredPlaybooksSection({ items }: { items: NewlyAddedItem[] }) {
   return (
     <section>
-      <h2 className="mb-6 text-xl font-bold tracking-tight text-white sm:mb-8 sm:text-2xl md:text-3xl">
+      <h2 className="mb-6 text-lg font-bold tracking-tight text-white sm:mb-8 sm:text-2xl md:text-3xl">
         Filtered Playbooks
       </h2>
       {items.length === 0 ? (
@@ -478,14 +479,8 @@ function PlaybookVideoCard({
           </span>
         )}
 
-        <span
-          className="pointer-events-none absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center opacity-0 scale-50 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-100 group-hover:opacity-50 group-focus-visible:scale-100 group-focus-visible:opacity-50 motion-reduce:scale-100 motion-reduce:opacity-50 motion-reduce:transition-none"
-          aria-hidden
-        >
-          <span className="absolute h-11 w-11 rounded-full bg-coral/60 opacity-0 transition-opacity duration-500 group-hover:animate-ping group-hover:opacity-100 group-focus-visible:animate-ping group-focus-visible:opacity-100 motion-reduce:hidden sm:h-12 sm:w-12" />
-          <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-coral text-black shadow-lg transition-transform duration-300 ease-out group-hover:scale-110 sm:h-12 sm:w-12">
-            <span className="ml-0.5 text-2xl leading-none">▶</span>
-          </span>
+        <span className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
+          <PlayCircle />
         </span>
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-4 pb-2 text-center sm:px-5 sm:pb-3">
@@ -522,7 +517,7 @@ function ContinuesWatchingSection({
   return (
     <section className="mt-12 sm:mt-14 md:mt-16">
       <div className="mb-5 flex items-end justify-between gap-4 sm:mb-6">
-        <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl md:text-3xl">
+        <h2 className="text-lg font-bold tracking-tight text-white sm:text-2xl md:text-3xl">
           Continues Watching
         </h2>
         <div className="flex shrink-0 gap-2">

@@ -10,6 +10,7 @@
     "generate:image-blur": "node scripts/generate-image-blur-data.mjs",
     "seed": "tsx prisma/seed.ts",
     "backfill:renditions": "tsx scripts/backfill-lesson-renditions.ts",
+    "backfill:images-webp": "tsx scripts/backfill-images-webp.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

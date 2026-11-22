@@ -85,13 +85,25 @@ function IconBookmark({ className, filled = false }: { className?: string; fille
   );
 }
 
-function IconShare({ className }: { className?: string }) {
+function IconClose({ className }: { className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className={className} aria-hidden>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.172.16.0.3.033.514v.086a2.25 2.25 0 01-.033.514m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={className} aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
   );
 }
+
+function IconLessons({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className={className} aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+    </svg>
+  );
+}
+
+/** Small stacked icon + label card used for Guidebook / Bookmark under the player. */
+const actionCardClass =
+  "inline-flex h-14 w-[4.5rem] flex-col items-center justify-center gap-1 rounded-lg text-[10px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral disabled:opacity-60 sm:h-16 sm:w-20 sm:text-[11px]";
 
 export function WatchClient({
   video,
@@ -105,7 +117,9 @@ export function WatchClient({
   const [activeIndex, setActiveIndex] = useState(initialLessonIndex);
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [descExpanded, setDescExpanded] = useState(false);
-  const [shareStatus, setShareStatus] = useState<"idle" | "copied">("idle");
+  /** Whole right sidebar — ✕ hides it so the player takes the full width (YouTube-style);
+   * the "Lessons" pill on the player's top-right corner brings it back. */
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [bookmarkState, setBookmarkState] = useState<Record<string, boolean>>(
     () => Object.fromEntries(video.lessons.map((l) => [l.id, l.bookmarked])),
   );
@@ -186,33 +200,28 @@ export function WatchClient({
     });
   }
 
-  async function onShare() {
-    if (!activeLesson || typeof window === "undefined") return;
-    const url = `${window.location.origin}/user-portal/watch?video=${video.id}&lesson=${activeLesson.id}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: activeLesson.title, url });
-        return;
-      }
-    } catch {
-      /* fall through to clipboard */
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      setShareStatus("copied");
-      setTimeout(() => setShareStatus("idle"), 1800);
-    } catch {
-      /* ignore */
-    }
-  }
-
   return (
     <main className="flex min-h-0 flex-1 flex-col bg-black">
       <div className="mx-auto w-full max-w-[1400px] px-4 pb-10 pt-4 sm:px-6 sm:pb-12 sm:pt-5 lg:px-8 lg:pt-6">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10 xl:gap-12">
           {/* ── Left: player + lesson meta ── */}
           <div className="min-w-0 flex-1">
-            <div className="overflow-hidden rounded-lg bg-black">
+            <div className="relative overflow-hidden rounded-lg bg-black">
+              {!sidebarOpen ? (
+                // Pinned to the player's top-right so it's always in view, even when the
+                // full-width player pushes everything below it off screen.
+                <button
+                  type="button"
+                  onClick={() => setSidebarOpen(true)}
+                  aria-label="Show lessons sidebar"
+                  aria-controls="watch-sidebar"
+                  aria-expanded={false}
+                  className="absolute right-3 top-3 z-40 inline-flex items-center gap-1.5 rounded-full bg-black/55 px-3.5 py-2 text-xs font-semibold text-white shadow-lg ring-1 ring-white/20 backdrop-blur-sm transition-colors hover:bg-black/75 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral sm:right-4 sm:top-4 sm:text-sm"
+                >
+                  <IconLessons className="h-4 w-4" />
+                  Lessons
+                </button>
+              ) : null}
               {activeLesson ? (
                 <VidstackPlayer
                   key={activeLesson.id}
@@ -230,7 +239,7 @@ export function WatchClient({
             </div>
 
             {activeLesson && (
-              <div className="mt-5 flex items-start gap-4 sm:mt-6 sm:gap-6">
+              <div className="mt-5 flex flex-col gap-4 sm:mt-6 sm:flex-row sm:items-start sm:gap-6">
                 <div className="min-w-0 flex-1">
                   <h1 className="text-[1.35rem] font-semibold leading-snug tracking-tight text-white sm:text-2xl lg:text-[1.65rem]">
                     {activeIndex + 1}. {activeLesson.title}
@@ -242,24 +251,17 @@ export function WatchClient({
                   ) : null}
                 </div>
 
-                <div className="flex shrink-0 flex-col gap-2 pt-0.5 sm:flex-row sm:items-start">
-                  <button
-                    type="button"
-                    onClick={() => void onShare()}
-                    className="inline-flex h-9 items-center gap-2 rounded-md bg-white/[0.08] px-3 text-xs font-medium text-white/90 transition-colors hover:bg-white/[0.14] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral sm:h-10 sm:px-3.5 sm:text-sm"
-                  >
-                    <IconShare className="h-4 w-4" />
-                    {shareStatus === "copied" ? "Copied" : "Share"}
-                  </button>
+                <div className="flex shrink-0 flex-row gap-2 pt-0.5 sm:flex-col">
                   {video.guidebookUrl ? (
                     <a
                       href={video.guidebookUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="Download Guidebook"
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-white/[0.08] text-white/90 transition-colors hover:bg-white/[0.14] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral sm:h-10 sm:w-10"
+                      className={`${actionCardClass} bg-white/[0.08] text-white/90 hover:bg-white/[0.14]`}
                     >
                       <IconDownload className="h-4 w-4" />
+                      Guidebook
                     </a>
                   ) : null}
                   <button
@@ -268,13 +270,14 @@ export function WatchClient({
                     disabled={bookmarkPending}
                     aria-pressed={isBookmarked}
                     aria-label={isBookmarked ? "Remove bookmark" : "Bookmark this lesson"}
-                    className={`inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral disabled:opacity-60 sm:h-10 sm:w-10 ${
+                    className={`${actionCardClass} ${
                       isBookmarked
                         ? "bg-coral/20 text-coral"
                         : "bg-white/[0.08] text-white/90 hover:bg-white/[0.14]"
                     }`}
                   >
                     <IconBookmark className="h-4 w-4" filled={isBookmarked} />
+                    {isBookmarked ? "Saved" : "Bookmark"}
                   </button>
                 </div>
               </div>
@@ -282,10 +285,23 @@ export function WatchClient({
           </div>
 
           {/* ── Right: class sidebar ── */}
-          <aside className="w-full shrink-0 lg:w-[340px] xl:w-[380px]">
+          <aside
+            id="watch-sidebar"
+            hidden={!sidebarOpen}
+            className="w-full shrink-0 lg:w-[340px] xl:w-[380px]"
+          >
             <div className="overflow-hidden rounded-2xl bg-zinc-900/80 ring-1 ring-white/10 lg:sticky lg:top-20">
               {/* Header: thumbnail + course title / description */}
-              <div className="flex items-start gap-3 border-b border-white/10 p-4 sm:gap-4 sm:p-5">
+              <div className="relative flex items-start gap-3 border-b border-white/10 p-4 pr-11 sm:gap-4 sm:p-5 sm:pr-12">
+                <button
+                  type="button"
+                  onClick={() => setSidebarOpen(false)}
+                  aria-label="Close sidebar"
+                  aria-controls="watch-sidebar"
+                  className="absolute right-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-full text-white/60 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-coral sm:right-4 sm:top-4"
+                >
+                  <IconClose className="h-4 w-4" />
+                </button>
                 <Link
                   href={`/user-portal/click-video-detail?video=${video.id}`}
                   aria-label={`View ${video.title} detail`}

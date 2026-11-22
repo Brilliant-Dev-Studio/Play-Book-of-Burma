@@ -17,7 +17,7 @@ function PortraitCard({ src, priority }: { src: string; priority?: boolean }) {
   return (
     <div
       data-portrait-card
-      className="relative h-[min(62vh,520px)] w-[140px] shrink-0 overflow-hidden rounded-[30px] shadow-[0_16px_48px_rgba(0,0,0,0.55)] sm:h-[min(68vh,560px)] sm:w-[170px] md:h-[min(72vh,600px)] md:w-[200px] lg:w-[220px] xl:w-[240px]"
+      className="relative h-[min(46vh,380px)] w-[124px] shrink-0 overflow-hidden rounded-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.55)] sm:h-[min(56vh,480px)] sm:w-[160px] sm:rounded-[30px] md:h-[min(72vh,600px)] md:w-[200px] lg:w-[220px] xl:w-[240px]"
     >
       <Image
         src={src}

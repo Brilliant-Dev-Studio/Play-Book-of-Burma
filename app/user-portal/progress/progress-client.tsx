@@ -5,6 +5,7 @@ import {
   IconChevronLeft,
   IconChevronRight,
 } from "@/app/components/carousel-chevrons";
+import { PlayCircle } from "@/app/components/play-circle";
 
 export type BookmarkItem = {
   videoId: string;
@@ -87,7 +88,7 @@ function ContinuesWatchingSection({ items }: { items: ContinueWatchingItem[] }) 
   return (
     <section>
       <div className="mb-5 flex items-end justify-between gap-4 sm:mb-6">
-        <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl md:text-3xl">
+        <h2 className="text-lg font-bold tracking-tight text-white sm:text-2xl md:text-3xl">
           Continues Watching
         </h2>
         <div className="flex shrink-0 gap-2">
@@ -185,7 +186,7 @@ function YourBookmarksSection({ items }: { items: BookmarkItem[] }) {
   return (
     <section className="mt-12 sm:mt-14 md:mt-16">
       <div className="mb-5 flex items-end justify-between gap-4 sm:mb-6">
-        <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl md:text-3xl">
+        <h2 className="text-lg font-bold tracking-tight text-white sm:text-2xl md:text-3xl">
           Your Bookmarks
         </h2>
         <div className="flex shrink-0 gap-2">
@@ -282,7 +283,7 @@ function BookmarkCard({
 function YourNotesSection({ items }: { items: NoteItemData[] }) {
   return (
     <section className="mt-12 sm:mt-14 md:mt-16">
-      <h2 className="mb-5 text-xl font-bold tracking-tight text-white sm:mb-6 sm:text-2xl md:text-3xl">
+      <h2 className="mb-5 text-lg font-bold tracking-tight text-white sm:mb-6 sm:text-2xl md:text-3xl">
         Your Notes
       </h2>
       {items.length === 0 ? (
@@ -360,7 +361,7 @@ function PlaybookAchievedSection({ items }: { items: PlaybookAchievedItem[] }) {
   return (
     <section className="mt-12 sm:mt-14 md:mt-16">
       <div className="mb-5 flex items-end justify-between gap-4 sm:mb-6">
-        <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl md:text-3xl">
+        <h2 className="text-lg font-bold tracking-tight text-white sm:text-2xl md:text-3xl">
           Playbook you have achieved
         </h2>
         <div className="flex shrink-0 gap-2">
@@ -440,14 +441,8 @@ function PlaybookCard({
           }}
           aria-hidden
         />
-        <span
-          className="pointer-events-none absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center opacity-0 scale-50 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-100 group-hover:opacity-50 group-focus-visible:scale-100 group-focus-visible:opacity-50 motion-reduce:scale-100 motion-reduce:opacity-50 motion-reduce:transition-none"
-          aria-hidden
-        >
-          <span className="absolute h-11 w-11 rounded-full bg-coral/60 opacity-0 transition-opacity duration-500 group-hover:animate-ping group-hover:opacity-100 group-focus-visible:animate-ping group-focus-visible:opacity-100 motion-reduce:hidden sm:h-12 sm:w-12" />
-          <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-coral text-black shadow-lg transition-transform duration-300 ease-out group-hover:scale-110 sm:h-12 sm:w-12">
-            <span className="ml-0.5 text-2xl leading-none">▶</span>
-          </span>
+        <span className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
+          <PlayCircle />
         </span>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-4 pb-2 text-center sm:px-5 sm:pb-3">
           <h3 className="overflow-hidden text-ellipsis text-base font-bold leading-snug tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] sm:text-lg">

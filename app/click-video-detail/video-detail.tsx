@@ -89,7 +89,7 @@ export async function VideoDetail({
           />
           {/* Lighter veil — keep text readable on the left, photo clearer on the right */}
           <div
-            className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(90deg,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.72)_28%,rgba(0,0,0,0.35)_48%,rgba(0,0,0,0.08)_68%,transparent_82%)] max-md:bg-[linear-gradient(180deg,rgba(0,0,0,0.78)_0%,rgba(0,0,0,0.55)_40%,rgba(0,0,0,0.22)_70%,transparent_100%)]"
+            className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(90deg,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.72)_28%,rgba(0,0,0,0.35)_48%,rgba(0,0,0,0.08)_68%,transparent_82%)] max-md:bg-[linear-gradient(180deg,rgba(0,0,0,0.82)_0%,rgba(0,0,0,0.7)_45%,rgba(0,0,0,0.6)_75%,rgba(0,0,0,0.75)_100%)]"
             aria-hidden
           />
           {/* Top / bottom edge shadow masks */}
@@ -105,7 +105,7 @@ export async function VideoDetail({
 
         <div className={`relative z-[3] flex min-h-[min(68dvh,620px)] flex-1 flex-col pt-12 pb-16 sm:pt-14 sm:pb-20 md:flex-row ${shell}`}>
           <div className="flex w-full flex-1 flex-col items-start justify-center md:w-[30vw] md:max-w-[30vw] md:shrink-0">
-            <div className="w-full max-w-3xl text-left text-white max-md:rounded-lg max-md:bg-black/35 max-md:px-4 max-md:py-6 sm:max-md:px-5">
+            <div className="w-full max-w-3xl text-left text-white">
               <h1 className="text-2xl font-semibold leading-tight tracking-tight text-balance sm:text-3xl md:text-[1.95rem] md:leading-[1.14] lg:text-4xl">
                 <span className="block">{video.titleLine1}</span>
                 {video.titleLine2 && <span className="block">{video.titleLine2}</span>}

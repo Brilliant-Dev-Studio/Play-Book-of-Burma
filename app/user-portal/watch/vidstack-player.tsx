@@ -1,10 +1,14 @@
 "use client";
 
+import { PlayCircle } from "@/app/components/play-circle";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   MediaPlayer,
   MediaProvider,
   Menu,
+  useMediaRemote,
+  useMediaState,
+  usePlaybackRateOptions,
   useVideoQualityOptions,
   type MediaPlayerInstance,
 } from "@vidstack/react";
@@ -15,8 +19,6 @@ import {
 
 import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
-
-const MenuIcons = defaultLayoutIcons.Menu;
 
 export type QualitySource = { label: string; height: number | null; url: string; isSource: boolean };
 
@@ -36,47 +38,75 @@ function buildQualitySources(qualities: QualitySource[] | undefined, fallbackSrc
     }));
 }
 
-function ResolutionMenu() {
-  const options = useVideoQualityOptions({ auto: true, sort: "descending" });
-  const current = options.selectedQuality;
-  const hint =
-    options.selectedValue === "auto"
-      ? current?.height
-        ? `Auto (${current.height}p)`
-        : "Auto"
-      : current?.height
-        ? `${current.height}p`
-        : "—";
+// Reuse the default layout's bundled icon — `@vidstack/react/icons` needs the separate
+// `media-icons` package, which isn't installed.
+const SettingsIcon = defaultLayoutIcons.Menu.Settings;
+
+const RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
+const radioClass =
+  "flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-white/85 outline-none transition-colors hover:bg-white/10 focus-visible:bg-white/10 data-[checked]:bg-white/15 data-[checked]:text-white";
+
+/** Compact "1x" text button next to the gear — cycles through RATES on each click. */
+function SpeedButton() {
+  const rate = useMediaState("playbackRate");
+  const remote = useMediaRemote();
+  return (
+    <button
+      type="button"
+      className="vds-button w-auto! px-2 text-sm font-semibold tabular-nums"
+      aria-label={`Playback speed ${rate}x`}
+      onClick={(e) => {
+        const next = RATES[(RATES.indexOf(rate) + 1) % RATES.length] ?? 1;
+        remote.changePlaybackRate(next, e.nativeEvent);
+      }}
+    >
+      {rate}x
+    </button>
+  );
+}
+
+/** Gear menu: Playback Speed and Quality side by side as two columns, icon-only trigger. */
+function SettingsMenu() {
+  const speed = usePlaybackRateOptions({ rates: RATES, normalLabel: "1" });
+  const quality = useVideoQualityOptions({ auto: true, sort: "ascending" });
 
   return (
     <Menu.Root className="vds-menu">
-      <Menu.Button
-        className="vds-menu-item"
-        disabled={options.disabled}
-        aria-label="Resolution"
-      >
-        <MenuIcons.ArrowLeft className="vds-menu-close-icon vds-icon" />
-        <span className="vds-menu-item-label">Resolution</span>
-        <span className="vds-menu-item-hint" data-part="hint">
-          {hint}
-        </span>
-        <MenuIcons.ArrowRight className="vds-menu-open-icon vds-icon" />
+      <Menu.Button className="vds-menu-button vds-button" aria-label="Settings">
+        <SettingsIcon className="vds-rotate-icon vds-icon" />
       </Menu.Button>
-      <Menu.Content className="vds-menu-items">
-        <Menu.RadioGroup className="vds-radio-group" value={options.selectedValue}>
-          {options.map(({ label, value, select }) => (
-            <Menu.Radio
-              className="vds-radio"
-              value={value}
-              onSelect={select}
-              key={value}
-            >
-              <MenuIcons.RadioCheck className="vds-icon" />
-              <span className="vds-radio-label">{label}</span>
-            </Menu.Radio>
-          ))}
-        </Menu.RadioGroup>
-      </Menu.Content>
+      <Menu.Items className="vds-menu-items" placement="top end" offset={0}>
+        <div className="grid grid-cols-2 gap-2 p-1">
+          <div className="min-w-24">
+            <p className="px-2.5 pb-1.5 text-[11px] font-medium text-white/50">Playback Speed</p>
+            <Menu.RadioGroup value={speed.selectedValue}>
+              {speed.map(({ label, value, select }) => (
+                <Menu.Radio key={value} value={value} onSelect={select} className={radioClass}>
+                  {label}
+                </Menu.Radio>
+              ))}
+            </Menu.RadioGroup>
+          </div>
+          <div className="min-w-24 border-l border-white/10 pl-2">
+            <p className="px-2.5 pb-1.5 text-[11px] font-medium text-white/50">Quality</p>
+            {quality.disabled ? (
+              <p className="px-2.5 py-1.5 text-[13px] text-white/50">Auto</p>
+            ) : (
+              <Menu.RadioGroup value={quality.selectedValue}>
+                {quality.map(({ label, value, quality: q, select }) => (
+                  <Menu.Radio key={value} value={value} onSelect={select} className={radioClass}>
+                    {label}
+                    {q && q.height >= 720 ? (
+                      <span className="rounded-sm bg-white/20 px-1 text-[9px] font-bold leading-tight">HD</span>
+                    ) : null}
+                  </Menu.Radio>
+                ))}
+              </Menu.RadioGroup>
+            )}
+          </div>
+        </div>
+      </Menu.Items>
     </Menu.Root>
   );
 }
@@ -105,7 +135,6 @@ export default function VidstackPlayer({
   const onTimeUpdateRef = useRef(onTimeUpdate);
   const initialSecondsRef = useRef(initialSeconds ?? 0);
   const seekDoneRef = useRef(false);
-  const [buffering, setBuffering] = useState(true);
   const [needsGesture, setNeedsGesture] = useState(false);
 
   onTimeUpdateRef.current = onTimeUpdate;
@@ -114,7 +143,6 @@ export default function VidstackPlayer({
   const sources = useMemo(() => buildQualitySources(qualities, src), [qualities, src]);
 
   useEffect(() => {
-    setBuffering(true);
     setNeedsGesture(false);
     seekDoneRef.current = false;
   }, [src]);
@@ -171,47 +199,43 @@ export default function VidstackPlayer({
         logLevel="silent"
         className="h-full w-full [&_video]:object-contain"
         onCanPlay={() => {
-          setBuffering(false);
           const player = playerRef.current;
-          if (!player || seekDoneRef.current) return;
+          if (!player) return;
+          // In "Auto", Vidstack re-picks the rendition on *every* player resize (closest
+          // width/height to the player box) and reloads the video when it changes — so
+          // toggling the sidebar made the video reload and show the buffering spinner.
+          // Pin whatever Auto picked once playback is ready: re-selecting the already
+          // selected quality only turns auto (and its resize watcher) off — no reload.
+          const picked = player.qualities.selected;
+          if (player.qualities.auto && picked && !player.qualities.readonly) {
+            picked.selected = true;
+          }
+          if (seekDoneRef.current) return;
           const seekTo = initialSecondsRef.current;
           if (seekTo > 0 && Number.isFinite(player.duration) && player.duration > 0) {
             player.currentTime = Math.min(seekTo, Math.max(player.duration - 1, 0));
             seekDoneRef.current = true;
           }
         }}
-        onPlaying={() => {
-          setBuffering(false);
-          setNeedsGesture(false);
-        }}
-        onWaiting={() => setBuffering(true)}
-        onAutoPlayFail={() => {
-          setBuffering(false);
-          setNeedsGesture(true);
-        }}
+        onPlaying={() => setNeedsGesture(false)}
+        onAutoPlayFail={() => setNeedsGesture(true)}
       >
         <MediaProvider />
+        {/* Right side of the controls bar is icon-only: 1x · settings · fullscreen.
+            Buffering uses Vidstack's own built-in indicator (no second custom spinner). */}
         <DefaultVideoLayout
           icons={defaultLayoutIcons}
           slots={{
-            settingsMenuItemsEnd: <ResolutionMenu />,
+            captionButton: null,
+            pipButton: null,
+            airPlayButton: null,
+            googleCastButton: null,
+            chaptersMenu: null,
+            beforeSettingsMenu: <SpeedButton />,
+            settingsMenu: <SettingsMenu />,
           }}
         />
       </MediaPlayer>
-
-      {buffering && !needsGesture ? (
-        // No background fill here on purpose — covering the whole player in solid
-        // black during buffering hides the controls bar underneath (play/pause,
-        // settings, timeline), leaving the viewer with nothing to interact with
-        // if buffering takes a while or gets stuck. The frame and controls stay
-        // visible; only a small spinner floats on top.
-        <div
-          className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
-          aria-hidden
-        >
-          <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/25 border-t-coral drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]" />
-        </div>
-      ) : null}
 
       {needsGesture ? (
         <button
@@ -221,12 +245,9 @@ export default function VidstackPlayer({
           onClick={() => {
             void playerRef.current?.play().catch(() => {});
             setNeedsGesture(false);
-            setBuffering(true);
           }}
         >
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-coral text-black shadow-lg">
-            <span className="ml-1 text-2xl leading-none">▶</span>
-          </span>
+          <PlayCircle size="lg" className="ring-1 ring-white/20" />
         </button>
       ) : null}
     </div>

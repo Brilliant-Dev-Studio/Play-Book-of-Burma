@@ -44,17 +44,26 @@ export function UserPortalSidebar({
   onClearAll,
   onClose,
   filterGroups,
+  variant = "desktop",
 }: {
   selected: Set<string>;
   onToggle: (option: string) => void;
   onClearAll: () => void;
   onClose: () => void;
   filterGroups: FilterGroup[];
+  /** `desktop`: sticky column (lg+ only). `drawer`: full-height slide-over panel for phone/tablet. */
+  variant?: "desktop" | "drawer";
 }) {
   const totalSelected = selected.size;
 
   return (
-    <aside className="sticky top-0 z-20 hidden h-dvh w-72 shrink-0 flex-col border-r border-white/10 bg-zinc-950 lg:flex">
+    <aside
+      className={
+        variant === "drawer"
+          ? "flex h-dvh w-[86vw] max-w-sm flex-col border-r border-white/10 bg-zinc-950 shadow-[8px_0_40px_rgba(0,0,0,0.6)]"
+          : "sticky top-0 z-20 hidden h-dvh w-72 shrink-0 flex-col border-r border-white/10 bg-zinc-950 lg:flex"
+      }
+    >
       {/* Header */}
       <div className="px-7 pb-6 pt-10">
         <div className="flex items-start justify-between gap-3">

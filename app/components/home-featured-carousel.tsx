@@ -6,6 +6,7 @@ import {
   IconChevronLeft,
   IconChevronRight,
 } from "@/app/components/carousel-chevrons";
+import { PlayCircle } from "@/app/components/play-circle";
 const LOOP_COPIES = 3;
 
 export type FeaturedItem = {
@@ -36,7 +37,7 @@ function FeaturedVideoCard({
       href={videoDetailHref(item.id, detailBasePath)}
       data-card
       draggable={false}
-      className="group flex w-[314px] shrink-0 flex-col overflow-hidden rounded-2xl border-2 border-white/30 bg-black outline-none transition-colors hover:border-white/45 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[354px] md:w-[362px]"
+      className="group flex w-[min(314px,calc(100vw-3.5rem))] shrink-0 flex-col overflow-hidden rounded-2xl border-2 border-white/30 bg-black outline-none transition-colors hover:border-white/45 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[354px] md:w-[362px]"
       aria-label={`${item.titleLine1} ${item.titleLine2}`}
     >
       <div className="relative aspect-[3/4] w-full overflow-hidden bg-zinc-900">
@@ -71,14 +72,8 @@ function FeaturedVideoCard({
           aria-hidden
         />
 
-        <span
-          className="pointer-events-none absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center opacity-0 scale-50 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-100 group-hover:opacity-50 group-focus-within:scale-100 group-focus-within:opacity-50 motion-reduce:scale-100 motion-reduce:opacity-50 motion-reduce:transition-none"
-          aria-hidden
-        >
-          <span className="absolute h-11 w-11 rounded-full bg-coral/60 opacity-0 transition-opacity duration-500 group-hover:animate-ping group-hover:opacity-100 group-focus-within:animate-ping group-focus-within:opacity-100 motion-reduce:hidden sm:h-12 sm:w-12" />
-          <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-coral text-black shadow-lg transition-transform duration-300 ease-out group-hover:scale-110 sm:h-12 sm:w-12">
-            <span className="ml-0.5 text-2xl leading-none">▶</span>
-          </span>
+        <span className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
+          <PlayCircle />
         </span>
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-4 pb-2 text-center sm:px-5 sm:pb-3">
@@ -283,10 +278,10 @@ export function HomeFeaturedCarousel({
   const sectionPad =
     variant === "embedded"
       ? "bg-black pb-12 pt-4 sm:pb-14 sm:pt-5 md:pb-16 md:pt-6 lg:pb-20 lg:pt-8"
-      : "bg-black pb-10 pt-20 md:pb-12 md:pt-24 lg:pb-14 lg:pt-28 xl:pb-16 xl:pt-32";
+      : "bg-black pb-10 pt-8 sm:pt-16 md:pb-12 md:pt-24 lg:pb-14 lg:pt-28 xl:pb-16 xl:pt-32";
 
   const edgePad =
-    "pl-[calc(10%+25px+1rem)] pr-[calc(10%+25px+1rem)] sm:pl-[calc(10%+25px+1.5rem)] sm:pr-[calc(10%+25px+1.5rem)] lg:pl-[calc(10%+25px+2rem)] lg:pr-[calc(10%+25px+2rem)]";
+    "px-4 sm:px-6 lg:pl-[calc(10%+25px+2rem)] lg:pr-[calc(10%+25px+2rem)]";
 
   return (
     <section className={sectionPad}>
@@ -416,11 +411,11 @@ export function HomeFeaturedCarousel({
           </div>
 
           <div
-            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-[linear-gradient(90deg,#000_0%,rgba(0,0,0,0.92)_35%,rgba(0,0,0,0.45)_70%,transparent_100%)] sm:w-36 md:w-48 lg:w-56"
+            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-4 bg-[linear-gradient(90deg,#000_0%,rgba(0,0,0,0.92)_35%,rgba(0,0,0,0.45)_70%,transparent_100%)] sm:w-10 md:w-16 lg:w-56"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-[linear-gradient(270deg,#000_0%,rgba(0,0,0,0.92)_35%,rgba(0,0,0,0.45)_70%,transparent_100%)] sm:w-36 md:w-48 lg:w-56"
+            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-4 bg-[linear-gradient(270deg,#000_0%,rgba(0,0,0,0.92)_35%,rgba(0,0,0,0.45)_70%,transparent_100%)] sm:w-10 md:w-16 lg:w-56"
             aria-hidden
           />
         </div>

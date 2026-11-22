@@ -91,7 +91,7 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: [
       {
-        url: "/social.png",
+        url: "/social.jpg",
         width: 1200,
         height: 630,
         alt: "Playbook of Burma — Myanmar Business Insights",
@@ -102,7 +102,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    images: ["/social.png"],
+    images: ["/social.jpg"],
   },
   icons: {
     icon: [

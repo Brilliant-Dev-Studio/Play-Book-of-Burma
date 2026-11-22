@@ -1,5 +1,6 @@
 "use client";
 
+import { PlayCircle } from "@/app/components/play-circle";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { formatPlayerClock } from "@/lib/format-duration";
@@ -100,11 +101,10 @@ export function FloatingPodcastPlayer() {
             type="button"
             onClick={toggle}
             aria-label={isPlaying ? "Pause" : "Play"}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-coral text-black shadow-md"
+            className="group shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
           >
-            <span className="text-sm leading-none">
-              {isPlaying ? "❚❚" : <span className="ml-0.5">▶</span>}
-            </span>
+            {/* Thin ring so the dark circle still reads against the dark player bar. */}
+            <PlayCircle size="sm" playing={isPlaying} className="h-9! w-9! ring-1 ring-white/20" />
           </button>
 
           <button

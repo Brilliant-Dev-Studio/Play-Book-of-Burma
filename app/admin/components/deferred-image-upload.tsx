@@ -8,8 +8,12 @@ import {
   useRef,
   useState,
 } from "react";
+import { imageToWebp } from "@/lib/image-to-webp";
 
 type Kind = "thumbnail" | "instructor" | "hero";
+
+/** Longest edge kept on upload — hero is a full-width banner, the rest render much smaller. */
+const MAX_DIM: Record<Kind, number> = { hero: 2400, thumbnail: 1600, instructor: 1200 };
 
 type UploadResult = { key: string; location: string };
 
@@ -90,12 +94,14 @@ export const DeferredImageUpload = forwardRef<
       upload: async () => {
         if (!file) return null;
 
+        const optimised = await imageToWebp(file, { maxDim: MAX_DIM[kind] });
+
         const signRes = await fetch("/api/admin/uploads/s3/sign-single", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            filename: file.name,
-            contentType: file.type || "application/octet-stream",
+            filename: optimised.name,
+            contentType: optimised.type || "application/octet-stream",
             kind,
           }),
         });
@@ -123,7 +129,7 @@ export const DeferredImageUpload = forwardRef<
               else reject(new Error(`Upload failed: ${xhr.status}`));
             };
             xhr.onerror = () => reject(new Error("Upload failed."));
-            xhr.send(file);
+            xhr.send(optimised);
           });
         } finally {
           setProgress(null);

@@ -1,5 +1,6 @@
 "use client";
 
+import { PlayCircle } from "@/app/components/play-circle";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatPlayerClock } from "@/lib/format-duration";
@@ -76,16 +77,9 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
               toggle();
             }}
             aria-label={isPlaying ? "Pause" : "Play"}
-            className={`absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center scale-50 opacity-0 outline-none transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-100 group-hover:opacity-50 focus-visible:scale-100 focus-visible:opacity-50 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-transparent motion-reduce:scale-100 motion-reduce:opacity-50 motion-reduce:transition-none ${isPlaying ? "scale-100! opacity-50!" : ""}`}
+            className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
           >
-            <span
-              className={`absolute h-11 w-11 rounded-full bg-coral/60 opacity-0 transition-opacity duration-500 group-hover:animate-ping group-hover:opacity-100 motion-reduce:hidden sm:h-12 sm:w-12 ${isPlaying ? "hidden" : ""}`}
-            />
-            <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-coral text-black shadow-lg transition-transform duration-300 ease-out hover:scale-110 sm:h-12 sm:w-12">
-              <span className="text-2xl leading-none">
-                {isPlaying ? "❚❚" : <span className="ml-0.5">▶</span>}
-              </span>
-            </span>
+            <PlayCircle playing={isPlaying} />
           </button>
         </div>
       </div>
@@ -285,7 +279,7 @@ export function UserPortalPodcastSection({
   if (groups.length === 0) {
     return (
       <section className="mt-12 sm:mt-14 md:mt-16">
-        <h2 className="text-left text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+        <h2 className="text-left text-xl font-semibold tracking-tight text-white sm:text-3xl">
           Listen to Story of Burma Podcast with No Ads
         </h2>
         <div className="mt-8 rounded-2xl border border-white/10 bg-white/4 py-12 text-center text-white/55">
@@ -297,7 +291,7 @@ export function UserPortalPodcastSection({
 
   return (
     <section className="mt-12 sm:mt-14 md:mt-16">
-      <h2 className="text-left text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+      <h2 className="text-left text-xl font-semibold tracking-tight text-white sm:text-3xl">
         Listen to Story of Burma Podcast with No Ads
       </h2>
 

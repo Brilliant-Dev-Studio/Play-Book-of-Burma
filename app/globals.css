@@ -16,8 +16,16 @@ html {
   --palette-butter: #fecf73;
   --palette-wine: #76220b;
 
-  /* Center content rail — previously 80%, tightened by 50px */
-  --layout-content-max: calc(80% - 50px);
+  /* Center content rail. Phones/tablets use the full width (the containers already
+     add px-4/px-6 gutters); the narrowed 80% − 50px rail is a desktop-only look —
+     on a 390px phone it left only ~260px for content. */
+  --layout-content-max: 100%;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --layout-content-max: calc(80% - 50px);
+  }
 }
 
 @theme inline {

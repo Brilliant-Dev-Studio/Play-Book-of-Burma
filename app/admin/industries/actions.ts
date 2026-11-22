@@ -34,6 +34,7 @@ export async function saveIndustry(input: IndustryFormInput): Promise<Result> {
 
     revalidatePath("/admin/industries");
     revalidatePath("/admin/videos/new");
+    revalidatePath("/"); // home hero lists industries ("Pick Industry" flyout)
     return { ok: true, id: row.id };
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
@@ -51,6 +52,7 @@ export async function deleteIndustry(
   try {
     await prisma.industry.delete({ where: { id } });
     revalidatePath("/admin/industries");
+    revalidatePath("/");
     return { ok: true };
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003") {

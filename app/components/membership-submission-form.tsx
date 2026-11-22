@@ -7,6 +7,7 @@ import {
   membershipFormFileClass,
   membershipFormTextareaClass,
 } from "@/app/components/membership-form-field-styles";
+import { imageToWebp } from "@/lib/image-to-webp";
 
 const COUNTRY_CODES = [
   { code: "+95",  flag: "🇲🇲", label: "MM" },
@@ -20,27 +21,9 @@ const COUNTRY_CODES = [
   { code: "+1",   flag: "🇺🇸", label: "US" },
 ] as const;
 
-async function compressImage(f: File): Promise<File> {
-  if (!f.type.startsWith("image/")) return f;
-  const bitmap = await createImageBitmap(f).catch(() => null);
-  if (!bitmap) return f;
-  const MAX_DIM = 1800;
-  const scale = Math.min(1, MAX_DIM / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return f;
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close?.();
-  const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, "image/jpeg", 0.82));
-  if (!blob) return f;
-  const base = f.name.replace(/\.[^.]+$/, "") || "screenshot";
-  return new File([blob], `${base}.jpg`, { type: "image/jpeg" });
-}
-
 async function uploadScreenshot(original: File): Promise<string> {
-  const f = await compressImage(original);
+  // Payment screenshots: keep text legible for admin review (1800px, slightly higher quality).
+  const f = await imageToWebp(original, { maxDim: 1800, quality: 0.85 });
   const presign = await fetch("/api/membership/sign-screenshot", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
