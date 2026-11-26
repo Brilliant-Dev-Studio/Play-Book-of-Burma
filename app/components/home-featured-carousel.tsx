@@ -37,7 +37,7 @@ function FeaturedVideoCard({
       href={videoDetailHref(item.id, detailBasePath)}
       data-card
       draggable={false}
-      className="group flex w-[min(314px,calc(100vw-3.5rem))] shrink-0 flex-col overflow-hidden rounded-2xl border-2 border-white/30 bg-black outline-none transition-colors hover:border-white/45 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[354px] md:w-[362px]"
+      className="group flex w-[min(314px,calc(100vw-3.5rem))] shrink-0 flex-col overflow-hidden rounded-2xl border border-white/12 bg-black outline-none transition-colors hover:border-white/25 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[354px] md:w-[362px]"
       aria-label={`${item.titleLine1} ${item.titleLine2}`}
     >
       <div className="relative aspect-[3/4] w-full overflow-hidden bg-zinc-900">
@@ -73,7 +73,7 @@ function FeaturedVideoCard({
         />
 
         <span className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
-          <PlayCircle />
+          <PlayCircle revealOnHover />
         </span>
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-4 pb-2 text-center sm:px-5 sm:pb-3">

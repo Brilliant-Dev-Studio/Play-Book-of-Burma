@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { Fragment, useState, useTransition } from "react";
 import { inputClass, labelClass } from "@/app/admin/components/form-field-styles";
 
 export type TaxonomyRow = {
@@ -9,6 +9,8 @@ export type TaxonomyRow = {
   name: string;
   order: number;
   videoCount: number;
+  /** Optional — Industries also count podcasts (they block deletion too). */
+  podcastCount?: number;
 };
 
 type SaveFn = (input: {
@@ -33,6 +35,7 @@ export function TaxonomyManager({
   remove: DeleteFn;
 }) {
   const router = useRouter();
+  const showPodcasts = items.some((r) => r.podcastCount !== undefined);
   const [pending, startTransition] = useTransition();
   const [newName, setNewName] = useState("");
   const [newOrder, setNewOrder] = useState<number>(items.length);
@@ -86,11 +89,23 @@ export function TaxonomyManager({
     });
   }
 
+  function usageText(row: TaxonomyRow): string | null {
+    const parts = [
+      row.videoCount > 0 ? `${row.videoCount} video${row.videoCount === 1 ? "" : "s"}` : null,
+      (row.podcastCount ?? 0) > 0 ? `${row.podcastCount} podcast${row.podcastCount === 1 ? "" : "s"}` : null,
+    ].filter(Boolean);
+    return parts.length ? parts.join(" and ") : null;
+  }
+
   function onRemove(row: TaxonomyRow) {
-    if (row.videoCount > 0) {
+    const usage = usageText(row);
+    if (usage) {
+      // Warn up front instead of letting the delete fail on the server.
       setRowError({
         id: row.id,
-        message: `Cannot delete — ${row.videoCount} video(s) still reference it.`,
+        message: `"${row.name}" can't be deleted yet — it is still used by ${usage}. Move ` +
+          `${usage.includes("podcast") && usage.includes("video") ? "them" : "it"} to another ${title.toLowerCase().replace(/s$/, "")} ` +
+          `first (Admin → ${usage.includes("podcast") ? "Podcasts" : "Videos"}), then delete.`,
       });
       return;
     }
@@ -162,13 +177,16 @@ export function TaxonomyManager({
               <th className="px-4 py-3 text-left font-bold">Name</th>
               <th className="px-4 py-3 text-left font-bold whitespace-nowrap">Order</th>
               <th className="px-4 py-3 text-left font-bold whitespace-nowrap">Videos</th>
+              {showPodcasts ? (
+                <th className="px-4 py-3 text-left font-bold whitespace-nowrap">Podcasts</th>
+              ) : null}
               <th className="px-4 py-3 text-right font-bold whitespace-nowrap">Actions</th>
             </tr>
           </thead>
           <tbody>
             {items.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-10 text-center text-white/55">
+                <td colSpan={showPodcasts ? 5 : 4} className="px-4 py-10 text-center text-white/55">
                   No entries yet. Add one above.
                 </td>
               </tr>
@@ -176,8 +194,10 @@ export function TaxonomyManager({
             {items.map((row) => {
               const isEditing = editingId === row.id;
               const hasErr = rowError?.id === row.id;
+              const usage = usageText(row);
               return (
-                <tr key={row.id} className="border-t border-white/10 text-white/90">
+                <Fragment key={row.id}>
+                <tr className="border-t border-white/10 text-white/90">
                   {isEditing ? (
                     <>
                       <td className="px-4 py-3">
@@ -198,6 +218,9 @@ export function TaxonomyManager({
                       <td className="px-4 py-3 whitespace-nowrap text-white/70">
                         {row.videoCount}
                       </td>
+                      {showPodcasts ? (
+                        <td className="px-4 py-3 whitespace-nowrap text-white/70">{row.podcastCount ?? 0}</td>
+                      ) : null}
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         <button
                           type="button"
@@ -222,6 +245,9 @@ export function TaxonomyManager({
                       <td className="px-4 py-3 font-semibold text-white">{row.name}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-white/70">{row.order}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-white/70">{row.videoCount}</td>
+                      {showPodcasts ? (
+                        <td className="px-4 py-3 whitespace-nowrap text-white/70">{row.podcastCount ?? 0}</td>
+                      ) : null}
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         <button
                           type="button"
@@ -234,19 +260,39 @@ export function TaxonomyManager({
                           type="button"
                           onClick={() => onRemove(row)}
                           disabled={pending}
-                          className="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/20 disabled:opacity-50"
+                          title={usage ? `In use by ${usage} — can't be deleted yet` : undefined}
+                          className={`rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 ${
+                            usage
+                              ? "border-white/10 bg-white/[0.03] text-white/40 hover:text-white/60"
+                              : "border-red-500/40 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                          }`}
                         >
                           Delete
                         </button>
                       </td>
                     </>
                   )}
-                  {hasErr && (
-                    <td colSpan={4} className="border-t border-red-500/30 bg-red-500/5 px-4 py-2 text-xs text-red-300">
-                      {rowError!.message}
-                    </td>
-                  )}
                 </tr>
+                {hasErr && (
+                  <tr>
+                    <td
+                      colSpan={showPodcasts ? 5 : 4}
+                      className="border-t border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-xs text-amber-200"
+                      role="alert"
+                    >
+                      <span className="mr-1.5" aria-hidden>⚠</span>
+                      {rowError!.message}
+                      <button
+                        type="button"
+                        onClick={() => setRowError(null)}
+                        className="ml-3 underline underline-offset-2 hover:text-amber-100"
+                      >
+                        Dismiss
+                      </button>
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               );
             })}
           </tbody>

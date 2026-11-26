@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import {
   membershipFormFieldClass,
   membershipFormFieldErrorClass,
-  membershipFormFieldLabelClass,
+  membershipPayLabelClass,
 } from "@/app/components/membership-form-field-styles";
 
 export function AuthPageShell({
@@ -26,7 +26,7 @@ export function AuthPageShell({
           aria-hidden
         />
 
-        <h1 className="relative text-center font-[family-name:var(--font-rwst-stack)] text-xl font-bold tracking-tight text-white sm:text-2xl">
+        <h1 className="relative text-center font-[family-name:var(--font-rwst-stack)] text-xl font-bold tracking-[0.12em] text-white sm:text-2xl">
           {heading}
         </h1>
         <div
@@ -47,7 +47,7 @@ export function AuthFieldLabel({
   children: ReactNode;
 }) {
   return (
-    <label htmlFor={htmlFor} className={membershipFormFieldLabelClass}>
+    <label htmlFor={htmlFor} className={membershipPayLabelClass}>
       {children}
     </label>
   );

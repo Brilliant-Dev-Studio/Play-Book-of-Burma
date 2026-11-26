@@ -146,7 +146,7 @@ function ContinuesWatchingCard({
       data-card
       className="group flex w-80 shrink-0 snap-start flex-col outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-95 md:w-105"
     >
-      <div className="rounded-2xl border-2 border-white/45 p-[5px] transition-colors group-hover:border-white/65">
+      <div className="rounded-2xl border border-white/12 p-[5px] transition-colors group-hover:border-white/25">
         <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-zinc-900">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -442,7 +442,7 @@ function PlaybookCard({
           aria-hidden
         />
         <span className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
-          <PlayCircle />
+          <PlayCircle revealOnHover />
         </span>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-4 pb-2 text-center sm:px-5 sm:pb-3">
           <h3 className="overflow-hidden text-ellipsis text-base font-bold leading-snug tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] sm:text-lg">

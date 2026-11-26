@@ -44,7 +44,7 @@ export default async function LibraryPage() {
       <HomeFeaturedCarousel
         items={popularVideos}
         newlyAddedItems={newlyAddedVideos}
-        heading="Play book of Burma"
+        heading="Playbook of Burma"
         variant="embedded"
         showSeeAll={false}
         newlyAddedViewAllHref="/watch-all"

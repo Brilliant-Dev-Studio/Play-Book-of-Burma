@@ -23,7 +23,7 @@ const SITE_URL = "https://playbookofburma.com";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Playbook of Burma — Myanmar Business Insights",
+    absolute: "Playbook of Burma — Founder Learning Platform",
   },
   description:
     "Watch exclusive video interviews and listen to podcasts with Myanmar's top founders, CEOs, and business experts. Join our membership for full access.",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: SITE_URL,
-    title: "Playbook of Burma — Myanmar Business Insights",
+    title: "Playbook of Burma — Founder Learning Platform",
     description:
       "Watch exclusive video interviews and listen to podcasts with Myanmar's top founders, CEOs, and business experts.",
     images: [
@@ -50,8 +50,13 @@ export default async function Home() {
     getPopularVideos(),
     getNewlyAddedVideos(),
     getHomePodcastGroups(),
-    // Shown (display-only) in the hero's "Pick Industry" flyout, in admin order.
-    prisma.industry.findMany({ orderBy: [{ order: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
+    // Shown (display-only) in the hero's "Pick Industry" list, in admin order — only industries
+    // that have at least one published video, so new ones appear once they get content.
+    prisma.industry.findMany({
+      where: { videos: { some: { status: "PUBLISHED" } } },
+      orderBy: [{ order: "asc" }, { name: "asc" }],
+      select: { id: true, name: true },
+    }),
   ]);
 
   const allPodcastItems = podcastGroups.flatMap((g) => g.items);

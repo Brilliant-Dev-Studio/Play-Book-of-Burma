@@ -77,6 +77,8 @@ export default async function EditVideoPage({
         title: l.title,
         videoKey: l.videoKey,
         videoUrl: await presignGetUrl(l.videoKey, PRESIGN_TTL.video),
+        thumbnailKey: l.thumbnailKey ?? "",
+        thumbnailUrl: l.thumbnailKey ? await presignGetUrl(l.thumbnailKey, PRESIGN_TTL.image) : undefined,
         durationSeconds: l.durationSeconds,
         durationLabel: l.durationLabel,
         details: l.details,

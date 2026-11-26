@@ -1,6 +1,5 @@
 "use client";
 
-import { PlayCircle } from "@/app/components/play-circle";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   MediaPlayer,
@@ -47,67 +46,164 @@ const RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
 const radioClass =
   "flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-white/85 outline-none transition-colors hover:bg-white/10 focus-visible:bg-white/10 data-[checked]:bg-white/15 data-[checked]:text-white";
 
-/** Compact "1x" text button next to the gear — cycles through RATES on each click. */
-function SpeedButton() {
+/** "1x" button → its own menu with the playback speeds. */
+function SpeedMenu() {
   const rate = useMediaState("playbackRate");
-  const remote = useMediaRemote();
+  const speed = usePlaybackRateOptions({ rates: RATES, normalLabel: "1x" });
+
   return (
-    <button
-      type="button"
-      className="vds-button w-auto! px-2 text-sm font-semibold tabular-nums"
-      aria-label={`Playback speed ${rate}x`}
-      onClick={(e) => {
-        const next = RATES[(RATES.indexOf(rate) + 1) % RATES.length] ?? 1;
-        remote.changePlaybackRate(next, e.nativeEvent);
-      }}
-    >
-      {rate}x
-    </button>
+    <Menu.Root className="vds-menu">
+      <Menu.Button
+        className="vds-menu-button vds-button text-[13px] font-semibold tabular-nums"
+        aria-label={`Playback speed ${rate}x`}
+      >
+        {rate}x
+      </Menu.Button>
+      <Menu.Items className="vds-menu-items [--media-menu-min-width:0px]" placement="top end" offset={0}>
+        <div className="w-28">
+          <p className="px-2.5 pb-1.5 text-[11px] font-medium text-white/50">Playback Speed</p>
+          <Menu.RadioGroup value={speed.selectedValue}>
+            {speed.map(({ label, value, select }) => (
+              <Menu.Radio key={value} value={value} onSelect={select} className={radioClass}>
+                {label}
+              </Menu.Radio>
+            ))}
+          </Menu.RadioGroup>
+        </div>
+      </Menu.Items>
+    </Menu.Root>
   );
 }
 
-/** Gear menu: Playback Speed and Quality side by side as two columns, icon-only trigger. */
+/** Gear button → its own menu with the video quality (resolution) options. */
 function SettingsMenu() {
-  const speed = usePlaybackRateOptions({ rates: RATES, normalLabel: "1" });
   const quality = useVideoQualityOptions({ auto: true, sort: "ascending" });
 
   return (
     <Menu.Root className="vds-menu">
-      <Menu.Button className="vds-menu-button vds-button" aria-label="Settings">
+      <Menu.Button className="vds-menu-button vds-button" aria-label="Quality">
         <SettingsIcon className="vds-rotate-icon vds-icon" />
       </Menu.Button>
-      <Menu.Items className="vds-menu-items" placement="top end" offset={0}>
-        <div className="grid grid-cols-2 gap-2 p-1">
-          <div className="min-w-24">
-            <p className="px-2.5 pb-1.5 text-[11px] font-medium text-white/50">Playback Speed</p>
-            <Menu.RadioGroup value={speed.selectedValue}>
-              {speed.map(({ label, value, select }) => (
+      <Menu.Items className="vds-menu-items [--media-menu-min-width:0px]" placement="top end" offset={0}>
+        <div className="w-28">
+          <p className="px-2.5 pb-1.5 text-[11px] font-medium text-white/50">Quality</p>
+          {quality.disabled ? (
+            <p className="px-2.5 py-1.5 text-[13px] text-white/50">Auto</p>
+          ) : (
+            <Menu.RadioGroup value={quality.selectedValue}>
+              {quality.map(({ label, value, quality: q, select }) => (
                 <Menu.Radio key={value} value={value} onSelect={select} className={radioClass}>
                   {label}
+                  {q && q.height >= 720 ? (
+                    <span className="rounded-sm bg-white/20 px-1 text-[9px] font-bold leading-tight">HD</span>
+                  ) : null}
                 </Menu.Radio>
               ))}
             </Menu.RadioGroup>
-          </div>
-          <div className="min-w-24 border-l border-white/10 pl-2">
-            <p className="px-2.5 pb-1.5 text-[11px] font-medium text-white/50">Quality</p>
-            {quality.disabled ? (
-              <p className="px-2.5 py-1.5 text-[13px] text-white/50">Auto</p>
-            ) : (
-              <Menu.RadioGroup value={quality.selectedValue}>
-                {quality.map(({ label, value, quality: q, select }) => (
-                  <Menu.Radio key={value} value={value} onSelect={select} className={radioClass}>
-                    {label}
-                    {q && q.height >= 720 ? (
-                      <span className="rounded-sm bg-white/20 px-1 text-[9px] font-bold leading-tight">HD</span>
-                    ) : null}
-                  </Menu.Radio>
-                ))}
-              </Menu.RadioGroup>
-            )}
-          </div>
+          )}
         </div>
       </Menu.Items>
     </Menu.Root>
+  );
+}
+
+function SeekIcon({ dir }: { dir: -1 | 1 }) {
+  return (
+    <span className="relative flex h-9 w-9 items-center justify-center sm:h-11 sm:w-11">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="absolute inset-0 h-full w-full"
+        aria-hidden
+      >
+        {dir < 0 ? (
+          <>
+            <path d="M3 12a9 9 0 1 0 3-6.7" />
+            <path d="M3 3v4h4" />
+          </>
+        ) : (
+          <>
+            <path d="M21 12a9 9 0 1 1-3-6.7" />
+            <path d="M21 3v4h-4" />
+          </>
+        )}
+      </svg>
+      <span className="pt-0.5 text-[10px] font-bold tabular-nums sm:text-xs">10</span>
+    </span>
+  );
+}
+
+/**
+ * App-style centre transport: previous lesson · back 10s · play/pause · forward 10s · next lesson.
+ * Follows the default layout's control visibility (shown on hover/tap and while paused).
+ */
+function CenterControls({
+  onPrev,
+  onNext,
+  lessonNav,
+}: {
+  onPrev?: () => void;
+  onNext?: () => void;
+  /** Show the previous/next lesson buttons (watch page) — off for single clips like trailers. */
+  lessonNav: boolean;
+}) {
+  const remote = useMediaRemote();
+  const paused = useMediaState("paused");
+  const visible = useMediaState("controlsVisible");
+  const currentTime = useMediaState("currentTime");
+  const duration = useMediaState("duration");
+
+  const seek = (dx: number, e: React.MouseEvent) =>
+    remote.seek(Math.min(Math.max(0, currentTime + dx), Math.max(0, duration - 0.5)), e.nativeEvent);
+
+  const btn =
+    "pointer-events-auto flex items-center justify-center rounded-full text-white transition-[transform,opacity] hover:scale-105 disabled:pointer-events-none disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80";
+
+  return (
+    <div
+      className={`pointer-events-none absolute inset-0 z-[5] flex items-center justify-center gap-5 bg-black/25 transition-opacity duration-200 sm:gap-9 ${
+        visible || paused ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      {lessonNav ? (
+      <button type="button" className={btn} onClick={onPrev} disabled={!onPrev} aria-label="Previous lesson">
+        <svg viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7 sm:h-9 sm:w-9" aria-hidden>
+          <path d="M6 5h2v14H6zM20 5.5v13L9.5 12z" />
+        </svg>
+      </button>
+      ) : null}
+      <button type="button" className={btn} onClick={(e) => seek(-10, e)} aria-label="Back 10 seconds">
+        <SeekIcon dir={-1} />
+      </button>
+      <button
+        type="button"
+        className={`${btn} h-14 w-14 bg-white/15 backdrop-blur-sm sm:h-16 sm:w-16`}
+        onClick={(e) => (paused ? remote.play(e.nativeEvent) : remote.pause(e.nativeEvent))}
+        aria-label={paused ? "Play" : "Pause"}
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7 sm:h-8 sm:w-8" aria-hidden>
+          {paused ? (
+            <path d="M8.5 5.3v13.4a.8.8 0 0 0 1.2.7l10.6-6.7a.8.8 0 0 0 0-1.4L9.7 4.6a.8.8 0 0 0-1.2.7z" />
+          ) : (
+            <path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" />
+          )}
+        </svg>
+      </button>
+      <button type="button" className={btn} onClick={(e) => seek(10, e)} aria-label="Forward 10 seconds">
+        <SeekIcon dir={1} />
+      </button>
+      {lessonNav ? (
+      <button type="button" className={btn} onClick={onNext} disabled={!onNext} aria-label="Next lesson">
+        <svg viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7 sm:h-9 sm:w-9" aria-hidden>
+          <path d="M16 5h2v14h-2zM4 5.5v13L14.5 12z" />
+        </svg>
+      </button>
+      ) : null}
+    </div>
   );
 }
 
@@ -119,6 +215,9 @@ export default function VidstackPlayer({
   initialSeconds,
   onTimeUpdate,
   autoPlay = true,
+  onPrev,
+  onNext,
+  lessonNav = false,
 }: {
   src: string;
   /** Real per-rendition sources; omit/empty while transcoding is still in progress. */
@@ -130,12 +229,18 @@ export default function VidstackPlayer({
   onTimeUpdate?: (currentSeconds: number, durationSeconds: number) => void;
   /** Watch page starts playback immediately (no poster preview). */
   autoPlay?: boolean;
+  /** Centre-control lesson navigation; omit to disable that button. */
+  onPrev?: () => void;
+  onNext?: () => void;
+  /** Show previous/next lesson buttons in the centre controls. */
+  lessonNav?: boolean;
 }) {
   const playerRef = useRef<MediaPlayerInstance | null>(null);
   const onTimeUpdateRef = useRef(onTimeUpdate);
   const initialSecondsRef = useRef(initialSeconds ?? 0);
   const seekDoneRef = useRef(false);
-  const [needsGesture, setNeedsGesture] = useState(false);
+  // Autoplay blocked: CenterControls already shows a play button while paused, so no extra overlay.
+  const [, setNeedsGesture] = useState(false);
 
   onTimeUpdateRef.current = onTimeUpdate;
   initialSecondsRef.current = initialSeconds ?? 0;
@@ -231,25 +336,15 @@ export default function VidstackPlayer({
             airPlayButton: null,
             googleCastButton: null,
             chaptersMenu: null,
-            beforeSettingsMenu: <SpeedButton />,
+            beforeSettingsMenu: <SpeedMenu />,
             settingsMenu: <SettingsMenu />,
+            // Phones: CenterControls replaces the small layout's own centre play / seek buttons.
+            smallLayout: { playButton: null, seekBackwardButton: null, seekForwardButton: null },
           }}
         />
+        <CenterControls onPrev={onPrev} onNext={onNext} lessonNav={lessonNav} />
       </MediaPlayer>
 
-      {needsGesture ? (
-        <button
-          type="button"
-          className="absolute inset-0 z-30 flex items-center justify-center bg-black"
-          aria-label="Play video"
-          onClick={() => {
-            void playerRef.current?.play().catch(() => {});
-            setNeedsGesture(false);
-          }}
-        >
-          <PlayCircle size="lg" className="ring-1 ring-white/20" />
-        </button>
-      ) : null}
     </div>
   );
 }

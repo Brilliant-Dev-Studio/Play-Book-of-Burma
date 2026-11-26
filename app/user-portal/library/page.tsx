@@ -23,7 +23,7 @@ export default async function UserPortalLibraryPage() {
         <HomeFeaturedCarousel
           items={popularVideos}
           newlyAddedItems={newlyAddedVideos}
-          heading="Play book of Burma"
+          heading="Playbook of Burma"
           variant="embedded"
           showSeeAll={false}
           detailBasePath="/user-portal/click-video-detail"

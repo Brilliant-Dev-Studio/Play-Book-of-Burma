@@ -43,6 +43,8 @@ export async function GET(
       durationLabel: true,
       durationSeconds: true,
       details: true,
+      thumbnailKey: true,
+      video: { select: { thumbnailKey: true } },
       transcodeStatus: true,
       sourceHeightPx: true,
       renditions: { select: { quality: true, videoKey: true, status: true } },
@@ -52,6 +54,8 @@ export async function GET(
   if (!lesson || lesson.videoId !== videoId) return notFound();
 
   const videoUrl = await presignGetUrl(lesson.videoKey, PRESIGN_TTL.video);
+  // Lesson's own thumbnail, falling back to the video thumbnail.
+  const thumbnailUrl = await presignGetUrl(lesson.thumbnailKey ?? lesson.video.thumbnailKey, PRESIGN_TTL.image);
 
   // Only surface a picker once every rung is confirmed ready — a half-finished
   // transcode must never show a broken or single-option menu. `videoUrl`
@@ -86,6 +90,8 @@ export async function GET(
       durationLabel: lesson.durationLabel,
       durationSeconds: lesson.durationSeconds,
       details: lesson.details,
+      thumbnailUrl,
+      hasOwnThumbnail: !!lesson.thumbnailKey,
       qualities,
     },
   });

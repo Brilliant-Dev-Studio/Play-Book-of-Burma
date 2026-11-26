@@ -2,9 +2,9 @@
 
 import Image, { type StaticImageData } from "next/image";
 import { HomeMembershipCta } from "@/app/components/home-membership-cta";
-import mockup1 from "@/app/assets/benefits/Mockup - 1.png";
-import mockup2 from "@/app/assets/benefits/Mockup - 2.png";
-import mockup3 from "@/app/assets/benefits/Mockup - 3.png";
+import benefit1 from "@/app/assets/benefits/benefit-1.jpg";
+import benefit2 from "@/app/assets/benefits/benefit-2.jpg";
+import benefit3 from "@/app/assets/benefits/benefit-3.jpg";
 
 const BENEFITS: readonly {
   title: string;
@@ -12,22 +12,22 @@ const BENEFITS: readonly {
   image: StaticImageData;
 }[] = [
   {
-    title: "Deliver experiential insights",
+    title: "Learn Directly from Leading CEOs and Experts",
     body:
-      "through 5–10 years of building, tested in both success and failure that shape life and business decisions",
-    image: mockup1,
+      "Life lesson, success, and failure behind the business they built. Insights that changed their life and business in Myanmar.",
+    image: benefit1,
   },
   {
-    title: "Learn today, execute tomorrow.",
+    title: "Learn Today, Execute Tomorrow",
     body:
-      "Learning material is designed to easier to understand through step-by-step guidelines, checklists, and action items",
-    image: mockup2,
+      "Learning material is designed easier to understand through step-by-step guidelines, checklists, and action items.",
+    image: benefit2,
   },
   {
-    title: "Learn anytime, anywhere.",
+    title: "Learn Anytime, Anywhere.",
     body:
-      "Even someone living outside of Yangon City can have the chance to learn closely from CEOs and industry experts",
-    image: mockup3,
+      "Even if you live far from Yangon, you can learn closely from CEOs and founders 24/7, anytime, anywhere with no limitation.",
+    image: benefit3,
   },
 ];
 
@@ -42,12 +42,12 @@ export function HomeBenefitsSection() {
         <div className="mt-7 grid gap-8 md:grid-cols-3 md:gap-10">
           {BENEFITS.map((b) => (
             <div key={b.title} className="mx-auto w-full min-w-0 md:w-[88%]">
-              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border-2 border-white/30 bg-black">
+              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-white/12 bg-black">
                 <Image
                   src={b.image}
                   alt=""
                   fill
-                  className="rounded-2xl object-contain object-center opacity-95"
+                  className="rounded-2xl object-cover object-center opacity-95"
                   sizes="(max-width: 768px) 95vw, 33vw"
                   placeholder="blur"
                 />

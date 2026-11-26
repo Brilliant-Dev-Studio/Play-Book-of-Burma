@@ -183,9 +183,9 @@ export default function TermsPage() {
 
         {/* Pull quote */}
         <figure className="border-t border-white/15 py-12">
-          <blockquote className="font-hero-display max-w-[32ch] text-xl font-bold uppercase leading-[1.2] tracking-[0.01em] text-butter sm:text-2xl">
-            &ldquo;Continued use after we update these Terms means you accept
-            them.&rdquo;
+          <blockquote className="font-hero-display max-w-[34ch] text-2xl font-normal italic text-balance sm:max-w-[46ch] leading-[1.2] text-butter sm:text-3xl">
+            &ldquo;Your continued use of our services constitutes acceptance of these
+            updated Terms.&rdquo;
           </blockquote>
           <figcaption className="mt-4 font-mono text-[11px] tracking-[0.22em] text-white/45">
             SECTION 08 — CHANGES TO THESE TERMS

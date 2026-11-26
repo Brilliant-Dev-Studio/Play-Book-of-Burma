@@ -94,7 +94,7 @@ export const metadata: Metadata = {
         url: "/social.jpg",
         width: 1200,
         height: 630,
-        alt: "Playbook of Burma — Myanmar Business Insights",
+        alt: "Playbook of Burma — Founder Learning Platform",
       },
     ],
   },

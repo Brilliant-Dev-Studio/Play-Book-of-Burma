@@ -11,20 +11,32 @@ const SIZES = {
   lg: { circle: "h-16 w-16 sm:h-18 sm:w-18 md:h-20 md:w-20", icon: "h-7 w-7 sm:h-8 sm:w-8" },
 } as const;
 
+/**
+ * Cards: hidden until the card (nearest `group`) is hovered or keyboard-focused. Devices without
+ * hover (phones/tablets) always show it, otherwise the button would never be visible there.
+ */
+const HOVER_REVEAL =
+  "opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 group-focus-visible:opacity-100 group-focus-visible:scale-100 group-focus-within:opacity-100 group-focus-within:scale-100 [@media(hover:none)]:opacity-100 [@media(hover:none)]:scale-100";
+
 export function PlayCircle({
   size = "md",
   playing = false,
+  revealOnHover = false,
   className = "",
 }: {
   size?: keyof typeof SIZES;
   /** Show a pause glyph instead of play. */
   playing?: boolean;
+  /** Only appear when the surrounding card is hovered/focused (desktop). */
+  revealOnHover?: boolean;
   className?: string;
 }) {
   const s = SIZES[size];
   return (
     <span
-      className={`flex shrink-0 items-center justify-center rounded-full bg-black/30 text-white shadow-[0_4px_18px_rgba(0,0,0,0.3)] ring-1 ring-white/15 backdrop-blur-[3px] transition-transform duration-300 ease-out group-hover:scale-110 motion-reduce:transition-none motion-reduce:group-hover:scale-100 ${s.circle} ${className}`}
+      className={`flex shrink-0 items-center justify-center rounded-full bg-black/30 text-white shadow-[0_4px_18px_rgba(0,0,0,0.3)] ring-1 ring-white/15 backdrop-blur-[3px] transition-[transform,opacity] duration-300 ease-out ${
+        revealOnHover ? HOVER_REVEAL : "group-hover:scale-110"
+      } motion-reduce:transition-none ${s.circle} ${className}`}
       aria-hidden
     >
       <svg viewBox="0 0 24 24" fill="currentColor" className={s.icon}>

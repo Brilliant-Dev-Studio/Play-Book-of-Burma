@@ -127,9 +127,9 @@ export async function VideoDetail({
               <div className="mt-6 flex flex-wrap items-center gap-3 sm:mt-8">
                 <Link
                   href={startWatchingHref}
-                  className="inline-flex items-center gap-2 rounded-md bg-coral px-5 py-2.5 text-sm font-bold text-black transition-colors hover:bg-coral/90 sm:px-6 sm:py-3 sm:text-base"
+                  className="inline-flex items-center gap-2 rounded-md bg-coral px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-coral/90 sm:px-6 sm:py-3 sm:text-base"
                 >
-                  ▶ Start watching
+                  ▶ Start Now
                 </Link>
                 {trailerUrl && (
                   <a
@@ -169,10 +169,11 @@ export async function VideoDetail({
       {video.skillsetItems.length > 0 && (
         <section className="w-full shrink-0 bg-black pb-16 md:pb-20 lg:pb-24 xl:pb-28">
           <div className={shell}>
-            <h2 className="mb-8 text-2xl font-bold tracking-tight text-white sm:text-3xl md:mb-10 md:text-4xl">
-              Skillset You will Learn
-            </h2>
-            <SkillsetCarousel items={video.skillsetItems} imageUrls={skillsetImageUrls} />
+            <SkillsetCarousel
+              heading="Skillset You will Learn"
+              items={video.skillsetItems}
+              imageUrls={skillsetImageUrls}
+            />
           </div>
         </section>
       )}

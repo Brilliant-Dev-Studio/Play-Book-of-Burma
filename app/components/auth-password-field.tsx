@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import {
   membershipFormFieldClass,
   membershipFormFieldErrorClass,
-  membershipFormFieldLabelClass,
+  membershipPayLabelClass,
 } from "@/app/components/membership-form-field-styles";
 
 function IconEye({ className }: { className?: string }) {
@@ -79,7 +79,7 @@ export function AuthPasswordField({
 
   return (
     <div>
-      <label htmlFor={id} className={membershipFormFieldLabelClass}>
+      <label htmlFor={id} className={membershipPayLabelClass}>
         {label}
       </label>
       <div className="relative">

@@ -9,6 +9,9 @@ export const membershipFormFieldErrorClass =
 export const membershipFormFieldLabelClass =
   "mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-white/50";
 
+/** Membership payment form labels: sentence case ("Upload payment screenshot"), not uppercase. */
+export const membershipPayLabelClass = "mb-1.5 block text-sm font-medium text-white/70";
+
 export const membershipFormTextareaClass = `${membershipFormFieldClass} min-h-[6rem] resize-y py-3 leading-relaxed`;
 
 export const membershipFormFileClass = `${membershipFormFieldClass} py-2.5 file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-coral file:px-4 file:py-2 file:text-sm file:font-semibold file:text-black file:shadow-sm file:transition-opacity file:hover:opacity-90 file:focus-visible:outline file:focus-visible:outline-2 file:focus-visible:outline-offset-2 file:focus-visible:outline-white/80`;

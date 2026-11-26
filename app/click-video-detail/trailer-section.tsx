@@ -27,7 +27,7 @@ export function TrailerSection({
 
   if (playing) {
     return (
-      <div className="overflow-hidden rounded-2xl shadow-[0_20px_56px_rgba(0,0,0,0.55)] ring-1 ring-white/10 md:rounded-3xl">
+      <div className="overflow-hidden rounded-2xl shadow-[0_20px_56px_rgba(0,0,0,0.55)] ring-1 ring-white/12 md:rounded-3xl">
         <VidstackPlayer src={trailerUrl} poster={posterUrl} title={title} />
       </div>
     );
@@ -37,7 +37,7 @@ export function TrailerSection({
     <button
       type="button"
       onClick={() => setPlaying(true)}
-      className="group relative aspect-video w-full cursor-pointer overflow-hidden rounded-2xl shadow-[0_20px_56px_rgba(0,0,0,0.55)] ring-1 ring-white/10 outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-transparent md:rounded-3xl"
+      className="group relative aspect-video w-full cursor-pointer overflow-hidden rounded-2xl shadow-[0_20px_56px_rgba(0,0,0,0.55)] ring-1 ring-white/12 outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-transparent md:rounded-3xl"
       aria-label="Play trailer"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -54,7 +54,7 @@ export function TrailerSection({
         Watch Trailer
       </p>
       <span className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
-        <PlayCircle size="lg" />
+        <PlayCircle size="lg" revealOnHover />
       </span>
     </button>
   );

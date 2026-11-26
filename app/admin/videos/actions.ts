@@ -17,6 +17,8 @@ type LessonInput = {
   durationSeconds: number;
   durationLabel: string;
   details: string;
+  /** Optional lesson thumbnail (S3 key); empty/null falls back to the video thumbnail. */
+  thumbnailKey?: string | null;
   /** Source video's vertical resolution in px, when known (probed client-side at upload time). */
   sourceHeightPx?: number | null;
 };
@@ -70,6 +72,7 @@ function clean(input: VideoFormInput): VideoFormInput {
         durationLabel: l.durationLabel.trim(),
         details: l.details.trim(),
         sourceHeightPx: l.sourceHeightPx ?? null,
+        thumbnailKey: l.thumbnailKey?.trim() || null,
       }))
       .filter((l) => l.title),
     skillsetItems: input.skillsetItems
@@ -131,6 +134,9 @@ async function validate(input: VideoFormInput): Promise<string[]> {
     input.lessons.forEach((l, i) => {
       if (!l.videoKey || !isAllowedKey(l.videoKey)) {
         errors.push(`Lesson ${i + 1} is missing its video upload.`);
+      }
+      if (l.thumbnailKey && !isAllowedKey(l.thumbnailKey)) {
+        errors.push(`Lesson ${i + 1} thumbnail upload is invalid.`);
       }
     });
   }
@@ -220,6 +226,7 @@ export async function saveVideo(
             durationSeconds: l.durationSeconds,
             durationLabel: l.durationLabel,
             details: l.details,
+            thumbnailKey: l.thumbnailKey ?? null,
             order: i,
           };
           return prisma.lesson.upsert({
@@ -259,6 +266,7 @@ export async function saveVideo(
               durationSeconds: l.durationSeconds,
               durationLabel: l.durationLabel,
               details: l.details,
+              thumbnailKey: l.thumbnailKey ?? null,
               order: i,
               sourceHeightPx: l.sourceHeightPx,
             })),
@@ -309,6 +317,7 @@ export async function saveVideo(
   }
 
   revalidatePath("/admin/videos");
+  revalidatePath("/"); // home hero industry list depends on which industries have published videos
   return { ok: true, id };
 }
 

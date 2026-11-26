@@ -74,6 +74,7 @@ export async function GET(
           durationLabel: true,
           durationSeconds: true,
           details: true,
+          thumbnailKey: true,
         },
       },
       skillsetItems: {
@@ -137,7 +138,14 @@ export async function GET(
         photoUrl: instructorPhotoUrl,
         biographyParagraphs: video.instructor.biographyParagraphs,
       },
-      lessons: video.lessons,
+      // thumbnailUrl: the lesson's own thumbnail, or the video thumbnail when it has none.
+      lessons: await Promise.all(
+        video.lessons.map(async ({ thumbnailKey, ...l }) => ({
+          ...l,
+          thumbnailUrl: thumbnailKey ? await presignGetUrl(thumbnailKey, PRESIGN_TTL.image) : thumbnailUrl,
+          hasOwnThumbnail: !!thumbnailKey,
+        })),
+      ),
       skillsetItems: skillsetItemsWithUrls,
     },
   });

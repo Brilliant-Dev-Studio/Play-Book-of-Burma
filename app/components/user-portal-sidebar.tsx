@@ -67,7 +67,7 @@ export function UserPortalSidebar({
       {/* Header */}
       <div className="px-7 pb-6 pt-10">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="font-hero-display text-lg font-bold uppercase tracking-[0.01em] text-white sm:text-xl">
+          <h2 className="font-hero-display text-xl font-normal italic text-white sm:text-2xl">
             Choose What You Learn
           </h2>
           <button

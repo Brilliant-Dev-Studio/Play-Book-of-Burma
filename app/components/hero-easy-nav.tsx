@@ -2,28 +2,38 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 
 const NAV_ITEMS = [
-  { href: "/library", label: "Choose Playbook you want to learn" },
-  { href: "/library", label: "Pick Industry you want to expert at it" },
-  { href: "/library", label: "Pick Skillsets you want to level up" },
+  { label: "Choose the Playbook You Want to Learn" },
+  { label: "Pick the Industry You Want to Master" },
+  { label: "Pick the Skillsets You Want to Sharpen" },
 ] as const;
+
+/** Where every hero choice leads: signed-in → the portal library, signed-out → membership. */
+const PORTAL_HREF = "/user-portal/library";
+const MEMBERSHIP_HREF = "/membership";
 
 /** Index of the "Pick Industry" row — its flyout lists the admin-managed industries. */
 const INDUSTRY_ROW = 1;
 
 export type HeroIndustry = { id: string; name: string };
 
-/** Display-only list of industries (from Admin → Industries, in admin order). Not clickable. */
-function IndustryList({ industries }: { industries: HeroIndustry[] }) {
+/** Industries (from Admin → Industries, in admin order); each links to `href`. */
+function IndustryList({ industries, href }: { industries: HeroIndustry[]; href: string }) {
   return (
     <ul className="flex max-h-72 flex-col gap-2 overflow-y-auto overscroll-contain" aria-label="Industries">
       {industries.map((ind) => (
-        <li
-          key={ind.id}
-          className="w-full min-w-[10rem] cursor-default rounded-lg border border-white/[0.06] bg-[#212124] px-3 py-2 text-left text-sm font-normal text-white"
-        >
-          {ind.name}
+        <li key={ind.id}>
+          <Link
+            href={href}
+            className="flex w-full min-w-[10rem] items-center justify-between gap-2 rounded-lg border border-white/[0.06] bg-[#212124] px-3 py-2 text-left text-sm font-normal text-white transition-colors hover:bg-[#2a2a2e]"
+          >
+            <span className="truncate">{ind.name}</span>
+            <span className="shrink-0 text-[0.65rem] leading-none text-white/45" aria-hidden>
+              ▶
+            </span>
+          </Link>
         </li>
       ))}
     </ul>
@@ -32,6 +42,8 @@ function IndustryList({ industries }: { industries: HeroIndustry[] }) {
 
 /** Nav chevron: `duration-[220ms] ease-out`. Preview: fade in/out only (`opacity` + ease-in-out). */
 export function HeroEasyNav({ industries = [] }: { industries?: HeroIndustry[] }) {
+  const { user } = useCurrentUser();
+  const destHref = user ? PORTAL_HREF : MEMBERSHIP_HREF;
   const [open, setOpen] = useState(false);
   /** Row currently hovered/focused — picks which flyout shows on desktop. */
   const [activeRow, setActiveRow] = useState<number | null>(null);
@@ -53,7 +65,7 @@ export function HeroEasyNav({ industries = [] }: { industries?: HeroIndustry[] }
 
   const cancelScheduledClose = useCallback(() => {
     if (closeRaf.current !== null) {
-      cancelAnimationFrame(closeRaf.current);
+      window.clearTimeout(closeRaf.current);
     }
     closeRaf.current = null;
   }, []);
@@ -63,13 +75,14 @@ export function HeroEasyNav({ industries = [] }: { industries?: HeroIndustry[] }
     setOpen(true);
   }, [cancelScheduledClose]);
 
-  /** Close on the next frame so the browser always runs the exit transition (no 200ms “stick”). */
+  /** Close after a short grace period so the pointer can travel from a row to its flyout
+   * (or cut a corner) without the flyout disappearing mid-way. */
   const scheduleClose = useCallback(() => {
     cancelScheduledClose();
-    closeRaf.current = requestAnimationFrame(() => {
+    closeRaf.current = window.setTimeout(() => {
       closeRaf.current = null;
       setOpen(false);
-    });
+    }, 220);
   }, [cancelScheduledClose]);
 
   useEffect(
@@ -98,7 +111,7 @@ export function HeroEasyNav({ industries = [] }: { industries?: HeroIndustry[] }
         className="flex min-w-0 flex-col gap-2 sm:gap-2.5"
         aria-label="Browse by focus"
       >
-        {NAV_ITEMS.map(({ href, label }, index) => {
+        {NAV_ITEMS.map(({ label }, index) => {
           const isIndustryRow = index === INDUSTRY_ROW && showIndustries;
           const rowClass =
             "group flex w-full items-center justify-between gap-3 rounded-lg border border-white/[0.06] bg-[#2a2a2e] px-4 py-2.5 text-left text-sm font-normal tracking-tight text-white transition-colors hover:bg-[#333338] sm:rounded-xl sm:px-6 sm:py-4 sm:text-base";
@@ -127,7 +140,7 @@ export function HeroEasyNav({ industries = [] }: { industries?: HeroIndustry[] }
                 </button>
               ) : null}
               <Link
-                href={href}
+                href={destHref}
                 className={`${rowClass} ${isIndustryRow ? "max-md:hidden" : ""}`}
               >
                 <span className="min-w-0">{label}</span>
@@ -141,14 +154,17 @@ export function HeroEasyNav({ industries = [] }: { industries?: HeroIndustry[] }
 
               {isIndustryRow ? (
                 <>
-                  {/* Desktop: flyout to the right of this row, on hover/focus */}
+                  {/* Desktop: flyout to the right of this row, on hover/focus. The gap is padding
+                      (not margin) so the pointer never "leaves" while crossing to the list. */}
                   <aside
                     aria-hidden={!industryFlyoutOpen}
-                    className={`absolute left-full top-0 z-40 ml-3 hidden w-[min(100%,14rem)] rounded-xl border border-white/15 bg-[#101010] p-3 transform-gpu transition-opacity duration-[280ms] ease-in-out motion-reduce:transition-none md:block ${
+                    className={`absolute left-full top-0 z-40 hidden pl-3 transform-gpu transition-opacity duration-[280ms] ease-in-out motion-reduce:transition-none md:block ${
                       industryFlyoutOpen ? "opacity-100" : "pointer-events-none opacity-0"
                     }`}
                   >
-                    <IndustryList industries={industries} />
+                    <div className="w-56 rounded-xl border border-white/15 bg-[#101010] p-3">
+                      <IndustryList industries={industries} href={destHref} />
+                    </div>
                   </aside>
                   {/* Phone/tablet: chips under the row, shown once the row is tapped */}
                   <ul
@@ -158,11 +174,13 @@ export function HeroEasyNav({ industries = [] }: { industries?: HeroIndustry[] }
                     aria-label="Industries"
                   >
                     {industries.map((ind) => (
-                      <li
-                        key={ind.id}
-                        className="rounded-full border border-white/10 bg-[#212124] px-3 py-1 text-xs text-white/85"
-                      >
-                        {ind.name}
+                      <li key={ind.id}>
+                        <Link
+                          href={destHref}
+                          className="block rounded-full border border-white/10 bg-[#212124] px-3 py-1 text-xs text-white/85 transition-colors hover:bg-[#2a2a2e]"
+                        >
+                          {ind.name}
+                        </Link>
                       </li>
                     ))}
                   </ul>
@@ -177,12 +195,13 @@ export function HeroEasyNav({ industries = [] }: { industries?: HeroIndustry[] }
           shows). Not shown on phone/tablet — "Choose Playbook" already goes to the library. */}
       <aside
         aria-hidden={!open || industryFlyoutOpen}
-        className={`absolute left-full top-0 z-40 ml-3 flex w-[min(100%,14rem)] flex-col justify-center gap-2.5 rounded-xl border border-white/15 bg-[#101010] p-3 transform-gpu transition-opacity duration-[280ms] ease-in-out motion-reduce:transition-none max-md:hidden ${
+        className={`absolute left-full top-0 z-40 pl-3 transform-gpu transition-opacity duration-[280ms] ease-in-out motion-reduce:transition-none max-md:hidden ${
           open && !industryFlyoutOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
+        <div className="flex w-56 flex-col justify-center gap-2.5 rounded-xl border border-white/15 bg-[#101010] p-3">
         <Link
-          href="/library"
+          href={destHref}
           tabIndex={isMdUp && open && !industryFlyoutOpen ? 0 : -1}
           className="flex w-full min-w-[10rem] items-center justify-between gap-2 rounded-lg border border-white/[0.06] bg-[#212124] px-3 py-2 text-left text-sm font-normal text-white transition-colors hover:bg-[#2a2a2e]"
         >
@@ -195,12 +214,13 @@ export function HeroEasyNav({ industries = [] }: { industries?: HeroIndustry[] }
           </span>
         </Link>
         <Link
-          href="/library"
+          href={destHref}
           tabIndex={isMdUp && open && !industryFlyoutOpen ? 0 : -1}
           className="flex w-full min-w-[10rem] items-center justify-center rounded-lg border border-white/25 bg-transparent px-3 py-2 text-center text-sm font-bold tracking-tight text-white transition-colors hover:bg-white/[0.06]"
         >
           View all
         </Link>
+        </div>
       </aside>
     </div>
   );

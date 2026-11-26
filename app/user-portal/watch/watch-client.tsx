@@ -27,6 +27,8 @@ export type WatchLesson = {
   durationSeconds: number;
   details: string;
   videoUrl: string;
+  /** Lesson's own thumbnail; null = use the video thumbnail. */
+  thumbnailUrl: string | null;
   /** [] until every rung is confirmed ready — see app/api.../lessons/[lessonId]/route.ts. */
   qualities: QualityOption[];
   bookmarked: boolean;
@@ -100,6 +102,16 @@ function IconLessons({ className }: { className?: string }) {
     </svg>
   );
 }
+
+/**
+ * The class sidebar card always fades out at the bottom — lessons, background, border and corners
+ * dissolve into the black page (CSS mask, so the border fades too). The lesson list carries matching
+ * empty space at its end (FADE_SPACE_CLASS), so the fade lands on that space and never dims the last
+ * lesson — even when there is only one.
+ */
+const SIDEBAR_FADE_MASK =
+  "linear-gradient(to bottom, #000 calc(100% - 130px), rgba(0,0,0,0.45) calc(100% - 60px), transparent 100%)";
+const FADE_SPACE_CLASS = "pb-28 sm:pb-28";
 
 /** Small stacked icon + label card used for Guidebook / Bookmark under the player. */
 const actionCardClass =
@@ -230,6 +242,11 @@ export function WatchClient({
                   qualities={activeLesson.qualities}
                   initialSeconds={progressState[activeLesson.id] ?? 0}
                   onTimeUpdate={handleTimeUpdate}
+                  lessonNav
+                  onPrev={activeIndex > 0 ? () => setActiveIndex(activeIndex - 1) : undefined}
+                  onNext={
+                    activeIndex < video.lessons.length - 1 ? () => setActiveIndex(activeIndex + 1) : undefined
+                  }
                 />
               ) : (
                 <div className="flex aspect-video w-full items-center justify-center bg-zinc-900 text-white/55">
@@ -290,9 +307,13 @@ export function WatchClient({
             hidden={!sidebarOpen}
             className="w-full shrink-0 lg:w-[340px] xl:w-[380px]"
           >
-            <div className="overflow-hidden rounded-2xl bg-zinc-900/80 ring-1 ring-white/10 lg:sticky lg:top-20">
+            <div
+              className="overflow-hidden rounded-2xl bg-zinc-900/80 ring-1 ring-white/10 lg:sticky lg:top-20"
+              // Bottom of the card always dissolves into the black page (see SIDEBAR_FADE_MASK).
+              style={{ maskImage: SIDEBAR_FADE_MASK, WebkitMaskImage: SIDEBAR_FADE_MASK }}
+            >
               {/* Header: thumbnail + course title / description */}
-              <div className="relative flex items-start gap-3 border-b border-white/10 p-4 pr-11 sm:gap-4 sm:p-5 sm:pr-12">
+              <div className="relative flex items-start gap-3 border-b border-white/10 p-4 sm:gap-4 sm:p-5">
                 <button
                   type="button"
                   onClick={() => setSidebarOpen(false)}
@@ -315,7 +336,7 @@ export function WatchClient({
                   />
                 </Link>
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-base font-bold leading-snug tracking-tight text-white sm:text-lg">
+                  <h2 className="pr-8 text-base font-bold leading-snug tracking-tight text-white sm:text-lg">
                     {panelTitle}
                   </h2>
                   <p
@@ -375,7 +396,10 @@ export function WatchClient({
                 })}
               </div>
 
-              <div className="max-h-[min(62vh,640px)] overflow-y-auto overscroll-contain p-3 sm:p-4">
+              <div className="relative">
+              <div
+                className={`max-h-[min(62vh,640px)] overflow-y-auto overscroll-contain p-3 sm:p-4 ${FADE_SPACE_CLASS}`}
+              >
                 {activeTab === "All Lessons" && (
                   <ul className="flex flex-col gap-1">
                     {video.lessons.map((lesson, index) => {
@@ -403,7 +427,7 @@ export function WatchClient({
                             <span className="relative aspect-video w-[7.25rem] shrink-0 overflow-hidden rounded-md bg-zinc-800 sm:w-32">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
-                                src={video.thumbnailUrl}
+                                src={lesson.thumbnailUrl ?? video.thumbnailUrl}
                                 alt=""
                                 className="absolute inset-0 h-full w-full object-cover"
                               />
@@ -502,6 +526,7 @@ export function WatchClient({
                     ))}
                   </ul>
                 )}
+              </div>
               </div>
             </div>
           </aside>

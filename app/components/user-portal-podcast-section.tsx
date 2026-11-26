@@ -55,7 +55,7 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
 
   return (
     <article className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-7">
-      <div className="group w-full max-w-87.5 shrink-0 rounded-2xl border border-white/25 p-1.25 shadow-[0_14px_44px_rgba(0,0,0,0.45)] transition-colors hover:border-white/40 sm:w-87.5">
+      <div className="group w-full max-w-87.5 shrink-0 rounded-2xl border border-white/12 p-1.25 shadow-[0_14px_44px_rgba(0,0,0,0.45)] transition-colors hover:border-white/25 sm:w-87.5">
         <div className="relative aspect-360/230 w-full overflow-hidden rounded-xl bg-white/5">
           <Link
             href={`/user-portal/audio/${item.id}`}
@@ -79,7 +79,7 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
             aria-label={isPlaying ? "Pause" : "Play"}
             className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
           >
-            <PlayCircle playing={isPlaying} />
+            <PlayCircle playing={isPlaying} revealOnHover={!isPlaying} />
           </button>
         </div>
       </div>
@@ -260,7 +260,8 @@ export function PodcastPlayerRow({ item }: { item: UserPortalPodcastItem }) {
   );
 }
 
-const PODCAST_LIMIT = 5;
+// First few episodes inline; "See All (N)" reveals the rest.
+const PODCAST_LIMIT = 3;
 
 export function UserPortalPodcastSection({
   groups,
@@ -295,19 +296,19 @@ export function UserPortalPodcastSection({
         Listen to Story of Burma Podcast with No Ads
       </h2>
 
-      <div className="mt-5 flex flex-wrap items-center gap-0 text-sm sm:mt-6 sm:text-[15px]">
+      <div className="mt-5 flex flex-wrap items-center gap-0 text-lg sm:mt-6 sm:text-xl">
         {labels.map((label, i) => (
           <span key={label} className="flex items-center">
             {i > 0 && (
-              <span className="mx-3 h-4 w-px shrink-0 bg-white/25 sm:mx-4" aria-hidden />
+              <span className="mx-3 h-5 w-px shrink-0 bg-white/30 sm:mx-4" aria-hidden />
             )}
             <button
               type="button"
               onClick={() => { setActiveTab(label); setShowAll(false); }}
               className={`transition-colors ${
                 activeTab === label
-                  ? "font-semibold text-white"
-                  : "font-medium text-mist hover:text-white/85"
+                  ? "font-bold text-white"
+                  : "font-bold text-mist/70 hover:text-white/85"
               }`}
             >
               {label}
@@ -322,13 +323,14 @@ export function UserPortalPodcastSection({
         ))}
       </div>
 
-      {!showAll && hiddenCount > 0 && (
+      {hiddenCount > 0 && (
         <button
           type="button"
-          onClick={() => setShowAll(true)}
-          className="mt-8 text-sm font-semibold text-coral transition-opacity hover:opacity-75"
+          onClick={() => setShowAll((v) => !v)}
+          aria-expanded={showAll}
+          className="mt-8 text-sm font-semibold text-white transition-opacity hover:opacity-75"
         >
-          See All ({allItems.length})
+          {showAll ? "Show less" : `See All (${allItems.length})`}
         </button>
       )}
     </section>

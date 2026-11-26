@@ -24,11 +24,11 @@ function CarouselEdgeMasks() {
   return (
     <>
       <div
-        className="pointer-events-none absolute inset-y-0 left-0 z-10 w-4 bg-[linear-gradient(90deg,#000_0%,rgba(0,0,0,0.92)_35%,rgba(0,0,0,0.45)_70%,transparent_100%)] sm:w-10 md:w-16 lg:w-40"
+        className="pointer-events-none absolute inset-y-0 left-0 z-10 w-4 bg-[linear-gradient(90deg,rgba(0,0,0,0.85)_0%,rgba(0,0,0,0.5)_40%,transparent_100%)] sm:w-8 md:w-12 lg:w-24"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-y-0 right-0 z-10 w-4 bg-[linear-gradient(270deg,#000_0%,rgba(0,0,0,0.92)_35%,rgba(0,0,0,0.45)_70%,transparent_100%)] sm:w-10 md:w-16 lg:w-40"
+        className="pointer-events-none absolute inset-y-0 right-0 z-10 w-4 bg-[linear-gradient(270deg,rgba(0,0,0,0.85)_0%,rgba(0,0,0,0.5)_40%,transparent_100%)] sm:w-8 md:w-12 lg:w-24"
         aria-hidden
       />
     </>
@@ -262,8 +262,8 @@ function NewlyAddedSection({ items }: { items: NewlyAddedItem[] }) {
     <section>
       <div className="mb-5 flex items-end justify-between gap-3 sm:mb-8 sm:gap-4">
         <div className="min-w-0 flex-1">
-          <h2 className="font-hero-display text-[1.3rem] font-bold uppercase leading-[1.15] sm:text-[clamp(1.55rem,2.8vw,2.4rem)] sm:leading-[1.12] tracking-[0.01em] text-white">
-            If you Dream Big, Will you give us 15 mins a day to change your life?
+          <h2 className="font-hero-display text-[1.3rem] font-normal italic leading-[1.15] text-white sm:text-[clamp(1.6rem,2.9vw,2.6rem)] md:text-[clamp(1.9rem,3.2vw,3.1rem)] md:leading-[1.12] text-balance">
+            If you dream big, will you give us 15 mins a day to change your life?
           </h2>
           <p className="mt-1.5 text-sm font-medium text-white/85 sm:mt-2 sm:text-lg sm:text-white">
             Newly Added to your playbooks
@@ -441,12 +441,19 @@ function PlaybookVideoCard({
       : "w-[314px] sm:w-[354px] md:w-[362px]";
 
   return (
-    <a
-      href={`/user-portal/click-video-detail?video=${id}`}
-      data-card
-      className={`group flex flex-col overflow-hidden rounded-2xl border border-white/25 bg-black outline-none transition-colors hover:border-white/40 focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black ${layoutClass}`}
-      aria-label={`${titleLine1} ${titleLine2}`}
+    <div
+      className={`group relative flex flex-col overflow-hidden rounded-2xl border border-white/12 bg-black transition-colors hover:border-white/25 ${layoutClass}`}
     >
+      {/* Covers the whole card for "see details" — sits below the play button
+          (lower z-index) so that button remains independently clickable even
+          though it visually overlaps this link. */}
+      <a
+        href={`/user-portal/click-video-detail?video=${id}`}
+        data-card
+        className="absolute inset-0 z-10 rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+        aria-label={`${titleLine1} ${titleLine2}`}
+      />
+
       <div className="relative aspect-3/4 w-full overflow-hidden bg-zinc-900">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -472,16 +479,22 @@ function PlaybookVideoCard({
 
         {showNewBadge && (
           <span
-            className="absolute left-3 top-3 z-20 -rotate-3 rounded-full bg-coral px-3 py-1 text-sm font-bold italic text-white shadow-[0_4px_14px_rgba(236,113,71,0.5)] sm:left-4 sm:top-4"
+            className="pointer-events-none absolute left-3 top-3 z-20 -rotate-3 rounded-full bg-coral px-3 py-1 text-sm font-bold italic text-white shadow-[0_4px_14px_rgba(236,113,71,0.5)] sm:left-4 sm:top-4"
             aria-label="Newly added"
           >
             New!
           </span>
         )}
 
-        <span className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
-          <PlayCircle />
-        </span>
+        {/* The one part of the card that jumps straight into playback instead
+            of the detail page — higher z-index than the card-wide link above. */}
+        <Link
+          href={`/user-portal/watch?video=${id}`}
+          className="absolute left-1/2 top-1/2 z-30 -translate-x-1/2 -translate-y-1/2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-coral"
+          aria-label={`Play ${titleLine1} ${titleLine2}`}
+        >
+          <PlayCircle revealOnHover />
+        </Link>
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-4 pb-2 text-center sm:px-5 sm:pb-3">
           <h3 className="overflow-hidden text-ellipsis text-base font-bold leading-snug tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] sm:text-lg">
@@ -490,7 +503,7 @@ function PlaybookVideoCard({
         </div>
       </div>
 
-      <div className="relative z-10 flex flex-col items-center px-4 pb-4 pt-4 text-center">
+      <div className="pointer-events-none relative z-10 flex flex-col items-center px-4 pb-4 pt-4 text-center">
         <span className="h-0.75 w-12 shrink-0 bg-coral" aria-hidden />
         <p className="mt-2 text-sm font-semibold leading-snug text-white/90 sm:text-[15px]">
           <span className="block w-full truncate">{instructorName},</span>
@@ -500,7 +513,7 @@ function PlaybookVideoCard({
           {duration}
         </p>
       </div>
-    </a>
+    </div>
   );
 }
 
@@ -589,7 +602,7 @@ function ContinuesWatchingCard({
       data-cw-card
       className="group flex w-72 shrink-0 snap-start flex-col outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-80 md:w-88"
     >
-      <div className="rounded-2xl border-2 border-white/45 p-1.25 transition-colors group-hover:border-white/65">
+      <div className="rounded-2xl border border-white/12 p-1.25 transition-colors group-hover:border-white/25">
         <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-zinc-900">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

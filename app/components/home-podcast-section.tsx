@@ -15,7 +15,7 @@ function PlayBadge({ href }: { href: string }) {
       className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
       aria-label="Become a member to listen"
     >
-      <PlayCircle />
+      <PlayCircle revealOnHover />
     </Link>
   );
 }
@@ -38,7 +38,7 @@ function PodcastRow({ item }: { item: HomePodcastItem }) {
   return (
     <article className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-7">
       {/* Thumbnail — fixed size, portal-style gray border frame */}
-      <div className="group w-full shrink-0 rounded-2xl border border-white/25 p-1.25 shadow-[0_14px_44px_rgba(0,0,0,0.45)] transition-colors hover:border-white/40 sm:w-[320px] lg:w-90">
+      <div className="group w-full shrink-0 rounded-2xl border border-white/12 p-1.25 shadow-[0_14px_44px_rgba(0,0,0,0.45)] transition-colors hover:border-white/25 sm:w-[320px] lg:w-90">
         <div className="relative aspect-360/230 w-full overflow-hidden rounded-xl bg-white/5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -67,9 +67,9 @@ function PodcastRow({ item }: { item: HomePodcastItem }) {
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="mt-2 block text-xs font-medium text-coral hover:text-coral/80 transition-colors"
+            className="mt-2 block text-xs font-medium text-white transition-colors hover:text-white/75"
           >
-            {expanded ? "show less" : "read more"}
+            {expanded ? "Show less" : "Read more"}
           </button>
         )}
         <Link
@@ -84,7 +84,8 @@ function PodcastRow({ item }: { item: HomePodcastItem }) {
   );
 }
 
-const PODCAST_LIMIT = 5;
+// First few episodes inline; "See All (N)" reveals the rest.
+const PODCAST_LIMIT = 3;
 
 export function HomePodcastSection({
   groups,
@@ -127,15 +128,15 @@ export function HomePodcastSection({
             <div
               className={
                 variant === "embedded"
-                  ? "mt-5 flex flex-wrap items-center gap-0 text-sm sm:mt-6 sm:text-[15px]"
-                  : "mt-8 flex flex-wrap items-center gap-0 text-sm sm:mt-10 sm:text-[15px]"
+                  ? "mt-5 flex flex-wrap items-center gap-0 text-lg sm:mt-6 sm:text-xl"
+                  : "mt-8 flex flex-wrap items-center gap-0 text-lg sm:mt-10 sm:text-xl"
               }
             >
               {labels.map((label, i) => (
                 <span key={label} className="flex items-center">
                   {i > 0 && (
                     <span
-                      className="mx-3 h-4 w-px shrink-0 bg-white/25 sm:mx-4"
+                      className="mx-3 h-5 w-px shrink-0 bg-white/30 sm:mx-4"
                       aria-hidden
                     />
                   )}
@@ -144,8 +145,8 @@ export function HomePodcastSection({
                     onClick={() => { setActiveTab(label); setShowAll(false); }}
                     className={`transition-colors ${
                       activeTab === label
-                        ? "font-semibold text-white"
-                        : "font-medium text-mist hover:text-white/85"
+                        ? "font-bold text-white"
+                        : "font-bold text-mist/70 hover:text-white/85"
                     }`}
                   >
                     {label}
@@ -170,13 +171,14 @@ export function HomePodcastSection({
               )}
             </div>
 
-            {!showAll && hiddenCount > 0 && (
+            {hiddenCount > 0 && (
               <button
                 type="button"
-                onClick={() => setShowAll(true)}
-                className="mt-8 text-sm font-semibold text-coral transition-opacity hover:opacity-75"
+                onClick={() => setShowAll((v) => !v)}
+                aria-expanded={showAll}
+                className="mt-8 text-sm font-semibold text-white transition-opacity hover:opacity-75"
               >
-                See All ({allItems.length})
+                {showAll ? "Show less" : `See All (${allItems.length})`}
               </button>
             )}
           </>

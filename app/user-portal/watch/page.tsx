@@ -40,11 +40,15 @@ export default async function WatchPage({
   if (!video) notFound();
 
   const lessonIds = video.lessons.map((l) => l.id);
-  const [thumbnailUrl, instructorPhotoUrl, lessonUrls, lessonQualities, bookmarks, notes, progress] =
+  const [thumbnailUrl, instructorPhotoUrl, lessonUrls, lessonThumbUrls, lessonQualities, bookmarks, notes, progress] =
     await Promise.all([
       presignGetUrl(video.thumbnailKey, PRESIGN_TTL.image),
       presignGetUrl(video.instructor.photoKey, PRESIGN_TTL.image),
       Promise.all(video.lessons.map((l) => presignGetUrl(l.videoKey, PRESIGN_TTL.video))),
+      // Per-lesson thumbnail when set; null = the client falls back to the video thumbnail.
+      Promise.all(
+        video.lessons.map((l) => (l.thumbnailKey ? presignGetUrl(l.thumbnailKey, PRESIGN_TTL.image) : null)),
+      ),
       Promise.all(
         video.lessons.map(async (l) => {
           if (l.transcodeStatus !== "READY") return [];
@@ -123,6 +127,7 @@ export default async function WatchPage({
         durationSeconds: l.durationSeconds,
         details: l.details,
         videoUrl: lessonUrls[i],
+        thumbnailUrl: lessonThumbUrls[i],
         // Deliberately NOT offering the raw source ("Original") here — camera/export
         // uploads are often not faststart-optimized (metadata at the end of the file
         // instead of the front), so seeking into a large one can hang the browser

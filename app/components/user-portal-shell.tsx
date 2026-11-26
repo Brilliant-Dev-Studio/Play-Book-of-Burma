@@ -42,6 +42,12 @@ function IconX({ className }: { className?: string }) {
   );
 }
 
+/**
+ * Filters (sidebar, mobile drawer, "Show Filters" toolbar) are hidden for now — there is only
+ * one playbook category so far. Flip to `true` to bring them back once there are more playbooks.
+ */
+const FILTERS_ENABLED = false;
+
 export function UserPortalShell({
   filterGroups,
   children,
@@ -104,7 +110,7 @@ export function UserPortalShell({
 
   return (
     <div className="flex min-h-0 flex-1 overflow-x-clip bg-black">
-      {isOpen && (
+      {FILTERS_ENABLED && isOpen && (
         <UserPortalSidebar
           selected={selected}
           onToggle={toggle}
@@ -114,7 +120,7 @@ export function UserPortalShell({
         />
       )}
 
-      {drawerOpen && (
+      {FILTERS_ENABLED && drawerOpen && (
         <div className="fixed inset-0 z-[60] flex lg:hidden" role="dialog" aria-modal="true" aria-label="Filters">
           <button
             type="button"
@@ -136,7 +142,7 @@ export function UserPortalShell({
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {showFilterToolbar ? (
+        {FILTERS_ENABLED && showFilterToolbar ? (
           <div className="sticky top-0 z-30 border-b border-white/10 bg-zinc-950/85 backdrop-blur-md">
             <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-2 px-4 py-3 sm:gap-3 sm:px-6 sm:py-4 lg:px-10">
               <button

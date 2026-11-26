@@ -72,7 +72,7 @@ function HowPayStepCard({
   accent,
 }: {
   step: number;
-  title: string;
+  title: React.ReactNode;
   children: React.ReactNode;
   accent?: boolean;
 }) {
@@ -323,19 +323,40 @@ export default async function MembershipPage() {
           </h2>
 
           <div className="mx-auto mt-10 grid w-full items-stretch gap-6 sm:mt-12 sm:gap-8 md:mt-14 md:grid-cols-3 lg:gap-10">
-            <HowPayStepCard step={1} title="Scan the MMQR Here">
+            <HowPayStepCard
+              step={1}
+              title={
+                <>
+                  <span className="font-normal">
+                    Scan the <span className="font-bold">KBZ Pay</span> Here
+                  </span>
+                </>
+              }
+            >
               <div className="flex flex-col items-center gap-5">
+                <p className="text-[13px] leading-relaxed text-white/90">
+                  <span className="font-bold text-white">Note:</span>{" "}
+                  For other payment methods,
+                  please contact us directly via our &ldquo;Playbook of Burma&rdquo; Page Messenger.
+                </p>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/mmqr.png"
-                  alt="MMQR payment code"
-                  className="w-full max-w-55 rounded-xl object-contain shadow-lg"
+                  src="/payment/kbzpay-qr.webp"
+                  alt="KBZ Pay QR code &mdash; Account Name: htet naing oo, Account Number: 09 763600983"
+                  width={800}
+                  height={1393}
+                  className="w-full object-contain"
                 />
-                <p className="text-xs leading-relaxed text-white/55">
-                  <span className="font-semibold text-white/75">Note:</span> MMQR can accept KBZ
-                  Pay, Wave Money, OK$, CB Pay, uabpay, A+ Wallet, CTZ Pay, Yoma, Trusty, Zego,
-                  Mpitesan
-                </p>
+                <a
+                  href="/payment/kbzpay-qr.png"
+                  download="PlaybookOfBurma-KBZPay-QR.png"
+                  className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden>
+                    <path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
+                  </svg>
+                  Download QR
+                </a>
               </div>
             </HowPayStepCard>
 

@@ -49,6 +49,25 @@ export async function deleteIndustry(
   id: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   await requireAdmin();
+  // Say exactly what is blocking the delete — podcasts reference industries too, and the old
+  // message only mentioned videos (confusing when the Videos column showed 0).
+  const usage = await prisma.industry.findUnique({
+    where: { id },
+    select: { _count: { select: { videos: true, podcasts: true } } },
+  });
+  if (usage) {
+    const { videos, podcasts } = usage._count;
+    if (videos > 0 || podcasts > 0) {
+      const parts = [
+        videos > 0 ? `${videos} video${videos === 1 ? "" : "s"}` : null,
+        podcasts > 0 ? `${podcasts} podcast${podcasts === 1 ? "" : "s"}` : null,
+      ].filter(Boolean);
+      return {
+        ok: false,
+        error: `Cannot delete — still used by ${parts.join(" and ")}. Change their industry (Admin → Videos / Podcasts) first.`,
+      };
+    }
+  }
   try {
     await prisma.industry.delete({ where: { id } });
     revalidatePath("/admin/industries");

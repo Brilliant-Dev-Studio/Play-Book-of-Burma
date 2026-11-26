@@ -33,11 +33,12 @@ const PLAYBOOK_LINKS = [
   { href: "/terms", label: "Terms & Conditions" },
 ] as const;
 
-const SOCIALS: { label: string; icon: LucideIcon }[] = [
+// `href` omitted = shown but not linked (no page URL yet).
+const SOCIALS: { label: string; icon: LucideIcon; href?: string }[] = [
   { label: "Facebook", icon: Users },
-  { label: "TikTok", icon: Music2 },
-  { label: "YouTube", icon: Play },
-  { label: "LinkedIn", icon: BriefcaseBusiness },
+  { label: "TikTok", icon: Music2, href: "https://www.tiktok.com/@storyofburmapodcast" },
+  { label: "YouTube", icon: Play, href: "https://www.youtube.com/@storyofburmapodcast" },
+  { label: "LinkedIn", icon: BriefcaseBusiness, href: "https://www.linkedin.com/company/playbook-of-burma/posts" },
 ];
 
 /**
@@ -127,15 +128,30 @@ export function SiteFooter() {
           <section className="col-span-2 border-t border-white/10 pt-6 md:col-span-2 lg:col-span-1 lg:border-0 lg:pt-0">
             <h3 className={headingClass}>Social</h3>
             <ul className="mt-3 flex flex-wrap gap-2 text-sm text-white/85 lg:mt-6 lg:block lg:space-y-3 lg:text-[15px]">
-              {SOCIALS.map(({ label, icon }) => (
-                <li
-                  key={label}
-                  className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] py-1.5 pl-1.5 pr-3.5 lg:gap-3 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0"
-                >
-                  <FooterIconBadge icon={icon} />
-                  <span>{label}</span>
-                </li>
-              ))}
+              {SOCIALS.map(({ label, icon, href }) => {
+                const chip =
+                  "flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] py-1.5 pl-1.5 pr-3.5 lg:gap-3 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0";
+                return (
+                  <li key={label}>
+                    {href ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`${chip} transition-colors hover:text-white`}
+                      >
+                        <FooterIconBadge icon={icon} />
+                        <span>{label}</span>
+                      </a>
+                    ) : (
+                      <span className={chip}>
+                        <FooterIconBadge icon={icon} />
+                        <span>{label}</span>
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </section>
 

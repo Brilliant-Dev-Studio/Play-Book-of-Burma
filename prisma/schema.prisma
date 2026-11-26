@@ -351,6 +351,8 @@ model Lesson {
   durationSeconds Int        @default(0)
   durationLabel   String
   details         String
+  /// Optional per-lesson thumbnail (S3 key). Clients fall back to the video thumbnail when null.
+  thumbnailKey    String?
   bookmarks       Bookmark[]
   notes           Note[]
   watchProgress   WatchProgress[]

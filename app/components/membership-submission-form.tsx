@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   membershipFormFieldClass,
-  membershipFormFieldLabelClass,
+  membershipPayLabelClass,
   membershipFormFileClass,
   membershipFormTextareaClass,
 } from "@/app/components/membership-form-field-styles";
@@ -109,7 +109,7 @@ export function MembershipSubmissionForm() {
     <form className="flex flex-col gap-4" onSubmit={onSubmit}>
       {/* Name */}
       <div>
-        <label className={membershipFormFieldLabelClass} htmlFor="pay-name">Name</label>
+        <label className={membershipPayLabelClass} htmlFor="pay-name">Name</label>
         <input
           id="pay-name"
           type="text"
@@ -125,7 +125,7 @@ export function MembershipSubmissionForm() {
 
       {/* Email */}
       <div>
-        <label className={membershipFormFieldLabelClass} htmlFor="pay-email">Email</label>
+        <label className={membershipPayLabelClass} htmlFor="pay-email">Email</label>
         <input
           id="pay-email"
           type="email"
@@ -144,7 +144,7 @@ export function MembershipSubmissionForm() {
 
       {/* Phone with country code */}
       <div>
-        <label className={membershipFormFieldLabelClass} htmlFor="pay-phone">Ph Number</label>
+        <label className={membershipPayLabelClass} htmlFor="pay-phone">Ph number</label>
         <div className="flex gap-2">
           <select
             value={dialCode}
@@ -175,7 +175,7 @@ export function MembershipSubmissionForm() {
 
       {/* Screenshot */}
       <div>
-        <label className={membershipFormFieldLabelClass} htmlFor="pay-screenshot">Upload Payment Screenshot</label>
+        <label className={membershipPayLabelClass} htmlFor="pay-screenshot">Upload payment screenshot</label>
         <input
           id="pay-screenshot"
           type="file"
@@ -189,7 +189,7 @@ export function MembershipSubmissionForm() {
 
       {/* Note */}
       <div>
-        <label className={membershipFormFieldLabelClass} htmlFor="pay-note">Note</label>
+        <label className={membershipPayLabelClass} htmlFor="pay-note">Note</label>
         <textarea
           id="pay-note"
           rows={3}

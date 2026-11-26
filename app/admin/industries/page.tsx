@@ -9,7 +9,7 @@ export default async function AdminIndustriesPage() {
       id: true,
       name: true,
       order: true,
-      _count: { select: { videos: true } },
+      _count: { select: { videos: true, podcasts: true } },
     },
   });
 
@@ -18,12 +18,13 @@ export default async function AdminIndustriesPage() {
     name: r.name,
     order: r.order,
     videoCount: r._count.videos,
+    podcastCount: r._count.podcasts,
   }));
 
   return (
     <TaxonomyManager
       title="Industries"
-      subtitle="Categories that videos can be filed under (shown in the Video form and the user portal filter)."
+      subtitle="Categories that videos and podcasts are filed under. An industry still used by any video or podcast can't be deleted — move that content to another industry first."
       items={items}
       save={saveIndustry}
       remove={deleteIndustry}

@@ -25,15 +25,16 @@ export function HeroMarqueeBackdrop({ industries = [] }: { industries?: HeroIndu
       <div className="relative z-30 mx-auto flex w-full max-w-site flex-col justify-start px-4 pb-6 pt-6 sm:px-6 sm:pb-12 sm:pt-12 md:min-h-[640px] md:justify-center md:py-16 lg:min-h-[78svh] lg:px-8 lg:py-20">
         <div className="w-full text-left text-white md:w-[48%] lg:w-[44%]">
           <h1
-            className={`${timesNewRomanMtCondensed.className} text-[clamp(1.45rem,6.3vw,2.4rem)] font-bold leading-[1.08] tracking-[0.01em] uppercase [text-shadow:0_2px_18px_rgba(0,0,0,0.85)] md:text-[clamp(1.6rem,2.9vw,2.85rem)] md:leading-[1.1]`}
+            className={`${timesNewRomanMtCondensed.className} text-[clamp(1.35rem,6.4vw,2.6rem)] font-normal italic leading-[1.12] tracking-[-0.005em] [text-shadow:0_2px_18px_rgba(0,0,0,0.85)] md:text-[clamp(1.9rem,3.2vw,3.1rem)] md:leading-[1.12]`}
           >
-            {/* Lines may wrap on phones; desktop keeps the two fixed lines. */}
-            <span className="block md:whitespace-nowrap">Get Playbook of Top{"\u00a0"}1%</span>
-            <span className="block md:whitespace-nowrap">in Myanmar</span>
+            {/* Times New Roman MT Condensed Italic, title case. Lines may wrap on phones;
+                desktop keeps the two fixed lines. */}
+            <span className="block md:whitespace-nowrap">Life-Changing Playbooks behind</span>
+            <span className="block md:whitespace-nowrap">Founders &amp; CEO in Myanmar</span>
           </h1>
           <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-white/90 [text-shadow:0_1px_12px_rgba(0,0,0,0.8)] sm:mt-5 sm:text-base">
             We will take you to learn the life-changing playbooks of
-            Myanmar&apos;s visionary founders, CEOs, Experts, how they define
+            Myanmar&apos;s visionary founders, CEOs, experts, how they define
             their journey, critical decision making, strategy which transformed
             their life and business.
           </p>

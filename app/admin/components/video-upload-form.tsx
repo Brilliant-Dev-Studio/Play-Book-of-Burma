@@ -24,6 +24,9 @@ type LessonRow = {
   details: string;
   /** Probed from the browser's <video> element at upload time — see s3-uploader.tsx. */
   sourceHeightPx?: number | null;
+  /** Optional per-lesson thumbnail (S3 key); empty = falls back to the video thumbnail. */
+  thumbnailKey?: string;
+  thumbnailUrl?: string;
   transcodeStatus?: "PENDING" | "PROCESSING" | "READY" | "FAILED";
   transcodeError?: string | null;
 };
@@ -640,6 +643,35 @@ export function VideoUploadForm({
                 readOnly
                 tabIndex={-1}
               />
+            </div>
+            <div className="sm:col-span-3">
+              <p className={labelClass}>Lesson {i + 1} thumbnail <span className="font-normal text-white/45">(optional — uses the video thumbnail if empty)</span></p>
+              <div className="mt-2 max-w-sm">
+                <S3Uploader
+                  kind="thumbnail"
+                  height={140}
+                  currentKey={l.thumbnailKey}
+                  currentUrl={l.thumbnailUrl}
+                  onComplete={({ key }) =>
+                    setLessons((xs) =>
+                      xs.map((x, idx) => (idx === i ? { ...x, thumbnailKey: key, thumbnailUrl: undefined } : x)),
+                    )
+                  }
+                />
+              </div>
+              {l.thumbnailKey ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setLessons((xs) =>
+                      xs.map((x, idx) => (idx === i ? { ...x, thumbnailKey: "", thumbnailUrl: undefined } : x)),
+                    )
+                  }
+                  className="mt-1 text-xs text-white/55 underline underline-offset-2 hover:text-white"
+                >
+                  Remove lesson thumbnail
+                </button>
+              ) : null}
             </div>
             <div className="sm:col-span-3">
               <label className={labelClass}>Details</label>
